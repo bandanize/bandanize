@@ -149,7 +149,8 @@ export function ProjectHub() {
               <>
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" className="text-[#EDEDED] hover:text-white hover:bg-white/5 font-sans text-[14px] font-normal hidden sm:flex">
+                  <Button className="bg-[#151518] border border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] font-sans text-[14px] font-normal hidden sm:flex h-[36px] px-4 rounded-[8px]">
+                    <PenLine className="size-4 mr-2" />
                     Editar proyecto
                   </Button>
                 </DialogTrigger>
