@@ -99,6 +99,7 @@ interface ProjectContextType {
   deleteTablature: (projectId: string, listId: string, songId: string, tabId: string) => void;
   addTablatureFile: (projectId: string, listId: string, songId: string, tabId: string, file: Omit<MediaFile, 'id'>) => void;
   deleteTablatureFile: (projectId: string, listId: string, songId: string, tabId: string, fileUrl: string) => void;
+  kickMember: (projectId: string, memberId: string) => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -294,6 +295,20 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           }
       } catch (error) {
           console.error("Error leaving project", error);
+          throw error;
+      }
+  };
+
+  const kickMember = async (projectId: string, memberId: string) => {
+      try {
+          await api.delete(`/bands/${projectId}/members/${memberId}`);
+          updateLocalProject(projectId, (p) => ({
+              ...p,
+              members: p.members.filter(m => m.id !== memberId)
+          }));
+          toast.success('Miembro eliminado del proyecto');
+      } catch (error) {
+          console.error("Error kicking member", error);
           throw error;
       }
   };
@@ -628,6 +643,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       selectProject,
       inviteMember,
       leaveProject,
+      kickMember,
       deleteProject,
       fetchInvitations,
       acceptInvitation,

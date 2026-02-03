@@ -403,10 +403,9 @@ export function SongManager() {
                           </span>
                           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                              {/* Edit List Button */}
-                             <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-[#A3E635] hover:bg-[#A3E635]/10"
+                             <div
+                                  role="button"
+                                  className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-[#A3E635] hover:bg-[#A3E635]/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
                                   onClick={(e) => {
                                       e.stopPropagation();
                                       setListToEdit(list);
@@ -415,19 +414,18 @@ export function SongManager() {
                                   }}
                               >
                                   <Edit className="size-4" />
-                              </Button>
+                              </div>
                               {/* Delete List Button */}
-                              <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20"
+                              <div
+                                  role="button"
+                                  className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
                                   onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteList(list.id);
                                   }}
                               >
                                   <Trash2 className="size-4" />
-                              </Button>
+                              </div>
                           </div>
                         </div>
                       </div>
