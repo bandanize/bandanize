@@ -23,7 +23,7 @@ export function Dashboard() {
   const [projectDescription, setProjectDescription] = useState('');
   const [projectImage, setProjectImage] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
-  const [showCookies, setShowCookies] = useState(true);
+  const [showCookies, setShowCookies] = useState(() => !localStorage.getItem('cookieConsent'));
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -287,13 +287,19 @@ export function Dashboard() {
                  
                  <div className="flex gap-4 w-full">
                      <Button 
-                        onClick={() => setShowCookies(false)}
+                        onClick={() => {
+                          setShowCookies(false);
+                          localStorage.setItem('cookieConsent', 'true');
+                        }}
                         className="flex-1 h-[36px] bg-[#151518] border border-[#2B2B31] rounded-[8px] text-[#EDEDED] font-poppins text-[14px] font-normal hover:bg-[#1f1f22]"
                      >
                          Decline
                      </Button>
                      <Button 
-                        onClick={() => setShowCookies(false)}
+                        onClick={() => {
+                          setShowCookies(false);
+                          localStorage.setItem('cookieConsent', 'true');
+                        }}
                         className="flex-1 h-[36px] bg-[#A3E635] hover:bg-[#92d030] rounded-[8px] text-[#151518] font-poppins text-[14px] font-normal"
                      >
                          Accept
