@@ -149,9 +149,9 @@ export function ProjectHub() {
               <>
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-[#151518] border border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] font-sans text-[14px] font-normal hidden sm:flex h-[36px] px-4 rounded-[8px]">
-                    <PenLine className="size-4 mr-2" />
-                    Editar proyecto
+                  <Button className="bg-[#151518] border border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] font-sans text-[14px] font-normal flex h-[36px] w-9 sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
+                    <PenLine className="size-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Editar proyecto</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">

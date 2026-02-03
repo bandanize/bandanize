@@ -140,9 +140,9 @@ export function Dashboard() {
           
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="w-[148px] h-[36px] bg-[#A3E635] hover:bg-[#92d030] text-[#151518] rounded-[8px] font-sans text-[14px] font-normal">
-                <Plus className="size-4 mr-2 stroke-[1.33px] text-[#151518]" />
-                Nuevo Proyecto
+              <Button className="w-9 sm:w-[148px] h-[36px] bg-[#A3E635] hover:bg-[#92d030] text-[#151518] rounded-[8px] font-sans text-[14px] font-normal px-0 sm:px-4">
+                <Plus className="size-4 sm:mr-2 stroke-[1.33px] text-[#151518]" />
+                <span className="hidden sm:inline">Nuevo Proyecto</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
@@ -215,7 +215,7 @@ export function Dashboard() {
             </div>
             <Button 
                 onClick={() => setOpen(true)}
-                className="w-[148px] h-[36px] bg-[#0B0B0C] border border-[#2B2B31] rounded-[8px] text-[#EDEDED] font-sans text-[14px] font-normal hover:bg-[#1f1f22]"
+                className="w-auto sm:w-[148px] h-[36px] bg-[#0B0B0C] border border-[#2B2B31] rounded-[8px] text-[#EDEDED] font-sans text-[14px] font-normal hover:bg-[#1f1f22] px-4"
             >
                  <Plus className="size-4 mr-2 stroke-[1.33px] text-[#EDEDED]" />
                  Nuevo Proyecto

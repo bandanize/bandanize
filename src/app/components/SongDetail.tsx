@@ -757,10 +757,10 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                         <Button 
                           onClick={handleSaveTab} 
                           disabled={isSaving || !hasTabChanges}
-                          className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] disabled:opacity-50"
+                          className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] disabled:opacity-50 w-9 sm:w-auto px-0 sm:px-4"
                         >
-                          <Save className="size-4 mr-2" />
-                          Guardar
+                          <Save className="size-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Guardar</span>
                         </Button>
                       </div>
 
@@ -787,10 +787,10 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                                   <Button 
                                     size="sm" 
                                     onClick={() => handleFileUpload('tab', selectedTab.id)} 
-                                    className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] h-8"
+                                    className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] h-8 w-8 sm:w-auto px-0 sm:px-3"
                                   >
-                                    <Plus className="size-4 mr-2" />
-                                    Añadir media
+                                    <Plus className="size-4 sm:mr-2" />
+                                    <span className="hidden sm:inline">Añadir media</span>
                                   </Button>
                               </div>
 
