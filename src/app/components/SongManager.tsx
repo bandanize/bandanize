@@ -228,20 +228,21 @@ export function SongManager() {
                           No hay canciones en esta lista
                         </p>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-2 pl-4 border-l border-[#2B2B31] ml-2 mt-4 relative">
+                          {/* Dotted line decoration for tree feel, or just the border is enough. Keeping it simple first. */}
                           {list.songs.map((song) => (
                             <div
                               key={song.id}
-                              className="flex items-center justify-between p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg hover:bg-[#2B2B31] cursor-pointer"
+                              className="flex items-center justify-between p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg hover:bg-[#2B2B31] cursor-pointer group transition-all hover:translate-x-1"
                               onClick={() => handleSelectSong(list.id, song)}
                             >
                               <div className="flex-1">
-                                <p className="font-medium text-[#EDEDED]">{song.name}</p>
-                                <p className="text-sm text-[#EDEDED]/60">
+                                <p className="font-medium text-[#EDEDED] group-hover:text-white transition-colors">{song.name}</p>
+                                <p className="text-sm text-[#EDEDED]/60 group-hover:text-[#EDEDED]/80">
                                   {song.originalBand || song.bandName} • {song.bpm} BPM • {song.key}
                                 </p>
                               </div>
-                              <ChevronRight className="size-5 text-[#EDEDED]/40" />
+                              <ChevronRight className="size-5 text-[#EDEDED]/40 group-hover:text-[#A3E635] transition-colors" />
                             </div>
                           ))}
                         </div>
