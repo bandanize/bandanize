@@ -17,11 +17,14 @@ import { toast } from 'sonner';
 
 import { uploadFile } from '@/services/api';
 
+import { usePresence } from '@/hooks/usePresence';
+
 export function ProjectHub() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { currentProject, updateProject, leaveProject, deleteProject, invitations } = useProjects();
   const { user, logout } = useAuth();
+  const onlineCount = usePresence(currentProject?.id);
   const [activeTab, setActiveTab] = useState('songs');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editData, setEditData] = useState({
@@ -134,7 +137,9 @@ export function ProjectHub() {
                    <h1 className="text-[20px] sm:text-[24px] font-normal font-poppins text-[#EDEDED] leading-8 truncate">{currentProject.name}</h1>
                    <div className="flex items-center gap-1 mt-1">
                        <span className="w-[7px] h-[7px] bg-[#A3E635] rounded-full inline-block"></span>
-                       <span className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">2 Online</span>
+                       <span className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">
+                           {onlineCount} Online
+                       </span>
                    </div>
                </div>
             </div>
