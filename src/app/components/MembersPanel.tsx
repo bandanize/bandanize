@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useProjects } from '@/contexts/ProjectContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { UserPlus, Mail, User, Check, ChevronsUpDown } from 'lucide-react';
+import { UserPlus, Mail, User, Check, ChevronsUpDown, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover";
@@ -12,7 +13,8 @@ import { cn } from "@/app/components/ui/utils";
 import api from '@/services/api';
 
 export function MembersPanel() {
-  const { currentProject, inviteMember } = useProjects();
+  const { currentProject, inviteMember, kickMember } = useProjects();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   
@@ -148,18 +150,37 @@ export function MembersPanel() {
             {currentProject.members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg"
+                className="flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg group"
               >
                 <div className="size-10 bg-[#2B2B31] rounded-full flex items-center justify-center">
                   <User className="size-5 text-[#EDEDED]" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-[#EDEDED]">{member.name}</p>
+                  <p className="font-medium text-[#EDEDED]">
+                      {member.name} 
+                      {currentProject.ownerId === member.id && <span className="ml-2 text-xs text-[#A3E635] border border-[#A3E635] px-1 rounded">Owner</span>}
+                  </p>
                   <div className="flex items-center text-sm text-[#EDEDED]/60">
                     <Mail className="size-3 mr-1" />
                     {member.email}
                   </div>
                 </div>
+                
+                {/* Kick Button: Only for owner, and cannot kick self */}
+                {currentProject.ownerId === user?.id && currentProject.ownerId !== member.id && (
+                    <Button
+                        variant="ghost" 
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20 data-[state=open]:opacity-100"
+                        onClick={() => {
+                            if (confirm(`¿Estás seguro de que quieres expulsar a ${member.name}?`)) {
+                                kickMember(currentProject.id, member.id);
+                            }
+                        }}
+                    >
+                        <Trash2 className="size-4" />
+                    </Button>
+                )}
               </div>
             ))}
           </div>
