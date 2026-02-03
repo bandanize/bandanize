@@ -97,6 +97,21 @@ export function SongManager() {
 
   // handleEditList and handleUpdateList removed (replaced by inline editor)
 
+  const [editListDialog, setEditListDialog] = useState(false);
+  const [listToEdit, setListToEdit] = useState<SongList | null>(null);
+  const [editListName, setEditListName] = useState('');
+
+  const handleUpdateList = async () => {
+    if (!currentProject || !listToEdit || !editListName.trim()) return;
+    try {
+        await updateSongList(currentProject.id, listToEdit.id, editListName);
+        setEditListDialog(false);
+        toast.success('Lista actualizada');
+    } catch (error) {
+        toast.error('Error al actualizar la lista');
+    }
+  };
+
   const handleDeleteList = (listId: string) => {
     if (!currentProject) return;
     if (confirm('¿Estás seguro de que quieres eliminar esta lista? Se eliminarán todas las canciones.')) {
@@ -205,11 +220,29 @@ export function SongManager() {
                            Wait, SongListEditor uses Input and Button. I should update that component too.
                            For now, focusing on the main list. 
                        */}
-                      <SongListEditor 
-                        list={list} 
-                        currentProject={currentProject} 
-                        onDelete={handleDeleteList} 
-                      />
+                      <div className="flex items-center gap-2 mb-4">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+                            onClick={() => {
+                                setListToEdit(list);
+                                setEditListName(list.name);
+                                setEditListDialog(true);
+                            }}
+                        >
+                            <Edit className="size-4 mr-2" />
+                            Editar lista
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20"
+                            onClick={() => handleDeleteList(list.id)}
+                        >
+                            <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
@@ -311,6 +344,29 @@ export function SongManager() {
               Crear canción
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editListDialog} onOpenChange={setEditListDialog}>
+        <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+            <DialogHeader>
+                <DialogTitle>Editar lista</DialogTitle>
+                <DialogDescription className="text-[#EDEDED]/60">cambia el nombre de la lista</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="edit-list-name" className="text-[#EDEDED]">Nombre</Label>
+                    <Input 
+                        id="edit-list-name"
+                        value={editListName}
+                        onChange={(e) => setEditListName(e.target.value)}
+                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    />
+                </div>
+                <Button onClick={handleUpdateList} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                    Guardar cambios
+                </Button>
+            </div>
         </DialogContent>
       </Dialog>
 

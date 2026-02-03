@@ -9,7 +9,7 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { ArrowLeft, Plus, Music2, FileAudio, Image as ImageIcon, File, Trash2, Guitar, Drum, Music, Check, Download, Play, Eye, X, FileText, Upload, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Music2, FileAudio, Image as ImageIcon, File, Trash2, Guitar, Drum, Music, Check, Download, Play, Eye, X, FileText, Upload, Save, PenLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/app/components/ui/separator';
 import { Progress } from '@/app/components/ui/progress';
@@ -481,51 +481,83 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle className="text-[#EDEDED]">Información de la canción</CardTitle>
-                <Button 
-                  onClick={handleSaveSong} 
-                  disabled={!hasSongChanges || isSavingSong}
-                  className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] disabled:opacity-50"
-                >
-                  <Save className="size-4 mr-2" />
-                  Guardar
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]">
+                      <PenLine className="size-4 mr-2" />
+                      Editar información
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                    <DialogHeader>
+                      <DialogTitle>Editar información</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label className="text-[#EDEDED]">Nombre</Label>
+                        <Input
+                          value={editSongData.name}
+                          onChange={(e) => setEditSongData({ ...editSongData, name: e.target.value })}
+                          className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[#EDEDED]">Banda</Label>
+                        <Input
+                          value={editSongData.originalBand}
+                          placeholder="Ej: The Beatles"
+                          onChange={(e) => setEditSongData({ ...editSongData, originalBand: e.target.value })}
+                          className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                          <Label className="text-[#EDEDED]">BPM</Label>
+                          <Input
+                            type="number"
+                            value={editSongData.bpm}
+                            onChange={(e) => setEditSongData({ ...editSongData, bpm: parseInt(e.target.value) || 0 })}
+                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                          />
+                      </div>
+                      <div className="space-y-2">
+                          <Label className="text-[#EDEDED]">Tonalidad</Label>
+                          <Input
+                            value={editSongData.key}
+                            onChange={(e) => setEditSongData({ ...editSongData, key: e.target.value })}
+                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                          />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button
+                           onClick={handleSaveSong}
+                           disabled={isSavingSong}
+                           className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]"
+                        >
+                            {isSavingSong ? 'Guardando...' : 'Guardar cambios'}
+                        </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[#EDEDED]">Nombre</Label>
-                  <Input
-                    value={editSongData.name}
-                    onChange={(e) => setEditSongData({ ...editSongData, name: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-                  />
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                <div>
+                   <Label className="text-[#EDEDED]/60 text-sm">Nombre</Label>
+                   <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.name}</p>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[#EDEDED]">Banda</Label>
-                  <Input
-                    value={editSongData.originalBand}
-                    placeholder="Ej: The Beatles"
-                    onChange={(e) => setEditSongData({ ...editSongData, originalBand: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-                  />
+                <div>
+                   <Label className="text-[#EDEDED]/60 text-sm">Banda</Label>
+                   <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.originalBand || song.bandName || '-'}</p>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[#EDEDED]">BPM</Label>
-                  <Input
-                    type="number"
-                    value={editSongData.bpm}
-                    onChange={(e) => setEditSongData({ ...editSongData, bpm: parseInt(e.target.value) || 0 })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-                  />
+                <div>
+                   <Label className="text-[#EDEDED]/60 text-sm">BPM</Label>
+                   <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.bpm || '-'}</p>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[#EDEDED]">Tonalidad</Label>
-                  <Input
-                    value={editSongData.key}
-                    onChange={(e) => setEditSongData({ ...editSongData, key: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-                  />
+                <div>
+                   <Label className="text-[#EDEDED]/60 text-sm">Tonalidad</Label>
+                   <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.key || '-'}</p>
                 </div>
               </div>
             </CardContent>
