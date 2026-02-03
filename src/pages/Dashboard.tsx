@@ -82,7 +82,7 @@ export function Dashboard() {
         <div className="max-w-[1216px] w-full flex justify-between items-center mx-auto px-6">
           {/* Logo Section */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center">
+            <div className="w-[52px] h-[52px] bg-white/10 rounded-full flex items-center justify-center">
                  <img src="/favicon.svg" alt="Bandanize" className="size-8" />
             </div>
             <div>
