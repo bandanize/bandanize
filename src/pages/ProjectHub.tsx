@@ -225,12 +225,7 @@ export function ProjectHub() {
               >
                  <Settings className="size-4 text-[#EDEDED]" />
               </Button>
-              <Button 
-                variant="outline" 
-                className="w-[40px] h-[36px] bg-[#151518] border-[#2B2B31] rounded-[8px] p-0 hover:bg-[#1f1f22] hidden sm:flex"
-              >
-                 <Settings className="size-4 text-[#EDEDED]" />
-              </Button>
+
 
               </>
             ) : (

@@ -107,22 +107,22 @@ export function Dashboard() {
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
+            <DropdownMenuContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+              <DropdownMenuItem onClick={() => navigate('/profile')} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
                 <Settings className="size-4 mr-2" />
                 Mi Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/invitations')}>
+              <DropdownMenuItem onClick={() => navigate('/invitations')} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
                 <Mail className="size-4 mr-2" />
                 Invitaciones
                 {(invitations?.length || 0) > 0 && (
-                  <span className="ml-auto bg-red-100 text-red-600 text-xs rounded-full px-2 py-0.5">
+                  <span className="ml-auto bg-red-500/20 text-red-400 text-xs rounded-full px-2 py-0.5">
                     {invitations.length}
                   </span>
                 )}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuSeparator className="bg-[#2B2B31]" />
+              <DropdownMenuItem onClick={logout} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
                 <LogOut className="size-4 mr-2" />
                 Cerrar sesión
               </DropdownMenuItem>

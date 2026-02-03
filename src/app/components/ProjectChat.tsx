@@ -141,21 +141,19 @@ export function ProjectChat() {
                  </div>
                 
                 <div className={`flex flex-col gap-1 max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm text-[#EDEDED] font-medium">{msg.userName}</span>
-                    <span className="text-[10px] text-[#EDEDED]/40">
-                      {(() => {
-                        try {
-                          const date = new Date(msg.timestamp);
-                          return isNaN(date.getTime()) 
-                            ? 'Ahora' 
-                            : formatDistanceToNow(date, { addSuffix: true, locale: es });
-                        } catch (e) {
-                          return 'Ahora';
-                        }
-                      })()}
-                    </span>
-                  </div>
+                  <span className="text-sm text-[#EDEDED] font-medium">{msg.userName}</span>
+                  <span className="text-[10px] text-[#EDEDED]/40">
+                    {(() => {
+                      try {
+                        const date = new Date(msg.timestamp);
+                        return isNaN(date.getTime()) 
+                          ? 'Ahora' 
+                          : formatDistanceToNow(date, { addSuffix: true, locale: es });
+                      } catch (e) {
+                        return 'Ahora';
+                      }
+                    })()}
+                  </span>
                   <div 
                     className={`p-3 rounded-lg text-sm break-words ${
                       isMe 
