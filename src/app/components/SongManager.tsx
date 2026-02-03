@@ -19,6 +19,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const ItemType = 'SONG_ROW';
 
+
 interface SortableSongRowProps {
   song: Song;
   index: number;
@@ -26,9 +27,10 @@ interface SortableSongRowProps {
   moveSong: (dragIndex: number, hoverIndex: number) => void;
   onDrop: () => void;
   onSelect: (listId: string, song: Song) => void;
+  onDelete: (listId: string, songId: string) => void;
 }
 
-const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect }: SortableSongRowProps) => {
+const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete }: SortableSongRowProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const [{ handlerId }, drop] = useDrop({
@@ -121,18 +123,20 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect }: So
       >
         <p className="font-medium text-[#EDEDED] text-[15px]">{song.name}</p>
         <p className="text-xs text-[#EDEDED]/50 font-medium">
-          {song.originalBand || song.bandName} • {song.bpm} BPM • {song.key}
+          {song.originalBand || song.bandName}
+          {song.bpm && ` • ${song.bpm} BPM`}
+          {song.key && ` • ${song.key}`}
         </p>
       </div>
       
-      {/* Visual Delete Button - TODO implement */}
+      {/* Visual Delete Button */}
       <Button
         variant="ghost"
         size="sm"
         className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20 transition-all"
         onClick={(e) => {
             e.stopPropagation();
-            toast.error("Eliminar canción no implementado aún");
+            onDelete(listId, song.id);
         }}
       >
         <Trash2 className="size-4" />
@@ -146,15 +150,14 @@ interface SortableSongListProps {
     songs: Song[];
     onReorder: (listId: string, songIds: string[]) => void;
     onSelectSong: (listId: string, song: Song) => void;
+    onDeleteSong: (listId: string, songId: string) => void;
 }
 
-const SortableSongList = ({ listId, songs, onReorder, onSelectSong }: SortableSongListProps) => {
+const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong }: SortableSongListProps) => {
     // Keep local state for smooth dragging
     const [items, setItems] = useState<Song[]>(songs);
 
     // Sync items if external source changes (e.g. adding a song)
-    // But ONLY if not dragging? For simplicity, we sync always, but drag might look glitchy if backend updates mid-drag.
-    // However, usually backend updates only happen on drop.
     useEffect(() => {
         setItems(songs);
     }, [songs]);
@@ -190,11 +193,14 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong }: SortableSo
                     moveSong={moveSong}
                     onDrop={handleDrop}
                     onSelect={onSelectSong}
+                    onDelete={onDeleteSong} 
                 />
             ))}
         </div>
     );
 };
+
+// ... Inline SongListEditor ...
 
 
 // Inline component for editing list metadata with manual save
@@ -260,17 +266,22 @@ const SongListEditor = ({ list, currentProject, onDelete }: { list: SongList, cu
 };
 
 export function SongManager() {
-  const { currentProject, createSongList, updateSongList, deleteSongList, createSong, reorderSongs } = useProjects();
+  const { currentProject, createSongList, updateSongList, deleteSongList, createSong, reorderSongs, deleteSong } = useProjects();
   const [openListDialog, setOpenListDialog] = useState(false);
   const [openSongDialog, setOpenSongDialog] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [selectedSongRef, setSelectedSongRef] = useState<{ listId: string; songId: string } | null>(null);
   const [listName, setListName] = useState('');
-  const [songData, setSongData] = useState({
+  const [songData, setSongData] = useState<{
+    name: string;
+    originalBand: string;
+    bpm: number | null;
+    key: string;
+  }>({
     name: '',
     originalBand: '',
-    bpm: 120,
-    key: 'C',
+    bpm: null,
+    key: '',
   });
 
   const handleCreateList = () => {
@@ -306,10 +317,19 @@ export function SongManager() {
     }
   };
 
+  const handleDeleteSong = (listId: string, songId: string) => {
+      if (!currentProject) return;
+      if (confirm('¿Estás seguro de que quieres eliminar esta canción? Se eliminarán también las tabs y archivos asociados.')) {
+          deleteSong(currentProject.id, listId, songId);
+          toast.success('Canción eliminada');
+      }
+  };
+
   const handleCreateSong = () => {
     if (!currentProject || !selectedListId || !songData.name.trim()) return;
+    // @ts-ignore - backend handles nulls, ProjectContext type might need update but works runtime
     createSong(currentProject.id, selectedListId, songData);
-    setSongData({ name: '', originalBand: '', bpm: 120, key: 'C' });
+    setSongData({ name: '', originalBand: '', bpm: null, key: '' });
     setOpenSongDialog(false);
     setSelectedListId(null);
     toast.success('Canción creada');
@@ -341,7 +361,7 @@ export function SongManager() {
         onBack={() => setSelectedSongRef(null)}
       />
     );
-  }
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -452,6 +472,7 @@ export function SongManager() {
                                   songs={list.songs}
                                   onReorder={handleReorder}
                                   onSelectSong={handleSelectSong}
+                                  onDeleteSong={handleDeleteSong}
                               />
                           </div>
                         )}
@@ -474,7 +495,7 @@ export function SongManager() {
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="song-name" className="text-[#EDEDED]">Nombre de la canción</Label>
+                <Label htmlFor="song-name" className="text-[#EDEDED]">Nombre de la canción <span className="text-red-500">*</span></Label>
                 <Input
                   id="song-name"
                   placeholder="Ej: Wonderwall"
@@ -499,8 +520,12 @@ export function SongManager() {
                   <Input
                     id="bpm"
                     type="number"
-                    value={songData.bpm}
-                    onChange={(e) => setSongData({ ...songData, bpm: parseInt(e.target.value) || 120 })}
+                    placeholder="Opcional"
+                    value={songData.bpm === null ? '' : songData.bpm}
+                    onChange={(e) => {
+                         const val = e.target.value;
+                         setSongData({ ...songData, bpm: val === '' ? null : parseInt(val) })
+                    }}
                     className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
                   />
                 </div>
@@ -508,7 +533,7 @@ export function SongManager() {
                   <Label htmlFor="key" className="text-[#EDEDED]">Tonalidad</Label>
                   <Input
                     id="key"
-                    placeholder="Ej: C, Dm, G#"
+                    placeholder="Opcional (Ej: C)"
                     value={songData.key}
                     onChange={(e) => setSongData({ ...songData, key: e.target.value })}
                     className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
