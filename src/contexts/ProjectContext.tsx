@@ -44,6 +44,7 @@ export interface Song {
   key: string;
   files: MediaFile[];
   tablatures: Tablature[];
+  orderIndex?: number;
 }
 
 export interface SongList {
@@ -87,6 +88,7 @@ interface ProjectContextType {
   createSongList: (projectId: string, name: string) => void;
   updateSongList: (projectId: string, listId: string, name: string) => void;
   deleteSongList: (projectId: string, listId: string) => void;
+  reorderSongs: (projectId: string, listId: string, songIds: string[]) => void;
   createSong: (projectId: string, listId: string, song: Omit<Song, 'id' | 'tablatures' | 'files' | 'bandName'>) => void;
   updateSong: (projectId: string, listId: string, songId: string, data: Partial<Song>) => void;
   deleteSong: (projectId: string, listId: string, songId: string) => void;
@@ -363,6 +365,35 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     } catch(error) { console.error("Error deleting song list", error); }
   };
 
+  const reorderSongs = async (projectId: string, listId: string, songIds: string[]) => {
+      // Optimistic update
+      updateLocalProject(projectId, (p) => {
+          const list = p.songLists.find(l => l.id === listId);
+          if (!list) return p;
+          
+          // Create a map for current songs
+          const songsMap = new Map(list.songs.map(s => [s.id, s]));
+          
+          // Reconstruct the songs array based on songIds order
+          // If a song is not in songIds (should not happen in drag n drop full list), keep it at the end? 
+          // Ideally songIds contains ALL songs in order.
+          
+          const newSongs = songIds.map(id => songsMap.get(id)).filter((s): s is Song => !!s);
+          
+          return {
+            ...p,
+            songLists: p.songLists.map(l => l.id === listId ? { ...l, songs: newSongs } : l)
+          };
+      });
+
+      try {
+          await api.put(`/songlists/${listId}/reorder`, songIds);
+      } catch (error) {
+          console.error("Error reordering songs", error);
+          // Revert? For now, we assume success or user refreshes.
+      }
+  };
+
   const createSong = async (projectId: string, listId: string, song: Omit<Song, 'id' | 'tablatures' | 'files' | 'bandName'>) => {
     try {
         const payload = {
@@ -605,6 +636,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       createSongList,
       updateSongList,
       deleteSongList,
+      reorderSongs,
       createSong,
       updateSong,
       deleteSong,
