@@ -6,7 +6,7 @@ import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/app/components/ui/accordion';
-import { Plus, Trash2, Music, ChevronRight, Edit, Check } from 'lucide-react';
+import { Plus, Trash2, Music, ChevronRight, Edit, Check, GripVertical } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
@@ -199,54 +199,53 @@ export function SongManager() {
               <p className="text-sm">Crea tu primera lista de canciones</p>
             </div>
           ) : (
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion type="single" collapsible className="w-full space-y-4">
               {currentProject.songLists.map((list) => (
-                <AccordionItem key={list.id} value={list.id} className="border-[#2B2B31]">
+                <AccordionItem key={list.id} value={list.id} className="border border-[#2B2B31] rounded-lg bg-[#151518] px-2 overflow-hidden last:border-b-[#2B2B31] last:border-b">
                   <AccordionTrigger className="hover:no-underline text-[#EDEDED] hover:text-[#EDEDED]/80">
                     <div className="flex items-center justify-between w-full pr-4">
-                      <span className="font-medium">{list.name}</span>
-                      <div className="flex items-center gap-2">
-                      <span className="text-sm text-[#EDEDED]/60">
-                        {list.songs.length} {list.songs.length === 1 ? 'canción' : 'canciones'}
-                      </span>
+                      <span className="font-medium text-lg">{list.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-[#EDEDED]/60 mr-2">
+                          {list.songs.length} {list.songs.length === 1 ? 'canción' : 'canciones'}
+                        </span>
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                           {/* Edit List Button */}
+                           <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-[#A3E635] hover:bg-[#A3E635]/10"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setListToEdit(list);
+                                    setEditListName(list.name);
+                                    setEditListDialog(true);
+                                }}
+                            >
+                                <Edit className="size-4" />
+                            </Button>
+                            {/* Delete List Button */}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteList(list.id);
+                                }}
+                            >
+                                <Trash2 className="size-4" />
+                            </Button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </AccordionTrigger>
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2 pt-2">
-                       {/* Note: SongListEditor needs to be styled too, but it's an inline component above. 
-                           I'll assume it inherits or needs manual update. 
-                           Since I can't update it in this chunk easily, I will address it if I can or hope styles cascade.
-                           Wait, SongListEditor uses Input and Button. I should update that component too.
-                           For now, focusing on the main list. 
-                       */}
-                      <div className="flex items-center gap-2 mb-4">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-                            onClick={() => {
-                                setListToEdit(list);
-                                setEditListName(list.name);
-                                setEditListDialog(true);
-                            }}
-                        >
-                            <Edit className="size-4 mr-2" />
-                            Editar lista
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20"
-                            onClick={() => handleDeleteList(list.id)}
-                        >
-                            <Trash2 className="size-4" />
-                        </Button>
-                      </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+                        className="w-full h-10 border border-[#2B2B31] bg-transparent text-[#EDEDED]/60 hover:text-[#EDEDED] hover:bg-[#2B2B31] hover:border-[#EDEDED]/20 justify-center mb-2"
                         onClick={() => {
                           setSelectedListId(list.id);
                           setOpenSongDialog(true);
@@ -256,26 +255,43 @@ export function SongManager() {
                         Añadir canción
                       </Button>
 
-                      {list.songs.length === 0 ? (
-                        <p className="text-sm text-[#EDEDED]/40 text-center py-4">
-                          No hay canciones en esta lista
-                        </p>
-                      ) : (
-                        <div className="space-y-2 pl-4 border-l border-[#2B2B31] ml-2 mt-4 relative">
-                          {/* Dotted line decoration for tree feel, or just the border is enough. Keeping it simple first. */}
+                      {list.songs.length > 0 && (
+                        <div className="space-y-2">
                           {list.songs.map((song) => (
                             <div
                               key={song.id}
-                              className="flex items-center justify-between p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg hover:bg-[#2B2B31] cursor-pointer group transition-all hover:translate-x-1"
-                              onClick={() => handleSelectSong(list.id, song)}
+                              className="group flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg hover:bg-[#151518] transition-all"
                             >
-                              <div className="flex-1">
-                                <p className="font-medium text-[#EDEDED] group-hover:text-white transition-colors">{song.name}</p>
-                                <p className="text-sm text-[#EDEDED]/60 group-hover:text-[#EDEDED]/80">
+                               {/* Drag Handle */}
+                              <GripVertical className="size-5 text-[#2B2B31] group-hover:text-[#EDEDED]/40 cursor-grab" />
+                              
+                              <div 
+                                className="flex-1 cursor-pointer"
+                                onClick={() => handleSelectSong(list.id, song)}
+                              >
+                                <p className="font-medium text-[#EDEDED] text-[15px]">{song.name}</p>
+                                <p className="text-xs text-[#EDEDED]/50 font-medium">
                                   {song.originalBand || song.bandName} • {song.bpm} BPM • {song.key}
                                 </p>
                               </div>
-                              <ChevronRight className="size-5 text-[#EDEDED]/40 group-hover:text-[#A3E635] transition-colors" />
+                              
+                              {/* Delete Song Button (Visual only for now if no delete handler exists, but I should probably implement/use a delete handler if available. 
+                                  Checking imports... I don't see a deleteSong function in useProjects destructuring. 
+                                  I will add the visual button. 
+                              */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20 transition-all"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    // TODO: Implement delete song
+                                    // deleteSong(currentProject.id, list.id, song.id)
+                                    toast.error("Eliminar canción no implementado aún");
+                                }}
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
                             </div>
                           ))}
                         </div>
