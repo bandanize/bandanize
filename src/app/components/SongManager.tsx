@@ -238,7 +238,7 @@ export function SongManager() {
                               <div className="flex-1">
                                 <p className="font-medium text-[#EDEDED]">{song.name}</p>
                                 <p className="text-sm text-[#EDEDED]/60">
-                                  {song.bandName} • {song.bpm} BPM • {song.key}
+                                  {song.originalBand || song.bandName} • {song.bpm} BPM • {song.key}
                                 </p>
                               </div>
                               <ChevronRight className="size-5 text-[#EDEDED]/40" />
