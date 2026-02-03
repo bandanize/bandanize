@@ -129,6 +129,7 @@ export function SongManager() {
   if (activeSong && selectedSongRef) {
     return (
       <SongDetail
+        key={activeSong.id}
         listId={selectedSongRef.listId}
         song={activeSong}
         onBack={() => setSelectedSongRef(null)}

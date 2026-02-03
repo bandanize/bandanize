@@ -9,7 +9,7 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { ArrowLeft, Plus, Music2, FileAudio, Image as ImageIcon, File, Trash2, Guitar, Drum, Music, Check, Download, Play, Eye, X, FileText, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Music2, FileAudio, Image as ImageIcon, File, Trash2, Guitar, Drum, Music, Check, Download, Play, Eye, X, FileText, Upload, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/app/components/ui/separator';
 import { Progress } from '@/app/components/ui/progress';
@@ -26,7 +26,8 @@ const INSTRUMENTS = [
 ];
 
 // Toolbar component for tablature editing
-function TablatureToolbar({ onInsert }: { onInsert: (text: string) => void }) {
+// Controls component for tablature editing
+function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
   const guitarStrings = 'e|---\nB|---\nG|---\nD|---\nA|---\nE|---\n';
   const bassStrings = 'G|---\nD|---\nA|---\nE|---\n';
 
@@ -38,134 +39,64 @@ function TablatureToolbar({ onInsert }: { onInsert: (text: string) => void }) {
     { label: '\\', desc: 'Slide down', value: '\\' },
     { label: '~', desc: 'Vibrato', value: '~' },
     { label: 'x', desc: 'Mute', value: 'x' },
+    { label: '|', desc: 'Barra', value: '|' },
   ];
 
   return (
-    <div className="border border-[#2B2B31] rounded-lg p-4 mb-4 bg-[#0B0B0C]">
-      <div className="space-y-4">
-        {/* String templates */}
-        <div>
-          <Label className="text-sm font-medium mb-2 block text-[#EDEDED]">Plantillas de cuerdas</Label>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onInsert(guitarStrings)}
-              className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-            >
-              <Guitar className="size-4 mr-2" />
-              Guitarra
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onInsert(bassStrings)}
-              className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-            >
-              <Music2 className="size-4 mr-2" />
-              Bajo
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onInsert('---')}
-              className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-            >
-              Línea simple
-            </Button>
-          </div>
+    <div className="space-y-6 mt-4">
+      {/* String templates */}
+      <div>
+        <Label className="text-sm font-medium mb-3 block text-[#EDEDED]">Plantillas de cuerdas</Label>
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onInsert(guitarStrings)}
+            className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+          >
+            <Guitar className="size-4 mr-2" />
+            Guitarra (6 cuerdas)
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onInsert(bassStrings)}
+            className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+          >
+            <Music2 className="size-4 mr-2" />
+            Bajo (4 cuerdas)
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onInsert('---')}
+            className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+          >
+            Línea simple
+          </Button>
         </div>
+      </div>
 
-        <Separator className="bg-[#2B2B31]" />
-
-        {/* Symbols */}
-        <div>
-          <Label className="text-sm font-medium mb-2 block text-[#EDEDED]">Símbolos y técnicas</Label>
-          <div className="flex gap-2 flex-wrap">
-            {symbols.map((symbol) => (
-              <Button
-                key={symbol.value}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onInsert(symbol.value)}
-                title={symbol.desc}
-                className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-              >
-                {symbol.label}
-              </Button>
-            ))}
+      {/* Symbols */}
+      <div>
+        <Label className="text-sm font-medium mb-3 block text-[#EDEDED]">Símbolos y técnicas</Label>
+        <div className="flex gap-2 flex-wrap">
+          {symbols.map((symbol) => (
             <Button
+              key={symbol.value}
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onInsert('|')}
-              title="Separador de compás"
-              className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+              onClick={() => onInsert(symbol.value)}
+              title={symbol.desc}
+              className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] min-w-[32px]"
             >
-              |
+              {symbol.label}
             </Button>
-          </div>
-        </div>
-
-        <Separator className="bg-[#2B2B31]" />
-
-        {/* Numbers */}
-        <div>
-          <Label className="text-sm font-medium mb-2 block text-[#EDEDED]">Trastes</Label>
-          <div className="flex gap-2 flex-wrap">
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
-              <Button
-                key={num}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onInsert(num.toString())}
-                className="w-10 bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-              >
-                {num}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <Separator className="bg-[#2B2B31]" />
-
-        {/* Formatting */}
-        <div>
-          <Label className="text-sm font-medium mb-2 block text-[#EDEDED]">Formato</Label>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onInsert('\n')}
-              className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-            >
-              Nueva línea
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onInsert('    ')}
-              className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-            >
-              Espacio (4)
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onInsert('\n\n[Intro]\n')}
-              className="bg-transparent border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-            >
-              [Sección]
-            </Button>
-          </div>
+          ))}
         </div>
       </div>
     </div>
@@ -206,6 +137,16 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     bpm: song.bpm || 0,
     key: song.key || '',
   });
+
+  // Sync local state with prop when song changes (e.g. after save or external update)
+  useEffect(() => {
+    setEditSongData({
+      name: song.name || '',
+      originalBand: song.originalBand || '',
+      bpm: song.bpm || 0,
+      key: song.key || '',
+    });
+  }, [song]);
 
   // Local state for active tablature editing
   const [editingContent, setEditingContent] = useState('');
@@ -543,10 +484,9 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                 <Button 
                   onClick={handleSaveSong} 
                   disabled={!hasSongChanges || isSavingSong}
-                  variant="outline"
-                  className="border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] disabled:opacity-50"
+                  className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] disabled:opacity-50"
                 >
-                  <Check className="size-4 mr-2" />
+                  <Save className="size-4 mr-2" />
                   Guardar
                 </Button>
               </div>
@@ -794,117 +734,122 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
               <div className="lg:col-span-2">
                 {selectedTab ? (
                   <Card className="bg-[#151518] border-[#2B2B31]">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
+                    <CardContent className="p-0">
+                      {/* Header */}
+                      <div className="p-6 border-b border-[#2B2B31] flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-[#EDEDED]">{selectedTab.name}</CardTitle>
-                          <p className="text-sm text-[#EDEDED]/60 mt-1">
-                            {selectedTab.instrument} • {selectedTab.tuning}
-                          </p>
-                        </div>
-                        <Button size="sm" onClick={() => handleFileUpload('tab', selectedTab.id)} className="bg-[#2B2B31] text-[#EDEDED] hover:bg-[#3E3E46]">
-                          <Plus className="size-4 mr-2" />
-                          Añadir archivo
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-end mb-2 items-center h-8 gap-1">
-                        {hasTabChanges && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-[#A3E635] hover:text-[#A3E635] hover:bg-[#A3E635]/10 h-8 w-8 p-0"
-                                onClick={handleSaveTab}
-                                disabled={isSaving}
-                            >
-                                <Check className="size-4" />
-                            </Button>
-                        )}
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20 h-8 w-8 p-0"
-                            onClick={() => selectedTabId && handleDeleteTablature(selectedTabId)}
-                        >
-                            <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-
-                      {/* Tablature Toolbar */}
-                      <TablatureToolbar onInsert={handleInsertText} />
-                      
-                      <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">Tablatura</Label>
-                        <Textarea
-                          ref={textareaRef}
-                          value={editingContent}
-                          onChange={(e) => setEditingContent(e.target.value)}
-                          placeholder="Escribe tu tablatura aquí..."
-                          className="font-mono text-sm min-h-[300px] bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-                        />
-                      </div>
-
-                      {selectedTab.files.length > 0 && (
-                        <div className="space-y-2">
-                          <Label className="text-[#EDEDED]">Archivos adjuntos</Label>
-                          <div className="space-y-2">
-                            {selectedTab.files.map((file) => (
-                              <div key={file.url} className="flex items-center gap-3 p-3 bg-[#0B0B0C] rounded-lg group border border-[#2B2B31]">
-                                {file.type.startsWith('audio') ? (
-                                  <FileAudio className="size-5 text-blue-500" />
-                                ) : file.type.startsWith('image') ? (
-                                  <ImageIcon className="size-5 text-green-500" />
-                                ) : (
-                                  <File className="size-5 text-[#EDEDED]/60" />
-                                )}
-                                <div className="flex-1 min-w-0">
-                                   <p className="text-sm font-medium text-[#EDEDED] truncate" title={file.name}>{file.name}</p>
-                                </div>
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {(file.type.startsWith('audio') || file.type.startsWith('video') || file.type.startsWith('image')) && (
-                                      <Button
-                                        variant="ghost" 
-                                        size="icon"
-                                        className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                                        onClick={() => setPreviewFile(file)}
-                                        title="Reproducir/Ver"
-                                      >
-                                          {file.type.startsWith('image') ? <Eye className="size-4" /> : <Play className="size-4" />}
-                                      </Button>
-                                    )}
-
-                                    <a 
-                                      href={`${(import.meta.env.VITE_API_URL || '') + (file.url.startsWith('/uploads') ? '/api' + file.url : file.url)}`} 
-                                      download 
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-2 hover:bg-[#2B2B31] rounded-md text-[#EDEDED]/60"
-                                      title="Descargar"
-                                    >
-                                        <Download className="size-4" />
-                                    </a>
-                                    <Button
-                                      variant="ghost" 
-                                      size="icon"
-                                      className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                                      onClick={() => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, selectedTab.id, file.url)}
-                                      title="Eliminar"
-                                    >
-                                        <Trash2 className="size-4" />
-                                    </Button>
-                                </div>
-                              </div>
-                            ))}
+                          <div className="flex items-center gap-2">
+                             <CardTitle className="text-xl text-[#EDEDED]">{selectedTab.name}</CardTitle>
+                             <div className="p-1 rounded-md hover:bg-[#2B2B31] cursor-pointer text-[#EDEDED]/40 hover:text-[#EDEDED]">
+                                <FileText className="size-4" />
+                             </div>
+                          </div>
+                          
+                          <div className="flex flex-col gap-1 mt-1">
+                              <p className="text-sm text-[#EDEDED]/60 font-medium">
+                                {selectedTab.instrument}
+                              </p>
+                              <p className="text-xs text-[#EDEDED]/40">
+                                {selectedTab.tuning}
+                              </p>
                           </div>
                         </div>
-                      )}
+                        <Button 
+                          onClick={handleSaveTab} 
+                          disabled={isSaving || !hasTabChanges}
+                          className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] disabled:opacity-50"
+                        >
+                          <Save className="size-4 mr-2" />
+                          Guardar
+                        </Button>
+                      </div>
+
+                      <div className="p-6 space-y-8">
+                          {/* Editor */}
+                          <div className="space-y-3">
+                            <Label className="text-[#EDEDED] text-base font-medium">Tablatura</Label>
+                            <Textarea
+                              ref={textareaRef}
+                              value={editingContent}
+                              onChange={(e) => setEditingContent(e.target.value)}
+                              placeholder="Escribe tu tablatura aquí..."
+                              className="font-mono text-sm min-h-[400px] bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED] resize-none focus-visible:ring-1 focus-visible:ring-[#A3E635]"
+                            />
+                            
+                            {/* Controls below editor */}
+                            <TablatureControls onInsert={handleInsertText} />
+                          </div>
+
+                          {/* Media Section */}
+                          <div className="space-y-4 pt-4 border-t border-[#2B2B31]">
+                              <div className="flex justify-between items-center">
+                                  <Label className="text-[#EDEDED] text-base font-medium">Archivos y media</Label>
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => handleFileUpload('tab', selectedTab.id)} 
+                                    className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] h-8"
+                                  >
+                                    <Plus className="size-4 mr-2" />
+                                    Añadir media
+                                  </Button>
+                              </div>
+
+                              {selectedTab.files.length > 0 ? (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                  {selectedTab.files.map((file) => (
+                                    <div key={file.url} className="group relative aspect-square bg-[#0B0B0C] border border-[#2B2B31] rounded-xl overflow-hidden flex flex-col items-center justify-center p-4 gap-3 hover:border-[#EDEDED]/20 transition-colors">
+                                        <div className="size-10 rounded-full bg-[#151518] flex items-center justify-center">
+                                            {file.type.startsWith('audio') ? (
+                                              <FileAudio className="size-5 text-blue-500" />
+                                            ) : file.type.startsWith('image') ? (
+                                              <ImageIcon className="size-5 text-green-500" />
+                                            ) : (
+                                              <File className="size-5 text-[#EDEDED]/60" />
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-[#EDEDED] text-center w-full truncate px-2 font-medium">
+                                            {file.name}
+                                        </p>
+                                        
+                                        {/* Hover Overlay */}
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            {(file.type.startsWith('audio') || file.type.startsWith('video') || file.type.startsWith('image')) && (
+                                              <Button
+                                                variant="ghost" 
+                                                size="icon"
+                                                className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                                                onClick={() => setPreviewFile(file)}
+                                              >
+                                                  {file.type.startsWith('image') ? <Eye className="size-4" /> : <Play className="size-4" />}
+                                              </Button>
+                                            )}
+                                            <Button
+                                              variant="ghost" 
+                                              size="icon"
+                                              className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                                              onClick={() => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, selectedTab.id, file.url)}
+                                            >
+                                                <Trash2 className="size-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-8 border border-dashed border-[#2B2B31] rounded-xl">
+                                    <p className="text-sm text-[#EDEDED]/40">No hay archivos adjuntos</p>
+                                </div>
+                              )}
+                          </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className="bg-[#151518] border-[#2B2B31]">
+                  <Card className="bg-[#151518] border-[#2B2B31] h-full flex items-center justify-center">
                     <CardContent className="text-center py-12">
-                      <p className="text-[#EDEDED]/60">Selecciona una tablatura para editarla</p>
+                      <Guitar className="size-16 mx-auto text-[#2B2B31] mb-4" />
+                      <p className="text-[#EDEDED] font-medium">Selecciona una tablatura</p>
+                      <p className="text-sm text-[#EDEDED]/40 mt-1">o crea una nueva para empezar a editar</p>
                     </CardContent>
                   </Card>
                 )}
