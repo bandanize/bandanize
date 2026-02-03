@@ -127,14 +127,19 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   const [tabData, setTabData] = useState({
     instrument: 'guitar',
     name: '',
-    tuning: 'Standard (EADGBE)',
+    tuning: '',
   });
   
   // Local state for song editing
-  const [editSongData, setEditSongData] = useState({
+  const [editSongData, setEditSongData] = useState<{
+    name: string;
+    originalBand: string;
+    bpm: number | null;
+    key: string;
+  }>({
     name: song.name || '',
     originalBand: song.originalBand || '',
-    bpm: song.bpm || 0,
+    bpm: song.bpm !== null && song.bpm !== undefined && song.bpm !== 0 ? song.bpm : null,
     key: song.key || '',
   });
 
@@ -143,7 +148,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     setEditSongData({
       name: song.name || '',
       originalBand: song.originalBand || '',
-      bpm: song.bpm || 0,
+      bpm: song.bpm !== null && song.bpm !== undefined && song.bpm !== 0 ? song.bpm : null,
       key: song.key || '',
     });
   }, [song]);
@@ -256,7 +261,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
       tuning: tabData.tuning,
       content: '',
     });
-    setTabData({ instrument: 'guitar', name: '', tuning: 'Standard (EADGBE)' });
+    setTabData({ instrument: 'guitar', name: '', tuning: '' });
     setOpenTabDialog(false);
     toast.success('Tablatura creada');
   };
@@ -514,8 +519,12 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                           <Label className="text-[#EDEDED]">BPM</Label>
                           <Input
                             type="number"
-                            value={editSongData.bpm}
-                            onChange={(e) => setEditSongData({ ...editSongData, bpm: parseInt(e.target.value) || 0 })}
+                            placeholder="Opcional"
+                            value={editSongData.bpm === null ? '' : editSongData.bpm}
+                            onChange={(e) => {
+                                 const val = e.target.value;
+                                 setEditSongData({ ...editSongData, bpm: val === '' ? null : parseInt(val) })
+                            }}
                             className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
                           />
                       </div>
@@ -551,14 +560,18 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                    <Label className="text-[#EDEDED]/60 text-sm">Banda</Label>
                    <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.originalBand || song.bandName || '-'}</p>
                 </div>
-                <div>
-                   <Label className="text-[#EDEDED]/60 text-sm">BPM</Label>
-                   <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.bpm || '-'}</p>
-                </div>
-                <div>
-                   <Label className="text-[#EDEDED]/60 text-sm">Tonalidad</Label>
-                   <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.key || '-'}</p>
-                </div>
+                {song.bpm !== null && song.bpm !== undefined && song.bpm !== 0 && (
+                  <div>
+                     <Label className="text-[#EDEDED]/60 text-sm">BPM</Label>
+                     <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.bpm}</p>
+                  </div>
+                )}
+                {song.key && (
+                  <div>
+                     <Label className="text-[#EDEDED]/60 text-sm">Tonalidad</Label>
+                     <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.key}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -702,7 +715,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                     <Label htmlFor="tab-tuning" className="text-[#EDEDED]">Afinación</Label>
                     <Input
                       id="tab-tuning"
-                      placeholder="Ej: Standard (EADGBE)"
+                      placeholder="Opcional (Ej: Standard EADGBE)"
                       value={tabData.tuning}
                       onChange={(e) => setTabData({ ...tabData, tuning: e.target.value })}
                       className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
@@ -736,64 +749,66 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="size-10 bg-[#2B2B31] rounded-lg flex items-center justify-center text-[#EDEDED]">
-                            {getInstrumentIcon(tab.instrumentIcon)}
+                            <div className="flex items-center gap-3">
+                              <div className="size-10 bg-[#2B2B31] rounded-lg flex items-center justify-center text-[#EDEDED]">
+                                {getInstrumentIcon(tab.instrumentIcon)}
+                              </div>
+                              <div>
+                                <p className="font-medium text-[#EDEDED]">{tab.name}</p>
+                                <p className="text-sm text-[#EDEDED]/60">{tab.instrument}</p>
+                                {tab.tuning && <p className="text-xs text-[#EDEDED]/40">{tab.tuning}</p>}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTablature(tab.id);
+                              }}
+                              className="hover:bg-[#2B2B31] text-[#EDEDED]/60 hover:text-red-500"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
                           </div>
-                          <div>
-                            <p className="font-medium text-[#EDEDED]">{tab.name}</p>
-                            <p className="text-sm text-[#EDEDED]/60">{tab.instrument}</p>
-                            <p className="text-xs text-[#EDEDED]/40">{tab.tuning}</p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteTablature(tab.id);
-                          }}
-                          className="hover:bg-[#2B2B31] text-[#EDEDED]/60 hover:text-red-500"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
 
-              <div className="lg:col-span-2">
-                {selectedTab ? (
-                  <Card className="bg-[#151518] border-[#2B2B31]">
-                    <CardContent className="p-0">
-                      {/* Header */}
-                      <div className="p-6 border-b border-[#2B2B31] flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2">
-                             <CardTitle className="text-xl text-[#EDEDED]">{selectedTab.name}</CardTitle>
-                             <div className="p-1 rounded-md hover:bg-[#2B2B31] cursor-pointer text-[#EDEDED]/40 hover:text-[#EDEDED]">
-                                <FileText className="size-4" />
-                             </div>
-                          </div>
-                          
-                          <div className="flex flex-col gap-1 mt-1">
-                              <p className="text-sm text-[#EDEDED]/60 font-medium">
-                                {selectedTab.instrument}
-                              </p>
-                              <p className="text-xs text-[#EDEDED]/40">
-                                {selectedTab.tuning}
-                              </p>
-                          </div>
-                        </div>
-                        <Button 
-                          onClick={handleSaveTab} 
-                          disabled={isSaving || !hasTabChanges}
-                          className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] disabled:opacity-50 w-9 sm:w-auto px-0 sm:px-4"
-                        >
-                          <Save className="size-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Guardar</span>
-                        </Button>
+                  <div className="lg:col-span-2">
+                    {selectedTab ? (
+                      <Card className="bg-[#151518] border-[#2B2B31]">
+                        <CardContent className="p-0">
+                          {/* Header */}
+                          <div className="p-6 border-b border-[#2B2B31] flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                 <CardTitle className="text-xl text-[#EDEDED]">{selectedTab.name}</CardTitle>
+                                 <div className="p-1 rounded-md hover:bg-[#2B2B31] cursor-pointer text-[#EDEDED]/40 hover:text-[#EDEDED]">
+                                    <FileText className="size-4" />
+                                 </div>
+                              </div>
+                              
+                              <div className="flex flex-col gap-1 mt-1">
+                                  <p className="text-sm text-[#EDEDED]/60 font-medium">
+                                    {selectedTab.instrument}
+                                  </p>
+                                  {selectedTab.tuning && (
+                                    <p className="text-xs text-[#EDEDED]/40">
+                                      {selectedTab.tuning}
+                                    </p>
+                                  )}
+                              </div>
+                            </div>
+                            <Button 
+                              onClick={handleSaveTab} 
+                              disabled={isSaving || !hasTabChanges}
+                              className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] disabled:opacity-50 w-9 sm:w-auto px-0 sm:px-4"
+                            >
+                              <Save className="size-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Guardar</span>
+                            </Button>
                       </div>
 
                       <div className="p-6 space-y-8">
