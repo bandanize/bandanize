@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
@@ -24,7 +24,7 @@ export function MembersPanel() {
   const [openCombobox, setOpenCombobox] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const searchUsers = async () => {
@@ -32,14 +32,14 @@ export function MembersPanel() {
             setSearchResults([]);
             return;
         }
-        setLoading(true);
+        // setLoading(true);
         try {
             const response = await api.get(`/users/search?query=${searchValue}`);
             setSearchResults(response.data);
         } catch (error) {
             console.error("Error searching users", error);
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     };
 

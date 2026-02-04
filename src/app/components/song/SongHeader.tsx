@@ -1,10 +1,7 @@
 import React from 'react';
 import { Button } from '@/app/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { ArrowLeft, Trash2, PenLine } from 'lucide-react';
+import { Card, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { Song } from '@/contexts/ProjectContext';
 import { useTranslation } from 'react-i18next';
 
@@ -16,27 +13,9 @@ interface SongHeaderProps {
   isSaving: boolean;
 }
 
-export function SongHeader({ song, onBack, onDelete, onUpdate, isSaving }: SongHeaderProps) {
+export function SongHeader({ song, onBack, onDelete }: SongHeaderProps) {
   const { t } = useTranslation();
-  const [editSongData, setEditSongData] = React.useState({
-    name: song.name || '',
-    originalBand: song.originalBand || '',
-    bpm: song.bpm !== null && song.bpm !== undefined && song.bpm !== 0 ? song.bpm : null,
-    key: song.key || '',
-  });
 
-  React.useEffect(() => {
-    setEditSongData({
-      name: song.name || '',
-      originalBand: song.originalBand || '',
-      bpm: song.bpm !== null && song.bpm !== undefined && song.bpm !== 0 ? song.bpm : null,
-      key: song.key || '',
-    });
-  }, [song]);
-
-  const handleSave = () => {
-    onUpdate(editSongData);
-  };
 
   return (
 
