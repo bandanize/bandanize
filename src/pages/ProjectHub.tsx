@@ -20,6 +20,7 @@ import { uploadFile } from '@/services/api';
 import { usePresence } from '@/hooks/usePresence';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
+import { PageLayout } from '@/app/components/PageLayout';
 
 export function ProjectHub() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -117,9 +118,8 @@ export function ProjectHub() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0B0C] relative">
-      {/* Header */}
-      <header className="h-auto min-h-[85px] pt-[calc(1rem+env(safe-area-inset-top))] pb-4 bg-[#151518] border-b border-black/10 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full">
+    <PageLayout
+      headerContent={
         <div className="max-w-[1216px] w-full mx-auto flex flex-wrap items-center gap-4 px-4 sm:px-6">
             <Button 
                 variant="ghost" 
@@ -239,9 +239,9 @@ export function ProjectHub() {
             )}
             </div>
         </div>
-      </header>
-
-      <main className="max-w-[1216px] w-full mx-auto py-8 px-4 sm:px-6">
+      }
+    >
+      <div className="max-w-[1216px] w-full mx-auto py-8 px-4 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="bg-[#151518] rounded-[14px] p-0 h-[36px] flex items-center w-full max-w-[303px] mx-auto">
             <TabsTrigger 
@@ -281,7 +281,7 @@ export function ProjectHub() {
             </TabsContent>
           </div>
         </Tabs>
-      </main>
-    </div>
+      </div>
+    </PageLayout>
   );
 }
