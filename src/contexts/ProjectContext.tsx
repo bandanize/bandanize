@@ -357,6 +357,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         updateLocalProject(projectId, (p) => ({ ...p, songLists: [...p.songLists, newList] }));
     } catch (error) {
         console.error("Error creating song list", error);
+        throw error;
     }
   };
 
@@ -367,7 +368,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           ...p,
           songLists: p.songLists.map(l => l.id === listId ? { ...l, name } : l)
         }));
-    } catch(error) { console.error("Error updating song list", error); }
+    } catch(error) { 
+        console.error("Error updating song list", error); 
+        throw error; 
+    }
   };
 
   const deleteSongList = async (projectId: string, listId: string) => {
@@ -377,7 +381,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           ...p,
           songLists: p.songLists.filter(l => l.id !== listId)
         }));
-    } catch(error) { console.error("Error deleting song list", error); }
+    } catch(error) { 
+        console.error("Error deleting song list", error); 
+        throw error; 
+    }
   };
 
   const reorderSongs = async (projectId: string, listId: string, songIds: string[]) => {
@@ -405,7 +412,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           await api.put(`/songlists/${listId}/reorder`, songIds);
       } catch (error) {
           console.error("Error reordering songs", error);
-          // Revert? For now, we assume success or user refreshes.
+          throw error;
       }
   };
 
@@ -435,6 +442,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         }));
     } catch (error) {
         console.error("Error creating song", error);
+        throw error;
     }
   };
 
@@ -455,7 +463,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             songs: l.songs.map(s => s.id === songId ? { ...s, ...data } : s)
           } : l)
         }));
-    } catch (error) { console.error("Error updating song", error); }
+    } catch (error) { 
+        console.error("Error updating song", error); 
+        throw error; 
+    }
   };
 
   const deleteSong = async (projectId: string, listId: string, songId: string) => {
@@ -468,7 +479,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             songs: l.songs.filter(s => s.id !== songId)
           } : l)
         }));
-    } catch (error) { console.error("Error deleting song", error); }
+    } catch (error) { 
+        console.error("Error deleting song", error); 
+        throw error; 
+    }
   };
   
   const addSongFile = async (projectId: string, listId: string, songId: string, file: Omit<MediaFile, 'id'>) => {
@@ -495,7 +509,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             } : s)
           } : l)
         }));
-    } catch (error) { console.error("Error adding song file", error); }
+    } catch (error) { 
+        console.error("Error adding song file", error); 
+        throw error; 
+    }
   };
   
   const createTablature = async (projectId: string, listId: string, songId: string, tablature: Omit<Tablature, 'id' | 'files'>) => {
@@ -522,7 +539,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             } : s)
           } : l)
         }));
-    } catch (error) { console.error("Error creating tablature", error); }
+    } catch (error) { 
+        console.error("Error creating tablature", error); 
+        throw error; 
+    }
   };
   
   const updateTablature = async (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>) => {
@@ -538,7 +558,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 } : s)
             } : l)
             }));
-      } catch (error) { console.error("Error updating tablature", error); }
+      } catch (error) { 
+          console.error("Error updating tablature", error); 
+          throw error; 
+      }
   };
   
   const deleteTablature = async (projectId: string, listId: string, songId: string, tabId: string) => {
@@ -554,7 +577,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 } : s)
             } : l)
             }));
-      } catch (error) { console.error("Error deleting tablature", error); }
+      } catch (error) { 
+          console.error("Error deleting tablature", error); 
+          throw error; 
+      }
   };
   
   const addTablatureFile = async (projectId: string, listId: string, songId: string, tabId: string, file: Omit<MediaFile, 'id'>) => {
@@ -575,7 +601,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 } : s)
             } : l)
         }));
-    } catch (error) { console.error("Error adding tablature file", error); }
+    } catch (error) { 
+        console.error("Error adding tablature file", error); 
+        throw error; 
+    }
   };
 
   const deleteSongFile = async (projectId: string, listId: string, songId: string, fileUrl: string) => {
@@ -596,7 +625,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 } : s)
               } : l)
             }));
-      } catch (error) { console.error("Error deleting song file", error); }
+      } catch (error) { 
+          console.error("Error deleting song file", error); 
+          throw error; 
+      }
   };
 
   const deleteTablatureFile = async (projectId: string, listId: string, songId: string, tabId: string, fileUrl: string) => {
@@ -617,7 +649,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                   } : s)
               } : l)
           }));
-      } catch (error) { console.error("Error deleting tablature file", error); }
+      } catch (error) { 
+          console.error("Error deleting tablature file", error); 
+          throw error; 
+      }
   };
 
   // Helper to update local state

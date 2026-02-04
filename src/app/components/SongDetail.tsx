@@ -9,7 +9,7 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { ArrowLeft, Plus, Music2, FileAudio, Image as ImageIcon, File, Trash2, Guitar, Drum, Music, Check, Download, Play, Eye, X, FileText, Upload, Save, PenLine } from 'lucide-react';
+import { ArrowLeft, Plus, Music2, FileAudio, Image as ImageIcon, File, Trash2, Guitar, Drum, Music, Check, Download, Play, Eye, X, FileText, Upload, Save, PenLine, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/app/components/ui/separator';
 import { Progress } from '@/app/components/ui/progress';
@@ -165,6 +165,14 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
 
+  // Tab Edit State
+  const [editTabDetailsDialog, setEditTabDetailsDialog] = useState(false);
+  const [editTabDetails, setEditTabDetails] = useState({
+      name: '',
+      instrument: 'guitar',
+      tuning: ''
+  });
+
   // Helper for exponential backoff
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -285,6 +293,34 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   const handleUpdateTabContent = (tabId: string, content: string) => {
     if (!currentProject) return;
     updateTablature(currentProject.id, listId, song.id, tabId, { content });
+  };
+
+  useEffect(() => {
+      if (selectedTab) {
+          setEditTabDetails({
+              name: selectedTab.name,
+              instrument: selectedTab.instrumentIcon || 'guitar',
+              tuning: selectedTab.tuning || ''
+          });
+      }
+  }, [selectedTab]);
+
+  const handleUpdateTabDetails = async () => {
+      if (!currentProject || !selectedTabId || !editTabDetails.name.trim()) return;
+      const instrument = INSTRUMENTS.find(i => i.value === editTabDetails.instrument);
+      
+      try {
+          await updateTablature(currentProject.id, listId, song.id, selectedTabId, {
+              name: editTabDetails.name,
+              instrument: instrument?.label || 'Guitarra',
+              instrumentIcon: editTabDetails.instrument,
+              tuning: editTabDetails.tuning
+          });
+          setEditTabDetailsDialog(false);
+          toast.success('Información actualizada');
+      } catch (error) {
+          toast.error('Error al actualizar');
+      }
   };
 
   // File Upload State
@@ -785,8 +821,12 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                             <div>
                               <div className="flex items-center gap-2">
                                  <CardTitle className="text-xl text-[#EDEDED]">{selectedTab.name}</CardTitle>
-                                 <div className="p-1 rounded-md hover:bg-[#2B2B31] cursor-pointer text-[#EDEDED]/40 hover:text-[#EDEDED]">
-                                    <FileText className="size-4" />
+                                 <div 
+                                    className="p-1 rounded-md hover:bg-[#2B2B31] cursor-pointer text-[#EDEDED]/40 hover:text-[#A3E635] transition-colors"
+                                    onClick={() => setEditTabDetailsDialog(true)}
+                                    role="button"
+                                 >
+                                    <Edit className="size-4" />
                                  </div>
                               </div>
                               
@@ -957,6 +997,55 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                 )}
             </div>
         </DialogContent>
+      </Dialog>
+      <Dialog open={editTabDetailsDialog} onOpenChange={setEditTabDetailsDialog}>
+          <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+              <DialogHeader>
+                  <DialogTitle>Editar tablatura</DialogTitle>
+                  <DialogDescription className="text-[#EDEDED]/60">Modifica los detalles de la tablatura</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-tab-name" className="text-[#EDEDED]">Nombre</Label>
+                    <Input 
+                        id="edit-tab-name"
+                        value={editTabDetails.name}
+                        onChange={(e) => setEditTabDetails({ ...editTabDetails, name: e.target.value })}
+                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-tab-instrument" className="text-[#EDEDED]">Instrumento</Label>
+                    <Select
+                      value={editTabDetails.instrument}
+                      onValueChange={(value) => setEditTabDetails({ ...editTabDetails, instrument: value })}
+                    >
+                      <SelectTrigger id="edit-tab-instrument" className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                        {INSTRUMENTS.map((inst) => (
+                          <SelectItem key={inst.value} value={inst.value} className="focus:bg-[#2B2B31] focus:text-[#EDEDED]">
+                            {inst.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-tab-tuning" className="text-[#EDEDED]">Afinación</Label>
+                    <Input 
+                        id="edit-tab-tuning"
+                        value={editTabDetails.tuning}
+                        onChange={(e) => setEditTabDetails({ ...editTabDetails, tuning: e.target.value })}
+                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    />
+                  </div>
+                  <Button onClick={handleUpdateTabDetails} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                      Guardar cambios
+                  </Button>
+              </div>
+          </DialogContent>
       </Dialog>
     </div>
   );
