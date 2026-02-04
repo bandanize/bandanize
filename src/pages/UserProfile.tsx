@@ -10,10 +10,13 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { ArrowLeft, User, Lock, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/app/components/ui/separator';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 
 export function UserProfile() {
   const { user, updateProfile, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     instrument: user?.instrument || '',
@@ -27,16 +30,17 @@ export function UserProfile() {
 
   const handleUpdateProfile = () => {
     updateProfile(profileData);
-    toast.success('Perfil actualizado correctamente');
+    toast.success(t('profile_updated', 'Perfil actualizado correctamente'));
   };
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('Las contraseñas no coinciden');
+      toast.error(t('passwords_do_not_match', 'Las contraseñas no coinciden'));
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres');
+      toast.error(t('password_length_error', 'La contraseña debe tener al menos 6 caracteres'));
       return;
     }
     
@@ -45,14 +49,14 @@ export function UserProfile() {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      toast.success('Contraseña actualizada correctamente');
+      toast.success(t('password_updated', 'Contraseña actualizada correctamente'));
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
     } catch (error: any) {
-      toast.error(error.response?.data || 'Error al actualizar la contraseña');
+      toast.error(error.response?.data || t('password_update_error', 'Error al actualizar la contraseña'));
     }
   };
 
@@ -74,14 +78,17 @@ export function UserProfile() {
     <div className="min-h-screen bg-[#0B0B0C] relative">
       <header className="h-[84px] bg-[#151518] border-b border-black/10 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full">
         <div className="max-w-4xl w-full mx-auto px-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')} className="hover:bg-white/5 text-[#EDEDED]">
-              <ArrowLeft className="size-4" />
-            </Button>
-            <div>
-              <h1 className="text-[24px] font-normal font-poppins text-[#EDEDED] leading-8">Mi Perfil</h1>
-              <p className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">Gestiona tu información personal</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" onClick={() => navigate('/dashboard')} className="hover:bg-white/5 text-[#EDEDED]">
+                <ArrowLeft className="size-4" />
+                </Button>
+                <div>
+                <h1 className="text-[24px] font-normal font-poppins text-[#EDEDED] leading-8">{t('my_profile', 'Mi Perfil')}</h1>
+                <p className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">{t('personal_info', 'Gestiona tu información personal')}</p>
+                </div>
             </div>
+            <LanguageSwitcher />
           </div>
         </div>
       </header>
@@ -92,15 +99,15 @@ export function UserProfile() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <User className="size-5 text-[#A3E635]" />
-              <CardTitle className="text-[#EDEDED]">Información Personal</CardTitle>
+              <CardTitle className="text-[#EDEDED]">{t('personal_info', 'Información Personal')}</CardTitle>
             </div>
             <CardDescription className="text-[#EDEDED]/60">
-              Actualiza tu información de perfil
+              {t('update_project_info', 'Actualiza tu información de perfil')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[#EDEDED]">Nombre completo</Label>
+              <Label htmlFor="name" className="text-[#EDEDED]">{t('name', 'Nombre completo')}</Label>
               <Input
                 id="name"
                 value={profileData.name}
@@ -111,7 +118,7 @@ export function UserProfile() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#EDEDED]">Email</Label>
+              <Label htmlFor="email" className="text-[#EDEDED]">{t('email', 'Email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -119,9 +126,6 @@ export function UserProfile() {
                 disabled
                 className="bg-[#0B0B0C]/50 border-[#2B2B31] text-[#EDEDED]/50"
               />
-              <p className="text-xs text-[#EDEDED]/40">
-                El email no se puede cambiar
-              </p>
             </div>
             
             <div className="space-y-2">
@@ -149,7 +153,7 @@ export function UserProfile() {
             
             <Button onClick={handleUpdateProfile} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
               <Save className="size-4 mr-2" />
-              Guardar cambios
+              {t('save_changes', 'Guardar cambios')}
             </Button>
           </CardContent>
         </Card>
@@ -161,54 +165,59 @@ export function UserProfile() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Lock className="size-5 text-[#A3E635]" />
-              <CardTitle className="text-[#EDEDED]">Cambiar Contraseña</CardTitle>
+              <CardTitle className="text-[#EDEDED]">{t('change_password', 'Cambiar Contraseña')}</CardTitle>
             </div>
             <CardDescription className="text-[#EDEDED]/60">
-              Actualiza tu contraseña de acceso
+              {t('update_password', 'Actualiza tu contraseña de acceso')}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword" className="text-[#EDEDED]">Contraseña actual</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="newPassword" className="text-[#EDEDED]">Nueva contraseña</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-[#EDEDED]">Confirmar nueva contraseña</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-              />
-            </div>
-            
-            <Button 
-              onClick={handleChangePassword} 
-              variant="outline" 
-              className="w-full bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#1f1f22]"
-              disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-            >
-              Cambiar contraseña
-            </Button>
+          <CardContent>
+            <form onSubmit={handleChangePassword} className="space-y-4">
+                <div className="space-y-2">
+                <Label htmlFor="currentPassword" className="text-[#EDEDED]">{t('current_password', 'Contraseña actual')}</Label>
+                <Input
+                    id="currentPassword"
+                    type="password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    autoComplete="current-password"
+                />
+                </div>
+                
+                <div className="space-y-2">
+                <Label htmlFor="newPassword" className="text-[#EDEDED]">{t('new_password', 'Nueva contraseña')}</Label>
+                <Input
+                    id="newPassword"
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    autoComplete="new-password"
+                />
+                </div>
+                
+                <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-[#EDEDED]">{t('new_password', 'Confirmar nueva contraseña')}</Label>
+                <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    autoComplete="new-password"
+                />
+                </div>
+                
+                <Button 
+                type="submit"
+                variant="outline" 
+                className="w-full bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#1f1f22]"
+                disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                >
+                {t('change_password', 'Cambiar contraseña')}
+                </Button>
+            </form>
           </CardContent>
         </Card>
 
@@ -217,7 +226,7 @@ export function UserProfile() {
         {/* Zona de peligro */}
         <Card className="bg-[#151518] border-red-900/50">
           <CardHeader>
-            <CardTitle className="text-red-500">Zona de peligro</CardTitle>
+            <CardTitle className="text-red-500">{t('danger_zone', 'Zona de peligro')}</CardTitle>
             <CardDescription className="text-[#EDEDED]/60">
               Acciones irreversibles
             </CardDescription>

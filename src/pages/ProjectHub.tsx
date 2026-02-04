@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { uploadFile } from '@/services/api';
 
 import { usePresence } from '@/hooks/usePresence';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 
 export function ProjectHub() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -32,6 +34,8 @@ export function ProjectHub() {
     description: currentProject?.description || '',
     imageUrl: currentProject?.imageUrl || '',
   });
+
+  const { t } = useTranslation();
 
   // Sync edit data when dialog opens
   React.useEffect(() => {
@@ -49,10 +53,10 @@ export function ProjectHub() {
     try {
       await updateProject(currentProject.id, editData);
       setEditDialogOpen(false);
-      toast.success('Proyecto actualizado');
+      toast.success(t('project_updated', 'Proyecto actualizado'));
     } catch (error) {
       console.error('Error updating project:', error);
-      toast.error('Error al actualizar el proyecto');
+      toast.error(t('project_update_error', 'Error al actualizar el proyecto'));
     }
   };
 
@@ -60,11 +64,11 @@ export function ProjectHub() {
     if (!currentProject || !window.confirm('¿Estás seguro de que quieres abandonar este proyecto?')) return;
     try {
         await leaveProject(currentProject.id);
-        toast.success('Has abandonado el proyecto');
+        toast.success(t('left_project', 'Has abandonado el proyecto'));
         navigate('/dashboard');
     } catch (error) {
         console.error('Error leaving project:', error);
-        toast.error('Error al abandonar el proyecto');
+        toast.error(t('leave_error', 'Error al abandonar el proyecto'));
     }
   };
 
@@ -75,7 +79,7 @@ export function ProjectHub() {
           navigate('/dashboard');
       } catch (error) {
           console.error("Error deleting project:", error);
-          toast.error("No se pudo eliminar el proyecto");
+          toast.error(t('delete_error', "Error al eliminar proyecto"));
       }
   };
 
@@ -84,18 +88,18 @@ export function ProjectHub() {
       if (!file) return;
       
       try {
-          toast.loading("Subiendo imagen...");
+          toast.loading(t('uploading', "Subiendo imagen..."));
           const filename = await uploadFile(file, 'image');
           const baseUrl = import.meta.env.VITE_API_URL || '';
           const fullUrl = `${baseUrl}/api/uploads/images/${filename}`;
           
           setEditData(prev => ({ ...prev, imageUrl: fullUrl }));
           toast.dismiss();
-          toast.success("Imagen subida correctamente");
+          toast.success(t('image_uploaded', "Imagen subida correctamente"));
       } catch (error) {
           console.error("Upload error:", error);
           toast.dismiss();
-          toast.error("Error al subir la imagen");
+          toast.error(t('upload_error', "Error al subir la imagen"));
       }
   };
 
@@ -103,9 +107,9 @@ export function ProjectHub() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C]">
         <div className="text-center">
-          <p className="text-[#EDEDED]">Cargando proyecto...</p>
+          <p className="text-[#EDEDED]">{t('loading_project', 'Cargando proyecto...')}</p>
           <Button onClick={() => navigate('/dashboard')} className="mt-4 bg-[#A3E635] text-[#151518]">
-            Volver al dashboard
+            {t('back_to_dashboard', 'Volver al dashboard')}
           </Button>
         </div>
       </div>
@@ -138,32 +142,34 @@ export function ProjectHub() {
                    <div className="flex items-center gap-1 mt-1">
                        <span className="w-[7px] h-[7px] bg-[#A3E635] rounded-full inline-block"></span>
                        <span className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">
-                           {onlineCount} Online
+                           {onlineCount} {t('online', 'Online')}
                        </span>
                    </div>
                </div>
             </div>
 
             <div className="flex gap-2 items-center ml-auto">
+             <LanguageSwitcher />
+
             {currentProject.ownerId === user?.id ? (
               <>
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-[#151518] border border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] font-sans text-[14px] font-normal flex h-[36px] w-9 sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
                     <PenLine className="size-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Editar proyecto</span>
+                    <span className="hidden sm:inline">{t('edit_project', 'Editar proyecto')}</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
                   <DialogHeader>
-                    <DialogTitle className="text-[#EDEDED]">Configuración del Proyecto</DialogTitle>
+                    <DialogTitle className="text-[#EDEDED]">{t('project_settings', 'Configuración del Proyecto')}</DialogTitle>
                     <DialogDescription className="text-[#EDEDED]/60">
-                      Actualiza la información del proyecto o gestionalo.
+                      {t('update_project_info', 'Actualiza la información del proyecto o gestionalo.')}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-name" className="text-[#EDEDED]">Nombre del proyecto</Label>
+                      <Label htmlFor="edit-name" className="text-[#EDEDED]">{t('project_name', 'Nombre del proyecto')}</Label>
                       <Input
                         id="edit-name"
                         value={editData.name}
@@ -172,7 +178,7 @@ export function ProjectHub() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-description" className="text-[#EDEDED]">Descripción</Label>
+                      <Label htmlFor="edit-description" className="text-[#EDEDED]">{t('description', 'Descripción')}</Label>
                       <Textarea
                         id="edit-description"
                         value={editData.description}
@@ -181,7 +187,7 @@ export function ProjectHub() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-image" className="text-[#EDEDED]">Imagen del Proyecto</Label>
+                      <Label htmlFor="edit-image" className="text-[#EDEDED]">{t('image', 'Imagen del Proyecto')}</Label>
                       <div className="flex gap-2">
                          <Input
                           id="edit-image"
@@ -192,7 +198,7 @@ export function ProjectHub() {
                         />
                       </div>
                        <div className="mt-2">
-                           <Label htmlFor="upload-image" className="text-xs text-[#EDEDED]/60 mb-1 block">O subir imagen:</Label>
+                           <Label htmlFor="upload-image" className="text-xs text-[#EDEDED]/60 mb-1 block">{t('or_upload_image', 'O subir imagen:')}</Label>
                            <Input
                               id="upload-image"
                               type="file"
@@ -203,35 +209,32 @@ export function ProjectHub() {
                        </div>
                     </div>
                     <Button onClick={handleUpdateProject} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                      Guardar cambios
+                      {t('save_changes', 'Guardar cambios')}
                     </Button>
                     
                     <div className="border-t border-[#2B2B31] pt-4 mt-4">
-                        <Label className="text-red-500 mb-2 block">Zona de Peligro</Label>
+                        <Label className="text-red-500 mb-2 block">{t('danger_zone', 'Zona de Peligro')}</Label>
                         <Button variant="destructive" className="w-full bg-red-900/20 text-red-500 hover:bg-red-900/40 border border-red-900/50" onClick={async () => {
-                            if (window.confirm("¿ESTÁS SEGURO? Esta acción borrará el proyecto y todos sus datos permanentemente.")) {
+                            if (window.confirm(t('delete_confirmation', "Are you sure?"))) {
                                 try {
                                     await handleDeleteProject(); 
                                 } catch (e) {
-                                    toast.error("Error al eliminar proyecto");
+                                    toast.error(t('delete_error', "Error al eliminar proyecto"));
                                 }
                             }
                         }}>
-                             Eliminar Proyecto
+                             {t('delete_project', 'Eliminar Proyecto')}
                         </Button>
                     </div>
                   </div>
                 </DialogContent>
               </Dialog>
               
-
-
-
               </>
             ) : (
                 <Button variant="destructive" onClick={handleLeaveProject} className="bg-red-900/20 text-red-500 hover:bg-red-900/40">
                     <LogOut className="size-4 mr-2" />
-                    <span className="hidden sm:inline">Abandonar</span>
+                    <span className="hidden sm:inline">{t('leave_project', 'Abandonar')}</span>
                 </Button>
             )}
             </div>
@@ -246,21 +249,21 @@ export function ProjectHub() {
                 className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
             >
               <Music className="size-4 mr-2" />
-              Canciones
+              {t('songs', 'Canciones')}
             </TabsTrigger>
             <TabsTrigger 
                 value="chat"
                 className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
             >
               <MessageSquare className="size-4 mr-2" />
-              Chat
+              {t('chat', 'Chat')}
             </TabsTrigger>
             <TabsTrigger 
                 value="members"
                 className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
             >
               <Users className="size-4 mr-2" />
-              Miembros
+              {t('members', 'Miembros')}
             </TabsTrigger>
           </TabsList>
 

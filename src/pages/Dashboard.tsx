@@ -14,6 +14,8 @@ import { uploadFile } from '@/services/api';
 import { toast } from 'sonner';
 import CookiesImage from '@/assets/cookies.svg';
 import EmptyProjectsImage from '@/assets/empty-projects.svg';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 
 export function Dashboard() {
   const { user, logout } = useAuth();
@@ -25,6 +27,7 @@ export function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showCookies, setShowCookies] = useState(() => !localStorage.getItem('cookieConsent'));
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Check if this is the first time the user logs in
@@ -48,7 +51,7 @@ export function Dashboard() {
       setProjectDescription('');
       setProjectImage('');
       setOpen(false);
-      toast.success('Proyecto creado correctamente');
+      toast.success(t('project_created', 'Proyecto creado correctamente'));
     }
   };
 
@@ -57,16 +60,16 @@ export function Dashboard() {
       if (!file) return;
       
       try {
-          toast.loading("Subiendo imagen...");
+          toast.loading(t('uploading', "Subiendo imagen..."));
           const filename = await uploadFile(file, 'image');
           const fullUrl = `/api/uploads/images/${filename}`;
           setProjectImage(fullUrl);
           toast.dismiss();
-          toast.success("Imagen subida");
+          toast.success(t('image_uploaded', "Imagen subida"));
       } catch (error) {
           console.error("Upload error:", error);
           toast.dismiss();
-          toast.error("Error al subir imagen");
+          toast.error(t('upload_error', "Error al subir imagen"));
       }
   };
 
@@ -87,47 +90,51 @@ export function Dashboard() {
             </div>
             <div>
               <h1 className="text-[24px] font-normal font-poppins text-[#EDEDED] leading-8">Bandanize</h1>
-              <p className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">Bienvenido, {user?.name}</p>
+              <p className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">{t('welcome')}, {user?.name}</p>
             </div>
           </div>
 
-          {/* User Button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="w-9 sm:w-[148px] h-[36px] bg-[#151518] border-[#2B2B31] rounded-[8px] text-[#EDEDED] text-[14px] font-normal font-sans hover:bg-[#1f1f22] hover:text-white px-0 sm:px-4"
-              >
-                <User className="size-4 sm:mr-2" />
-                <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
-                {(invitations?.length || 0) > 0 && (
-                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
-                    {invitations.length}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
-              <DropdownMenuItem onClick={() => navigate('/profile')} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
-                <Settings className="size-4 mr-2" />
-                Mi Perfil
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/invitations')} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
-                <Mail className="size-4 mr-2" />
-                Invitaciones
-                {(invitations?.length || 0) > 0 && (
-                  <span className="ml-auto bg-red-500/20 text-red-400 text-xs rounded-full px-2 py-0.5">
-                    {invitations.length}
-                  </span>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-[#2B2B31]" />
-              <DropdownMenuItem onClick={logout} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
-                <LogOut className="size-4 mr-2" />
-                Cerrar sesión
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-4">
+             <LanguageSwitcher />
+
+             {/* User Button */}
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-9 sm:w-[148px] h-[36px] bg-[#151518] border-[#2B2B31] rounded-[8px] text-[#EDEDED] text-[14px] font-normal font-sans hover:bg-[#1f1f22] hover:text-white px-0 sm:px-4"
+                  >
+                    <User className="size-4 sm:mr-2" />
+                    <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
+                    {(invitations?.length || 0) > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
+                        {invitations.length}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                  <DropdownMenuItem onClick={() => navigate('/profile')} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
+                    <Settings className="size-4 mr-2" />
+                    {t('my_profile')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/invitations')} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
+                    <Mail className="size-4 mr-2" />
+                    {t('invitations')}
+                    {(invitations?.length || 0) > 0 && (
+                      <span className="ml-auto bg-red-500/20 text-red-400 text-xs rounded-full px-2 py-0.5">
+                        {invitations.length}
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-[#2B2B31]" />
+                  <DropdownMenuItem onClick={logout} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
+                    <LogOut className="size-4 mr-2" />
+                    {t('logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+             </DropdownMenu>
+          </div>
         </div>
       </header>
 
@@ -136,25 +143,25 @@ export function Dashboard() {
         
         {/* Projects Header Row */}
         <div className="flex justify-between items-center mb-6 max-w-[1216px] w-full mx-auto h-[36px]">
-          <h2 className="text-[20px] font-bold text-[#EDEDED] font-sans leading-7">Tus proyectos</h2>
+          <h2 className="text-[20px] font-bold text-[#EDEDED] font-sans leading-7">{t('your_projects')}</h2>
           
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="w-9 sm:w-[148px] h-[36px] bg-[#A3E635] hover:bg-[#92d030] text-[#151518] rounded-[8px] font-sans text-[14px] font-normal px-0 sm:px-4">
                 <Plus className="size-4 sm:mr-2 stroke-[1.33px] text-[#151518]" />
-                <span className="hidden sm:inline">Nuevo Proyecto</span>
+                <span className="hidden sm:inline">{t('new_project')}</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
               <DialogHeader>
-                <DialogTitle className="text-[#EDEDED]">Crear nuevo proyecto</DialogTitle>
+                <DialogTitle className="text-[#EDEDED]">{t('create_new_project_title')}</DialogTitle>
                 <DialogDescription className="text-[#EDEDED]/60">
-                  Crea un proyecto en solitario o una banda musical
+                   {t('create_new_project_desc')}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="project-name" className="text-[#EDEDED]">Nombre del proyecto</Label>
+                  <Label htmlFor="project-name" className="text-[#EDEDED]">{t('project_name')}</Label>
                   <Input
                     id="project-name"
                     placeholder="Ej: The Sodawaves"
@@ -164,7 +171,7 @@ export function Dashboard() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="project-description" className="text-[#EDEDED]">Descripción</Label>
+                  <Label htmlFor="project-description" className="text-[#EDEDED]">{t('description')}</Label>
                   <Textarea
                     id="project-description"
                     placeholder="Ej: Banda de alternative rock"
@@ -174,7 +181,7 @@ export function Dashboard() {
                   />
                 </div>
                  <div className="space-y-2">
-                  <Label htmlFor="project-image" className="text-[#EDEDED]">Imagen</Label>
+                  <Label htmlFor="project-image" className="text-[#EDEDED]">{t('image')}</Label>
                   <div className="flex gap-2">
                        <Input
                         id="project-image"
@@ -185,7 +192,7 @@ export function Dashboard() {
                       />
                   </div>
                    <div className="mt-2 text-[#EDEDED]/60">
-                       <Label htmlFor="create-upload-image" className="text-xs mb-1 block">O subir imagen:</Label>
+                       <Label htmlFor="create-upload-image" className="text-xs mb-1 block">{t('or_upload_image')}</Label>
                        <Input
                           id="create-upload-image"
                           type="file"
@@ -196,7 +203,7 @@ export function Dashboard() {
                    </div>
                 </div>
                 <Button onClick={handleCreateProject} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                  Crear proyecto
+                  {t('create_project')}
                 </Button>
               </div>
             </DialogContent>
@@ -210,15 +217,15 @@ export function Dashboard() {
                  <img src={EmptyProjectsImage} alt="EmptyProjects" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col items-center gap-1">
-                <h3 className="text-[20px] font-bold text-[#EDEDED] font-sans leading-6 text-center">No tienes proyectos aún</h3>
-                <p className="text-[14px] font-normal text-[#EDEDED]/60 font-sans leading-5 text-center">Crea tu primer proyecto musical</p>
+                <h3 className="text-[20px] font-bold text-[#EDEDED] font-sans leading-6 text-center">{t('no_projects_yet')}</h3>
+                <p className="text-[14px] font-normal text-[#EDEDED]/60 font-sans leading-5 text-center">{t('create_first_project')}</p>
             </div>
             <Button 
                 onClick={() => setOpen(true)}
                 className="w-auto sm:w-[148px] h-[36px] bg-[#0B0B0C] border border-[#2B2B31] rounded-[8px] text-[#EDEDED] font-sans text-[14px] font-normal hover:bg-[#1f1f22] px-4"
             >
                  <Plus className="size-4 mr-2 stroke-[1.33px] text-[#EDEDED]" />
-                 Nuevo Proyecto
+                 {t('new_project')}
             </Button>
           </div>
         ) : (
@@ -279,9 +286,9 @@ export function Dashboard() {
              
              <div className="p-6 flex flex-col gap-4">
                  <div className="flex flex-col gap-2">
-                     <h4 className="text-[20px] font-medium font-poppins text-[#EDEDED] leading-6">Cookies & Privacy</h4>
+                     <h4 className="text-[20px] font-medium font-poppins text-[#EDEDED] leading-6">{t('cookies_privacy')}</h4>
                      <p className="text-[12px] font-normal font-poppins text-[#EDEDED] leading-4">
-                         We use cookies to personalise your experience. By continuing to visit this website you agree to our use of cookies. Learn more
+                         {t('cookies_text')}
                      </p>
                  </div>
                  
@@ -293,7 +300,7 @@ export function Dashboard() {
                         }}
                         className="flex-1 h-[36px] bg-[#151518] border border-[#2B2B31] rounded-[8px] text-[#EDEDED] font-poppins text-[14px] font-normal hover:bg-[#1f1f22]"
                      >
-                         Decline
+                         {t('decline')}
                      </Button>
                      <Button 
                         onClick={() => {
@@ -302,7 +309,7 @@ export function Dashboard() {
                         }}
                         className="flex-1 h-[36px] bg-[#A3E635] hover:bg-[#92d030] rounded-[8px] text-[#151518] font-poppins text-[14px] font-normal"
                      >
-                         Accept
+                         {t('accept')}
                      </Button>
                  </div>
              </div>

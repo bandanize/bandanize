@@ -15,6 +15,7 @@ import { Separator } from '@/app/components/ui/separator';
 import { Progress } from '@/app/components/ui/progress';
 import TabImage from '@/assets/tab.svg';
 import SpeakerImage from '@/assets/speaker.svg';
+import { useTranslation } from 'react-i18next';
 
 const INSTRUMENTS = [
   { value: 'guitar', label: 'Guitarra', icon: Guitar },
@@ -28,6 +29,7 @@ const INSTRUMENTS = [
 // Toolbar component for tablature editing
 // Controls component for tablature editing
 function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
+  const { t } = useTranslation();
   const guitarStrings = 'e|---\nB|---\nG|---\nD|---\nA|---\nE|---\n';
   const bassStrings = 'G|---\nD|---\nA|---\nE|---\n';
 
@@ -46,7 +48,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
     <div className="space-y-6 mt-4">
       {/* String templates */}
       <div>
-        <Label className="text-sm font-medium mb-3 block text-[#EDEDED]">Plantillas de cuerdas</Label>
+        <Label className="text-sm font-medium mb-3 block text-[#EDEDED]">{t('string_templates', 'Plantillas de cuerdas')}</Label>
         <div className="flex gap-2 flex-wrap">
           <Button
             type="button"
@@ -56,7 +58,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
             className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
           >
             <Guitar className="size-4 mr-2" />
-            Guitarra (6 cuerdas)
+            {t('guitar_6', 'Guitarra (6 cuerdas)')}
           </Button>
           <Button
             type="button"
@@ -66,7 +68,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
             className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
           >
             <Music2 className="size-4 mr-2" />
-            Bajo (4 cuerdas)
+            {t('bass_4', 'Bajo (4 cuerdas)')}
           </Button>
           <Button
             type="button"
@@ -75,14 +77,14 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
             onClick={() => onInsert('---')}
             className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
           >
-            Línea simple
+            {t('simple_line', 'Línea simple')}
           </Button>
         </div>
       </div>
 
       {/* Symbols */}
       <div>
-        <Label className="text-sm font-medium mb-3 block text-[#EDEDED]">Símbolos y técnicas</Label>
+        <Label className="text-sm font-medium mb-3 block text-[#EDEDED]">{t('symbols_techniques', 'Símbolos y técnicas')}</Label>
         <div className="flex gap-2 flex-wrap">
           {symbols.map((symbol) => (
             <Button
@@ -110,6 +112,7 @@ interface SongDetailProps {
 }
 
 export function SongDetail({ listId, song, onBack }: SongDetailProps) {
+  const { t } = useTranslation();
   const { 
     currentProject, 
     updateSong, 
@@ -201,9 +204,9 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     try {
       await updateTablature(currentProject.id, listId, song.id, selectedTabId, { content: editingContent });
       setHasTabChanges(false);
-      toast.success('Tablatura actualizada');
+      toast.success(t('tab_updated', 'Tablatura actualizada'));
     } catch (error) {
-      toast.error('Error al guardar tablatura');
+      toast.error(t('tab_update_error', 'Error al guardar tablatura'));
     } finally {
       setIsSaving(false);
     }
@@ -227,9 +230,9 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     try {
       await updateSong(currentProject.id, listId, song.id, editSongData);
       setHasSongChanges(false);
-      toast.success('Canción actualizada');
+      toast.success(t('song_updated', 'Canción actualizada'));
     } catch (error) {
-      toast.error('Error al guardar canción');
+      toast.error(t('song_update_error', 'Error al guardar canción'));
     } finally {
       setIsSavingSong(false);
     }
@@ -271,13 +274,13 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     });
     setTabData({ instrument: 'guitar', name: '', tuning: '' });
     setOpenTabDialog(false);
-    toast.success('Tablatura creada');
+    toast.success(t('tab_created', 'Tablatura creada'));
   };
 
   const handleDeleteSong = () => {
     if (!currentProject) return;
     deleteSong(currentProject.id, listId, song.id);
-    toast.success('Canción eliminada');
+    toast.success(t('song_deleted', 'Canción eliminada'));
     onBack();
   };
 
@@ -287,7 +290,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     if (selectedTabId === tabId) {
       setSelectedTabId(null);
     }
-    toast.success('Tablatura eliminada');
+    toast.success(t('tab_deleted', 'Tablatura eliminada'));
   };
 
   const handleUpdateTabContent = (tabId: string, content: string) => {
@@ -327,9 +330,9 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
               tuning: editTabDetails.tuning
           });
           setEditTabDetailsDialog(false);
-          toast.success('Información actualizada');
+          toast.success(t('info_updated', 'Información actualizada'));
       } catch (error) {
-          toast.error('Error al actualizar');
+          toast.error(t('update_error', 'Error al actualizar'));
       }
   };
 
@@ -377,8 +380,8 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
 
       setIsUploading(true);
       setUploadProgress(0);
-      setUploadStatus('Iniciando subida...');
-      const toastId = toast.loading('Calculando chunks...');
+      setUploadStatus(t('starting_upload', 'Iniciando subida...'));
+      const toastId = toast.loading(t('calculating_chunks', 'Calculando chunks...'));
 
       try {
           let endpointCategory = 'file';
@@ -391,7 +394,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
           const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
           
           if (file.size === 0) {
-            toast.error("El archivo está vacío");
+            toast.error(t('empty_file', "El archivo está vacío"));
             setUploadTarget(null);
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -414,8 +417,13 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
               formData.append('folder', endpointCategory); // Backend expects singular or mapped 'files'
 
               const currentProgress = Math.round((chunkIndex / totalChunks) * 100);
-              setUploadStatus(`Subiendo parte ${chunkIndex + 1} de ${totalChunks} (${currentProgress}%)...`);
-              toast.loading(`Subiendo parte ${chunkIndex + 1} de ${totalChunks} (${currentProgress}%)`, { id: toastId });
+              const statusMsg = t('uploading_chunk', `Subiendo parte ${chunkIndex + 1} de ${totalChunks} (${currentProgress}%)...`)
+                .replace('{current}', (chunkIndex + 1).toString())
+                .replace('{total}', totalChunks.toString())
+                .replace('{percent}', currentProgress.toString());
+
+              setUploadStatus(statusMsg);
+              toast.loading(statusMsg, { id: toastId });
               
               const response = await uploadFileWithRetry('/upload/chunk', formData);
               
@@ -445,17 +453,17 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
               await addTablatureFile(currentProject.id, listId, song.id, uploadTarget.tabId, mediaFile);
           }
           
-          toast.success('Archivo subido correctamente', { id: toastId });
+          toast.success(t('file_uploaded_success', 'Archivo subido correctamente'), { id: toastId });
 
       } catch (error: any) {
           console.error("Upload error", error);
-          let errorMessage = 'Error al subir el archivo';
+          let errorMessage = t('upload_error_generic', 'Error al subir el archivo');
           
           if (error.response) {
              if (error.response.status === 413) {
-                  errorMessage = 'Chunk demasiado grande (Error inesperado)';
+                  errorMessage = t('chunk_too_large', 'Chunk demasiado grande (Error inesperado)');
               } else if (error.response.status === 524) {
-                  errorMessage = 'Timeout en subida de chunk.';
+                  errorMessage = t('upload_timeout', 'Timeout en subida de chunk.');
               }
           }
 
@@ -504,7 +512,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
               onClick={handleDeleteSong}
             >
               <Trash2 className="size-4 md:mr-2" />
-              <span className="hidden md:inline">Eliminar canción</span>
+              <span className="hidden md:inline">{t('delete_song', 'Eliminar canción')}</span>
             </Button>
           </div>
         </CardHeader>
@@ -518,14 +526,14 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] px-4 font-sans font-normal text-[14px]"
           >
             <FileText className="size-4 mr-2" />
-            Info
+            {t('info', 'Info')}
           </TabsTrigger>
           <TabsTrigger 
             value="media"
             className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] px-4 font-sans font-normal text-[14px]"
           >
             <Upload className="size-4 mr-2" />
-            Media
+            {t('media', 'Media')}
           </TabsTrigger>
         </TabsList>
 
@@ -533,21 +541,21 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
           <Card className="bg-[#151518] border-[#2B2B31]">
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle className="text-[#EDEDED]">Información de la canción</CardTitle>
+                <CardTitle className="text-[#EDEDED]">{t('song_info', 'Información de la canción')}</CardTitle>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]">
                       <PenLine className="size-4 md:mr-2" />
-                      <span className="hidden md:inline">Editar información</span>
+                      <span className="hidden md:inline">{t('edit_info', 'Editar información')}</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
                     <DialogHeader>
-                      <DialogTitle>Editar información</DialogTitle>
+                      <DialogTitle>{t('edit_info', 'Editar información')}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">Nombre</Label>
+                        <Label className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
                         <Input
                           value={editSongData.name}
                           onChange={(e) => setEditSongData({ ...editSongData, name: e.target.value })}
@@ -555,7 +563,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">Banda</Label>
+                        <Label className="text-[#EDEDED]">{t('band', 'Banda')}</Label>
                         <Input
                           value={editSongData.originalBand}
                           placeholder="Ej: The Beatles"
@@ -564,7 +572,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                          <Label className="text-[#EDEDED]">BPM</Label>
+                          <Label className="text-[#EDEDED]">{t('bpm', 'BPM')}</Label>
                           <Input
                             type="number"
                             placeholder="Opcional"
@@ -577,7 +585,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                           />
                       </div>
                       <div className="space-y-2">
-                          <Label className="text-[#EDEDED]">Tonalidad</Label>
+                          <Label className="text-[#EDEDED]">{t('key', 'Tonalidad')}</Label>
                           <Input
                             value={editSongData.key}
                             onChange={(e) => setEditSongData({ ...editSongData, key: e.target.value })}
@@ -591,7 +599,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                            disabled={isSavingSong}
                            className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]"
                         >
-                            {isSavingSong ? 'Guardando...' : 'Guardar cambios'}
+                            {isSavingSong ? t('saving', 'Guardando...') : t('save_changes', 'Guardar cambios')}
                         </Button>
                     </div>
                   </DialogContent>
@@ -601,22 +609,22 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                 <div>
-                   <Label className="text-[#EDEDED]/60 text-sm">Nombre</Label>
+                   <Label className="text-[#EDEDED]/60 text-sm">{t('name', 'Nombre')}</Label>
                    <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.name}</p>
                 </div>
                 <div>
-                   <Label className="text-[#EDEDED]/60 text-sm">Banda</Label>
+                   <Label className="text-[#EDEDED]/60 text-sm">{t('band', 'Banda')}</Label>
                    <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.originalBand || song.bandName || '-'}</p>
                 </div>
                 {song.bpm !== null && song.bpm !== undefined && song.bpm !== 0 && (
                   <div>
-                     <Label className="text-[#EDEDED]/60 text-sm">BPM</Label>
+                     <Label className="text-[#EDEDED]/60 text-sm">{t('bpm', 'BPM')}</Label>
                      <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.bpm}</p>
                   </div>
                 )}
                 {song.key && (
                   <div>
-                     <Label className="text-[#EDEDED]/60 text-sm">Tonalidad</Label>
+                     <Label className="text-[#EDEDED]/60 text-sm">{t('key', 'Tonalidad')}</Label>
                      <p className="text-[#EDEDED] text-lg font-medium mt-1">{song.key}</p>
                   </div>
                 )}
@@ -630,10 +638,10 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             <CardHeader>
               <div className="flex flex-col gap-4">
                   <div className="flex justify-between items-center">
-                    <CardTitle className="text-[#EDEDED]">Archivos y media</CardTitle>
+                    <CardTitle className="text-[#EDEDED]">{t('files_media', 'Archivos y media')}</CardTitle>
                     <Button size="sm" onClick={() => handleFileUpload('song')} disabled={isUploading} className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
                       <Plus className="size-4 md:mr-2" />
-                      <span className="hidden md:inline">Añadir archivo</span>
+                      <span className="hidden md:inline">{t('add_file', 'Añadir archivo')}</span>
                     </Button>
                   </div>
                   {isUploading && (
@@ -652,7 +660,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                 <>
                   <img src={SpeakerImage} alt="speaker" className="size-12 mx-auto text-[#EDEDED]/40 mb-2" />
                   <p className="text-sm text-[#EDEDED]/40 text-center py-4">
-                    No hay archivos adjuntos
+                    {t('no_files', 'No hay archivos adjuntos')}
                   </p>
                 </>
               ) : (
@@ -676,7 +684,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                               size="icon"
                               className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
                               onClick={() => setPreviewFile(file)}
-                              title="Reproducir/Ver"
+                              title={t('view_play', "Reproducir/Ver")}
                             >
                                 {file.type.startsWith('image') ? <Eye className="size-4" /> : <Play className="size-4" />}
                             </Button>
@@ -688,7 +696,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 hover:bg-[#2B2B31] rounded-md text-[#EDEDED]/60"
-                            title="Descargar"
+                            title={t('download', "Descargar")}
                           >
                               <Download className="size-4" />
                           </a>
@@ -697,7 +705,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                             size="icon"
                             className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
                             onClick={() => currentProject && deleteSongFile(currentProject.id, listId, song.id, file.url)}
-                            title="Eliminar"
+                            title={t('delete', "Eliminar")}
                           >
                               <Trash2 className="size-4" />
                           </Button>
@@ -715,24 +723,24 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
       <Card className="bg-[#151518] border-[#2B2B31]">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-[#EDEDED]">Tablaturas ({song.tablatures.length})</CardTitle>
+            <CardTitle className="text-[#EDEDED]">{t('tabs_title', 'Tablaturas')} ({song.tablatures.length})</CardTitle>
             <Dialog open={openTabDialog} onOpenChange={setOpenTabDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
                   <Plus className="size-4 md:mr-2" />
-                  <span className="hidden md:inline">Nueva tablatura</span>
+                  <span className="hidden md:inline">{t('new_tab', 'Nueva tablatura')}</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
                 <DialogHeader>
-                  <DialogTitle>Crear tablatura</DialogTitle>
+                  <DialogTitle>{t('create_tab', 'Crear tablatura')}</DialogTitle>
                   <DialogDescription className="text-[#EDEDED]/60">
-                    Añade una nueva tablatura para un instrumento
+                    {t('create_tab_desc', 'Añade una nueva tablatura para un instrumento')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="tab-instrument" className="text-[#EDEDED]">Instrumento</Label>
+                    <Label htmlFor="tab-instrument" className="text-[#EDEDED]">{t('instrument', 'Instrumento')}</Label>
                     <Select
                       value={tabData.instrument}
                       onValueChange={(value) => setTabData({ ...tabData, instrument: value })}
@@ -750,7 +758,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="tab-name" className="text-[#EDEDED]">Nombre</Label>
+                    <Label htmlFor="tab-name" className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
                     <Input
                       id="tab-name"
                       placeholder="Ej: Guitarra rítmica"
@@ -760,7 +768,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="tab-tuning" className="text-[#EDEDED]">Afinación</Label>
+                    <Label htmlFor="tab-tuning" className="text-[#EDEDED]">{t('tuning', 'Afinación')}</Label>
                     <Input
                       id="tab-tuning"
                       placeholder="Opcional (Ej: Standard EADGBE)"
@@ -770,7 +778,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                     />
                   </div>
                   <Button onClick={handleCreateTablature} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                    Crear tablatura
+                    {t('create_tab', 'Crear tablatura')}
                   </Button>
                 </div>
               </DialogContent>
@@ -781,8 +789,8 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
           {song.tablatures.length === 0 ? (
             <div className="text-center py-12">
               <img src={TabImage} alt="tab" className="size-12 mx-auto text-[#EDEDED]/40 mb-2" />
-              <p className="text-[#EDEDED]/60">No hay tablaturas aún</p>
-              <p className="text-sm text-[#EDEDED]/40">Crea tu primera tablatura</p>
+              <p className="text-[#EDEDED]/60">{t('no_tabs', 'No hay tablaturas aún')}</p>
+              <p className="text-sm text-[#EDEDED]/40">{t('create_first_tab', 'Crea tu primera tablatura')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -798,267 +806,257 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="size-10 bg-[#2B2B31] rounded-lg flex items-center justify-center text-[#EDEDED]">
-                                {getInstrumentIcon(tab.instrumentIcon)}
+                              <div className="p-2 bg-[#151518] rounded-md border border-[#2B2B31]">
+                                {getInstrumentIcon(tab.instrumentIcon || 'guitar')}
                               </div>
                               <div>
-                                <p className="font-medium text-[#EDEDED]">{tab.name}</p>
-                                <p className="text-sm text-[#EDEDED]/60">{tab.instrument}</p>
-                                {tab.tuning && <p className="text-xs text-[#EDEDED]/40">{tab.tuning}</p>}
+                                <h4 className="font-medium text-[#EDEDED]">{tab.name}</h4>
+                                <p className="text-xs text-[#EDEDED]/60">{tab.tuning || t('standard_tuning', 'Estandar')}</p>
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteTablature(tab.id);
-                              }}
-                              className="hover:bg-[#2B2B31] text-[#EDEDED]/60 hover:text-red-500"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
+                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-8 w-8 text-[#EDEDED]/40 hover:text-[#A3E635] hover:bg-[#A3E635]/10"
+                                  onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedTabId(tab.id);
+                                      setEditTabDetailsDialog(true);
+                                  }}
+                                >
+                                  <Edit className="size-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-8 w-8 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteTablature(tab.id);
+                                  }}
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                            </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Editor Tabs Panel */}
+              {selectedTab && (
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        {getInstrumentIcon(selectedTab.instrumentIcon || 'guitar')}
+                        <h3 className="font-medium text-[#EDEDED] text-lg">{selectedTab.name}</h3>
+                        <span className="text-sm text-[#EDEDED]/60 px-2 py-0.5 bg-[#2B2B31] rounded">
+                            {selectedTab.tuning || 'Standard'}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {hasTabChanges && (
+                            <Button 
+                                size="sm" 
+                                onClick={handleSaveTab} 
+                                disabled={isSaving}
+                                className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]"
+                            >
+                                <Save className="size-4 mr-2" />
+                                {isSaving ? t('saving', 'Guardando...') : t('save_changes', 'Guardar cambios')}
+                            </Button>
+                        )}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+                            onClick={() => {
+                                const text = `${selectedTab.name}\n${selectedTab.tuning || 'Standard'}\n\n${editingContent}`;
+                                const blob = new Blob([text], { type: 'text/plain' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${song.name}-${selectedTab.name}.txt`;
+                                a.click();
+                            }}
+                        >
+                            <Download className="size-4 mr-2" />
+                            {t('export', 'Exportar')}
+                        </Button>
+                    </div>
                   </div>
 
-                  <div className="lg:col-span-2">
-                    {selectedTab ? (
-                      <Card className="bg-[#151518] border-[#2B2B31]">
-                        <CardContent className="p-0">
-                          {/* Header */}
-                          <div className="p-6 border-b border-[#2B2B31] flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                 <CardTitle className="text-xl text-[#EDEDED]">{selectedTab.name}</CardTitle>
-                                 <div 
-                                    className="p-1 rounded-md hover:bg-[#2B2B31] cursor-pointer text-[#EDEDED]/40 hover:text-[#A3E635] transition-colors"
-                                    onClick={() => setEditTabDetailsDialog(true)}
-                                    role="button"
-                                 >
-                                    <Edit className="size-4" />
-                                 </div>
-                              </div>
-                              
-                              <div className="flex flex-col gap-1 mt-1">
-                                  <p className="text-sm text-[#EDEDED]/60 font-medium">
-                                    {selectedTab.instrument}
-                                  </p>
-                                  {selectedTab.tuning && (
-                                    <p className="text-xs text-[#EDEDED]/40">
-                                      {selectedTab.tuning}
-                                    </p>
-                                  )}
-                              </div>
-                            </div>
-                            <Button 
-                              onClick={handleSaveTab} 
-                              disabled={isSaving || !hasTabChanges}
-                              className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] disabled:opacity-50 w-9 sm:w-auto px-0 sm:px-4"
-                            >
-                              <Save className="size-4 sm:mr-2" />
-                              <span className="hidden sm:inline">Guardar</span>
-                            </Button>
+                  {/* Tab Editor */}
+                  <div className="relative">
+                      <div className="absolute top-2 right-2 flex gap-1 z-10">
+                          <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 bg-[#2B2B31]/50 text-[#EDEDED]/60 hover:text-[#EDEDED] hover:bg-[#2B2B31]"
+                              onClick={() => {
+                                  // Copy to clipboard
+                                  navigator.clipboard.writeText(editingContent);
+                                  toast.success("Copiado al portapapeles");
+                              }}
+                              title={t('copy', "Copiar")}
+                          >
+                              <FileText className="size-4" />
+                          </Button>
                       </div>
+                      <Textarea
+                        ref={textareaRef}
+                        value={editingContent}
+                        onChange={(e) => setEditingContent(e.target.value)}
+                        className="font-mono text-sm min-h-[400px] bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED] resize-none leading-relaxed p-4"
+                        placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
+                        spellCheck={false}
+                      />
+                  </div>
 
-                      <div className="p-6 space-y-8">
-                          {/* Editor */}
-                          <div className="space-y-3">
-                            <Label className="text-[#EDEDED] text-base font-medium">Tablatura</Label>
-                            <Textarea
-                              ref={textareaRef}
-                              value={editingContent}
-                              onChange={(e) => setEditingContent(e.target.value)}
-                              placeholder="Escribe tu tablatura aquí..."
-                              className="font-mono text-sm min-h-[400px] bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED] resize-none focus-visible:ring-1 focus-visible:ring-[#A3E635]"
-                            />
-                            
-                            {/* Controls below editor */}
-                            <TablatureControls onInsert={handleInsertText} />
-                          </div>
+                  <TablatureControls onInsert={handleInsertText} />
 
-                          {/* Media Section */}
-                          <div className="space-y-4 pt-4 border-t border-[#2B2B31]">
-                              <div className="flex justify-between items-center">
-                                  <Label className="text-[#EDEDED] text-base font-medium">Archivos y media</Label>
-                                  <Button 
-                                    size="sm" 
-                                    onClick={() => handleFileUpload('tab', selectedTab.id)} 
-                                    className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030] h-8 w-8 sm:w-auto px-0 sm:px-3"
-                                  >
-                                    <Plus className="size-4 sm:mr-2" />
-                                    <span className="hidden sm:inline">Añadir media</span>
-                                  </Button>
-                              </div>
-
-                              {selectedTab.files.length > 0 ? (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                  {selectedTab.files.map((file) => (
-                                    <div key={file.url} className="group relative aspect-square bg-[#0B0B0C] border border-[#2B2B31] rounded-xl overflow-hidden flex flex-col items-center justify-center p-4 gap-3 hover:border-[#EDEDED]/20 transition-colors">
-                                        <div className="size-10 rounded-full bg-[#151518] flex items-center justify-center">
-                                            {file.type.startsWith('audio') ? (
-                                              <FileAudio className="size-5 text-blue-500" />
-                                            ) : file.type.startsWith('image') ? (
-                                              <ImageIcon className="size-5 text-green-500" />
-                                            ) : (
-                                              <File className="size-5 text-[#EDEDED]/60" />
-                                            )}
-                                        </div>
-                                        <p className="text-xs text-[#EDEDED] text-center w-full truncate px-2 font-medium">
-                                            {file.name}
-                                        </p>
-                                        
-                                        {/* Hover Overlay */}
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                            {(file.type.startsWith('audio') || file.type.startsWith('video') || file.type.startsWith('image')) && (
-                                              <Button
-                                                variant="ghost" 
-                                                size="icon"
-                                                className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
-                                                onClick={() => setPreviewFile(file)}
-                                              >
-                                                  {file.type.startsWith('image') ? <Eye className="size-4" /> : <Play className="size-4" />}
-                                              </Button>
-                                            )}
-                                            <Button
+                  {/* Tab Files Section */}
+                  <div className="mt-8 pt-8 border-t border-[#2B2B31]">
+                      <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-medium text-[#EDEDED]">{t('attached_files', 'Archivos adjuntos')}</h4>
+                          <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleFileUpload('tab', selectedTab.id)}
+                              className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+                          >
+                              <Upload className="size-4 mr-2" />
+                              {t('add_file', 'Añadir archivo')}
+                          </Button>
+                      </div>
+                      
+                      {selectedTab.files && selectedTab.files.length > 0 ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {selectedTab.files.map((file) => (
+                                  <div key={file.url} className="flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg group">
+                                      {file.type.startsWith('audio') ? (
+                                          <FileAudio className="size-5 text-blue-500" />
+                                      ) : file.type.startsWith('image') ? (
+                                          <ImageIcon className="size-5 text-green-500" />
+                                      ) : (
+                                          <File className="size-5 text-[#EDEDED]/60" />
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                          <p className="text-sm font-medium text-[#EDEDED] truncate">{file.name}</p>
+                                      </div>
+                                      <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                           <a 
+                                              href={`${(import.meta.env.VITE_API_URL || '') + (file.url.startsWith('/uploads') ? '/api' + file.url : file.url)}`} 
+                                              download 
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="p-2 hover:bg-[#2B2B31] rounded-md text-[#EDEDED]/60"
+                                          >
+                                              <Download className="size-4" />
+                                          </a>
+                                          <Button
                                               variant="ghost" 
                                               size="icon"
-                                              className="h-8 w-8 text-white hover:bg-white/20 rounded-full"
+                                              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
                                               onClick={() => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, selectedTab.id, file.url)}
-                                            >
-                                                <Trash2 className="size-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="text-center py-8 border border-dashed border-[#2B2B31] rounded-xl">
-                                    <p className="text-sm text-[#EDEDED]/40">No hay archivos adjuntos</p>
-                                </div>
-                              )}
+                                          >
+                                              <Trash2 className="size-4" />
+                                          </Button>
+                                      </div>
+                                  </div>
+                              ))}
                           </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="bg-[#151518] border-[#2B2B31] h-full flex items-center justify-center">
-                    <CardContent className="text-center py-12">
-                      <Guitar className="size-16 mx-auto text-[#2B2B31] mb-4" />
-                      <p className="text-[#EDEDED] font-medium">Selecciona una tablatura</p>
-                      <p className="text-sm text-[#EDEDED]/40 mt-1">o crea una nueva para empezar a editar</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                      ) : (
+                          <p className="text-sm text-[#EDEDED]/40 italic">{t('no_files_tab', 'No hay archivos en esta tablatura')}</p>
+                      )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
       </Card>
+      
+      {/* Edit Tab Details Dialog */}
+       <Dialog open={editTabDetailsDialog} onOpenChange={setEditTabDetailsDialog}>
+           <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+               <DialogHeader>
+                   <DialogTitle>{t('edit_tab', 'Editar tablatura')}</DialogTitle>
+               </DialogHeader>
+               <div className="space-y-4 py-4">
+                   <div className="space-y-2">
+                         <Label htmlFor="edit-tab-name" className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
+                         <Input
+                           id="edit-tab-name"
+                           value={editTabDetails.name}
+                           onChange={(e) => setEditTabDetails({ ...editTabDetails, name: e.target.value })}
+                           className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                         />
+                   </div>
+                   <div className="space-y-2">
+                       <Label htmlFor="edit-tab-instrument" className="text-[#EDEDED]">{t('instrument', 'Instrumento')}</Label>
+                       <Select
+                           value={editTabDetails.instrument}
+                           onValueChange={(value) => setEditTabDetails({ ...editTabDetails, instrument: value })}
+                       >
+                           <SelectTrigger id="edit-tab-instrument" className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]">
+                               <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                               {INSTRUMENTS.map((inst) => (
+                                   <SelectItem key={inst.value} value={inst.value} className="focus:bg-[#2B2B31] focus:text-[#EDEDED]">
+                                       {inst.label}
+                                   </SelectItem>
+                               ))}
+                           </SelectContent>
+                       </Select>
+                   </div>
+                   <div className="space-y-2">
+                       <Label htmlFor="edit-tab-tuning" className="text-[#EDEDED]">{t('tuning', 'Afinación')}</Label>
+                       <Input
+                           id="edit-tab-tuning"
+                           value={editTabDetails.tuning}
+                           onChange={(e) => setEditTabDetails({ ...editTabDetails, tuning: e.target.value })}
+                           className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                       />
+                   </div>
+                   <Button onClick={handleUpdateTabDetails} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                       {t('save_changes', 'Guardar cambios')}
+                   </Button>
+               </div>
+           </DialogContent>
+       </Dialog>
 
-      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
-        <DialogContent className="max-w-4xl w-full p-0 bg-black/95 border-none text-white [&>button]:hidden">
-            <DialogHeader className="p-4 absolute top-0 left-0 w-full z-10 bg-gradient-to-b from-black/50 to-transparent">
-                <div className="flex justify-between items-center">
-                    <DialogTitle className="text-white drop-shadow-md">{previewFile?.name}</DialogTitle>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => setPreviewFile(null)}
-                        className="text-white hover:bg-white/20 rounded-full"
-                    >
-                        <X className="size-6" />
-                    </Button>
+      {/* Media Preview Dialog */}
+      {previewFile && (
+        <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>
+            <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] max-w-4xl w-full">
+                <DialogHeader>
+                    <DialogTitle>{previewFile.name}</DialogTitle>
+                </DialogHeader>
+                <div className="mt-4 flex justify-center">
+                    {previewFile.type.startsWith('image') ? (
+                        <img 
+                            src={(import.meta.env.VITE_API_URL || '') + (previewFile.url.startsWith('/uploads') ? '/api' + previewFile.url : previewFile.url)} 
+                            alt={previewFile.name} 
+                            className="max-h-[70vh] w-auto object-contain rounded-md"
+                        />
+                    ) : (
+                        <audio 
+                            controls 
+                            className="w-full"
+                            src={(import.meta.env.VITE_API_URL || '') + (previewFile.url.startsWith('/uploads') ? '/api' + previewFile.url : previewFile.url)} 
+                        >
+                            Your browser does not support the audio element.
+                        </audio>
+                    )}
                 </div>
-                <DialogDescription className="sr-only">
-                    Previsualización del archivo {previewFile?.name}
-                </DialogDescription>
-            </DialogHeader>
-            <div className="flex items-center justify-center min-h-[50vh] max-h-[85vh] overflow-hidden p-4">
-                {previewFile && (
-                    <>
-                        {previewFile.type.startsWith('image') && (
-                            <img 
-                                src={`${(import.meta.env.VITE_API_URL || '') + (previewFile.url.startsWith('/uploads') ? '/api' + previewFile.url : previewFile.url)}`} 
-                                alt={previewFile.name} 
-                                className="max-w-full max-h-[80vh] object-contain"
-                            />
-                        )}
-                        {previewFile.type.startsWith('audio') && (
-                            <div className="w-full max-w-md bg-white/10 p-6 rounded-xl backdrop-blur-sm">
-                                <FileAudio className="size-16 mx-auto mb-4 text-blue-400" />
-                                <audio 
-                                    controls 
-                                    className="w-full" 
-                                    src={`${(import.meta.env.VITE_API_URL || '') + (previewFile.url.startsWith('/uploads') ? '/api' + previewFile.url : previewFile.url)}`} 
-                                    autoPlay
-                                />
-                            </div>
-                        )}
-                        {previewFile.type.startsWith('video') && (
-                            <video 
-                                controls 
-                                className="max-w-full max-h-[80vh]" 
-                                src={`${(import.meta.env.VITE_API_URL || '') + (previewFile.url.startsWith('/uploads') ? '/api' + previewFile.url : previewFile.url)}`} 
-                                autoPlay
-                            />
-                        )}
-                    </>
-                )}
-            </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={editTabDetailsDialog} onOpenChange={setEditTabDetailsDialog}>
-          <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
-              <DialogHeader>
-                  <DialogTitle>Editar tablatura</DialogTitle>
-                  <DialogDescription className="text-[#EDEDED]/60">Modifica los detalles de la tablatura</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-tab-name" className="text-[#EDEDED]">Nombre</Label>
-                    <Input 
-                        id="edit-tab-name"
-                        value={editTabDetails.name}
-                        onChange={(e) => setEditTabDetails({ ...editTabDetails, name: e.target.value })}
-                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-tab-instrument" className="text-[#EDEDED]">Instrumento</Label>
-                    <Select
-                      value={editTabDetails.instrument}
-                      onValueChange={(value) => setEditTabDetails({ ...editTabDetails, instrument: value })}
-                    >
-                      <SelectTrigger id="edit-tab-instrument" className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
-                        {INSTRUMENTS.map((inst) => (
-                          <SelectItem key={inst.value} value={inst.value} className="focus:bg-[#2B2B31] focus:text-[#EDEDED]">
-                            {inst.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-tab-tuning" className="text-[#EDEDED]">Afinación</Label>
-                    <Input 
-                        id="edit-tab-tuning"
-                        value={editTabDetails.tuning}
-                        onChange={(e) => setEditTabDetails({ ...editTabDetails, tuning: e.target.value })}
-                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-                    />
-                  </div>
-                  <Button onClick={handleUpdateTabDetails} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                      Guardar cambios
-                  </Button>
-              </div>
-          </DialogContent>
-      </Dialog>
+            </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
