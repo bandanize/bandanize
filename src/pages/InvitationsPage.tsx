@@ -32,7 +32,7 @@ export function InvitationsPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0B0C] relative">
-      <header className="h-[84px] bg-[#151518] border-b border-black/10 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full">
+      <header className="min-h-[84px] pt-[env(safe-area-inset-top)] bg-[#151518] border-b border-black/10 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full">
         <div className="max-w-4xl w-full mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">

@@ -119,7 +119,7 @@ export function ProjectHub() {
   return (
     <div className="min-h-screen bg-[#0B0B0C] relative">
       {/* Header */}
-      <header className="h-auto min-h-[85px] py-4 bg-[#151518] border-b border-black/10 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full">
+      <header className="h-auto min-h-[85px] pt-[calc(1rem+env(safe-area-inset-top))] pb-4 bg-[#151518] border-b border-black/10 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full">
         <div className="max-w-[1216px] w-full mx-auto flex flex-wrap items-center gap-4 px-4 sm:px-6">
             <Button 
                 variant="ghost" 
