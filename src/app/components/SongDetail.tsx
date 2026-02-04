@@ -309,6 +309,16 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
       if (!currentProject || !selectedTabId || !editTabDetails.name.trim()) return;
       const instrument = INSTRUMENTS.find(i => i.value === editTabDetails.instrument);
       
+      console.log('Updating tab details:', {
+          id: selectedTabId,
+          payload: {
+              name: editTabDetails.name,
+              instrument: instrument?.label || 'Guitarra',
+              instrumentIcon: editTabDetails.instrument,
+              tuning: editTabDetails.tuning
+          }
+      });
+      
       try {
           await updateTablature(currentProject.id, listId, song.id, selectedTabId, {
               name: editTabDetails.name,
@@ -482,7 +492,9 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
               <div>
                 <CardTitle className="text-2xl text-[#EDEDED]">{song.name}</CardTitle>
                 <p className="text-[#EDEDED]/60 mt-1">
-                  {song.originalBand || song.bandName} • {song.bpm} BPM • {song.key}
+                  {song.originalBand || song.bandName}
+                  {song.bpm ? ` • ${song.bpm} BPM` : ''}
+                  {song.key ? ` • ${song.key}` : ''}
                 </p>
               </div>
             </div>
