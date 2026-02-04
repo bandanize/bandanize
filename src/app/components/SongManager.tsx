@@ -13,7 +13,7 @@ import SongListImage from '@/assets/song-list.svg';
 
 // React DnD
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { TouchBackend } from 'react-dnd-touch-backend';
 
 // --- Sortable Components ---
 
@@ -134,7 +134,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
         <Button
             variant="ghost"
             size="sm"
-            className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-[#EDEDED] hover:bg-[#2B2B31] transition-all"
+            className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-[#EDEDED] hover:bg-[#2B2B31] transition-all"
             onClick={(e) => {
                 e.stopPropagation();
                 onEdit(listId, song);
@@ -147,7 +147,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
       <Button
         variant="ghost"
         size="sm"
-        className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20 transition-all"
+        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20 transition-all"
         onClick={(e) => {
             e.stopPropagation();
             onDelete(listId, song.id);
@@ -428,8 +428,10 @@ export function SongManager() {
     );
   };
 
+
+
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true }}>
       <div className="space-y-6">
         <Card className="bg-[#151518] border-[#2B2B31]">
           <CardHeader>
@@ -438,8 +440,8 @@ export function SongManager() {
               <Dialog open={openListDialog} onOpenChange={setOpenListDialog}>
                 <DialogTrigger asChild>
                   <Button className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                    <Plus className="size-4 mr-2" />
-                    Nueva lista
+                    <Plus className="size-4 md:mr-2" />
+                    <span className="hidden md:inline">Nueva lista</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
@@ -526,8 +528,8 @@ export function SongManager() {
                             setOpenSongDialog(true);
                           }}
                         >
-                          <Plus className="size-4 mr-2" />
-                          Añadir canción
+                          <Plus className="size-4 md:mr-2" />
+                          <span className="hidden md:inline">Añadir canción</span>
                         </Button>
   
                         {list.songs.length > 0 && (

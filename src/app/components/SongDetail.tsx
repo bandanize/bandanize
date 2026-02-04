@@ -503,8 +503,8 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={handleDeleteSong}
             >
-              <Trash2 className="size-4 mr-2" />
-              Eliminar canción
+              <Trash2 className="size-4 md:mr-2" />
+              <span className="hidden md:inline">Eliminar canción</span>
             </Button>
           </div>
         </CardHeader>
@@ -537,8 +537,8 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]">
-                      <PenLine className="size-4 mr-2" />
-                      Editar información
+                      <PenLine className="size-4 md:mr-2" />
+                      <span className="hidden md:inline">Editar información</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
@@ -632,8 +632,8 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-[#EDEDED]">Archivos y media</CardTitle>
                     <Button size="sm" onClick={() => handleFileUpload('song')} disabled={isUploading} className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                      <Plus className="size-4 mr-2" />
-                      Añadir archivo
+                      <Plus className="size-4 md:mr-2" />
+                      <span className="hidden md:inline">Añadir archivo</span>
                     </Button>
                   </div>
                   {isUploading && (
@@ -719,8 +719,8 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             <Dialog open={openTabDialog} onOpenChange={setOpenTabDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                  <Plus className="size-4 mr-2" />
-                  Nueva tablatura
+                  <Plus className="size-4 md:mr-2" />
+                  <span className="hidden md:inline">Nueva tablatura</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">

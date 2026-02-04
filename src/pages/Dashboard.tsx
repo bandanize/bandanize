@@ -96,12 +96,12 @@ export function Dashboard() {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-[148px] h-[36px] bg-[#151518] border-[#2B2B31] rounded-[8px] text-[#EDEDED] text-[14px] font-normal font-sans hover:bg-[#1f1f22] hover:text-white"
+                className="w-9 sm:w-[148px] h-[36px] bg-[#151518] border-[#2B2B31] rounded-[8px] text-[#EDEDED] text-[14px] font-normal font-sans hover:bg-[#1f1f22] hover:text-white px-0 sm:px-4"
               >
-                <User className="size-4 mr-2" />
-                <span className="truncate max-w-[80px]">{user?.username}</span>
+                <User className="size-4 sm:mr-2" />
+                <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
                 {(invitations?.length || 0) > 0 && (
-                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
                     {invitations.length}
                   </span>
                 )}
