@@ -10,6 +10,7 @@ import { Plus, Trash2, Edit, Check, GripVertical } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
+import { useTranslation } from 'react-i18next';
 
 // React DnD
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -222,6 +223,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
 // Inline component for editing list metadata with manual save
 const SongListEditor = ({ list, currentProject, onDelete }: { list: SongList, currentProject: Project, onDelete: (id: string) => void }) => {
   const { updateSongList } = useProjects();
+  const { t } = useTranslation();
   const [name, setName] = useState(list.name);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -237,9 +239,9 @@ const SongListEditor = ({ list, currentProject, onDelete }: { list: SongList, cu
     try {
         await updateSongList(currentProject.id, list.id, name);
         setHasChanges(false);
-        toast.success('Lista actualizada');
+        toast.success(t('list_updated', 'Lista actualizada'));
     } catch (error) {
-        toast.error('Error al guardar');
+        toast.error(t('update_error', 'Error al guardar'));
     } finally {
         setIsSaving(false);
     }
@@ -248,7 +250,7 @@ const SongListEditor = ({ list, currentProject, onDelete }: { list: SongList, cu
   return (
     <div className="flex items-center gap-2 mb-4 p-1">
         <div className="flex-1">
-          <Label htmlFor={`list-name-${list.id}`} className="sr-only">Nombre de la lista</Label>
+          <Label htmlFor={`list-name-${list.id}`} className="sr-only">{t('list_name', 'Nombre de la lista')}</Label>
           <Input 
             id={`list-name-${list.id}`}
             value={name}
@@ -283,6 +285,7 @@ const SongListEditor = ({ list, currentProject, onDelete }: { list: SongList, cu
 
 export function SongManager() {
   const { currentProject, createSongList, updateSongList, deleteSongList, createSong, reorderSongs, deleteSong, updateSong } = useProjects();
+  const { t } = useTranslation();
   const [openListDialog, setOpenListDialog] = useState(false);
   const [openSongDialog, setOpenSongDialog] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
@@ -305,7 +308,7 @@ export function SongManager() {
     createSongList(currentProject.id, listName);
     setListName('');
     setOpenListDialog(false);
-    toast.success('Lista creada');
+    toast.success(t('list_created', 'Lista creada'));
   };
 
   // handleEditList and handleUpdateList removed (replaced by inline editor)
@@ -333,25 +336,25 @@ export function SongManager() {
     try {
         await updateSongList(currentProject.id, listToEdit.id, editListName);
         setEditListDialog(false);
-        toast.success('Lista actualizada');
+        toast.success(t('list_updated', 'Lista actualizada'));
     } catch (error) {
-        toast.error('Error al actualizar la lista');
+        toast.error(t('list_update_error', 'Error al actualizar la lista'));
     }
   };
 
   const handleDeleteList = (listId: string) => {
     if (!currentProject) return;
-    if (confirm('¿Estás seguro de que quieres eliminar esta lista? Se eliminarán todas las canciones.')) {
+    if (confirm(t('delete_list_confirmation', '¿Estás seguro de que quieres eliminar esta lista? Se eliminarán todas las canciones.'))) {
       deleteSongList(currentProject.id, listId);
-      toast.success('Lista eliminada');
+      toast.success(t('list_deleted', 'Lista eliminada'));
     }
   };
 
   const handleDeleteSong = (listId: string, songId: string) => {
       if (!currentProject) return;
-      if (confirm('¿Estás seguro de que quieres eliminar esta canción? Se eliminarán también las tabs y archivos asociados.')) {
+      if (confirm(t('delete_song_confirmation', '¿Estás seguro de que quieres eliminar esta canción? Se eliminarán también las tabs y archivos asociados.'))) {
           deleteSong(currentProject.id, listId, songId);
-          toast.success('Canción eliminada');
+          toast.success(t('song_deleted', 'Canción eliminada'));
       }
   };
 
@@ -362,7 +365,7 @@ export function SongManager() {
     setSongData({ name: '', originalBand: '', bpm: null, key: '' });
     setOpenSongDialog(false);
     setSelectedListId(null);
-    toast.success('Canción creada');
+    toast.success(t('song_created', 'Canción creada'));
   };
 
   const handleSelectSong = (listId: string, song: Song) => {
@@ -401,9 +404,9 @@ export function SongManager() {
            
           setIsEditSongOpen(false);
           setEditingSong(null);
-          toast.success("Canción actualizada");
+          toast.success(t('song_updated', "Canción actualizada"));
       } catch (error) {
-          toast.error("Error al actualizar la canción");
+          toast.error(t('song_update_error', "Error al actualizar la canción"));
       } finally {
           setIsSavingSong(false);
       }
@@ -436,24 +439,24 @@ export function SongManager() {
         <Card className="bg-[#151518] border-[#2B2B31]">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="text-[#EDEDED]">Listas de canciones</CardTitle>
+              <CardTitle className="text-[#EDEDED]">{t('songs_list', 'Listas de canciones')}</CardTitle>
               <Dialog open={openListDialog} onOpenChange={setOpenListDialog}>
                 <DialogTrigger asChild>
                   <Button className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
                     <Plus className="size-4 md:mr-2" />
-                    <span className="hidden md:inline">Nueva lista</span>
+                    <span className="hidden md:inline">{t('new_list', 'Nueva lista')}</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
                   <DialogHeader>
-                    <DialogTitle>Crear lista de canciones</DialogTitle>
+                    <DialogTitle>{t('create_list', 'Crear lista de canciones')}</DialogTitle>
                     <DialogDescription className="text-[#EDEDED]/60">
-                      Agrupa tus canciones por álbum, setlist, etc.
+                      {t('create_list_desc', 'Agrupa tus canciones por álbum, setlist, etc.')}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="list-name" className="text-[#EDEDED]">Nombre de la lista</Label>
+                      <Label htmlFor="list-name" className="text-[#EDEDED]">{t('list_name', 'Nombre de la lista')}</Label>
                       <Input
                         id="list-name"
                         placeholder="Ej: Álbum 2024"
@@ -463,7 +466,7 @@ export function SongManager() {
                       />
                     </div>
                     <Button onClick={handleCreateList} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                      Crear lista
+                      {t('create_list', 'Crear lista')}
                     </Button>
                   </div>
                 </DialogContent>
@@ -474,8 +477,8 @@ export function SongManager() {
             {currentProject.songLists.length === 0 ? (
               <div className="text-center py-8 text-[#EDEDED]/40">
                 <img src={SongListImage} alt="Song list" className="size-12 mx-auto mb-2" />
-                <p>No hay listas aún</p>
-                <p className="text-sm">Crea tu primera lista de canciones</p>
+                <p>{t('no_lists', 'No hay listas aún')}</p>
+                <p className="text-sm">{t('create_first_list', 'Crea tu primera lista de canciones')}</p>
               </div>
             ) : (
               <Accordion type="single" collapsible className="w-full space-y-4">
@@ -486,7 +489,7 @@ export function SongManager() {
                         <span className="font-medium text-lg">{list.name}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-sm text-[#EDEDED]/60 mr-2">
-                            {list.songs.length} {list.songs.length === 1 ? 'canción' : 'canciones'}
+                            {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
                           </span>
                           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                              {/* Edit List Button */}
@@ -529,7 +532,7 @@ export function SongManager() {
                           }}
                         >
                           <Plus className="size-4 md:mr-2" />
-                          <span className="hidden md:inline">Añadir canción</span>
+                          <span className="hidden md:inline">{t('add_song', 'Añadir canción')}</span>
                         </Button>
   
                         {list.songs.length > 0 && (
@@ -556,14 +559,14 @@ export function SongManager() {
         <Dialog open={openSongDialog} onOpenChange={setOpenSongDialog}>
           <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
             <DialogHeader>
-              <DialogTitle>Añadir canción</DialogTitle>
+              <DialogTitle>{t('add_song', 'Añadir canción')}</DialogTitle>
               <DialogDescription className="text-[#EDEDED]/60">
-                Completa la información de la canción
+                {t('add_song_desc', 'Completa la información de la canción')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="song-name" className="text-[#EDEDED]">Nombre de la canción <span className="text-red-500">*</span></Label>
+                <Label htmlFor="song-name" className="text-[#EDEDED]">{t('song_name', 'Nombre de la canción')} <span className="text-red-500">*</span></Label>
                 <Input
                   id="song-name"
                   placeholder="Ej: Wonderwall"
@@ -573,7 +576,7 @@ export function SongManager() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="band-name" className="text-[#EDEDED]">Banda Original (Artista)</Label>
+                <Label htmlFor="band-name" className="text-[#EDEDED]">{t('original_band', 'Banda Original (Artista)')}</Label>
                 <Input
                   id="band-name"
                   placeholder="Ej: Oasis"
@@ -584,7 +587,7 @@ export function SongManager() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bpm" className="text-[#EDEDED]">BPM</Label>
+                  <Label htmlFor="bpm" className="text-[#EDEDED]">{t('bpm', 'BPM')}</Label>
                   <Input
                     id="bpm"
                     type="number"
@@ -598,7 +601,7 @@ export function SongManager() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="key" className="text-[#EDEDED]">Tonalidad</Label>
+                  <Label htmlFor="key" className="text-[#EDEDED]">{t('key', 'Tonalidad')}</Label>
                   <Input
                     id="key"
                     placeholder="Opcional (Ej: C)"
@@ -609,7 +612,7 @@ export function SongManager() {
                 </div>
               </div>
               <Button onClick={handleCreateSong} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                Crear canción
+                {t('create_song', 'Crear canción')}
               </Button>
             </div>
           </DialogContent>
@@ -618,12 +621,12 @@ export function SongManager() {
         <Dialog open={editListDialog} onOpenChange={setEditListDialog}>
           <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
               <DialogHeader>
-                  <DialogTitle>Editar lista</DialogTitle>
-                  <DialogDescription className="text-[#EDEDED]/60">cambia el nombre de la lista</DialogDescription>
+                  <DialogTitle>{t('edit_list', 'Editar lista')}</DialogTitle>
+                  <DialogDescription className="text-[#EDEDED]/60">{t('edit_list_desc', 'cambia el nombre de la lista')}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                      <Label htmlFor="edit-list-name" className="text-[#EDEDED]">Nombre</Label>
+                      <Label htmlFor="edit-list-name" className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
                       <Input 
                           id="edit-list-name"
                           value={editListName}
@@ -632,7 +635,7 @@ export function SongManager() {
                       />
                   </div>
                   <Button onClick={handleUpdateList} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
-                      Guardar cambios
+                      {t('save_changes', 'Guardar cambios')}
                   </Button>
               </div>
           </DialogContent>
@@ -642,12 +645,12 @@ export function SongManager() {
        <Dialog open={isEditSongOpen} onOpenChange={setIsEditSongOpen}>
             <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
                 <DialogHeader>
-                    <DialogTitle>Editar canción</DialogTitle>
-                    <DialogDescription className="text-[#EDEDED]/60">Modifica los detalles de la canción</DialogDescription>
+                    <DialogTitle>{t('edit_song', 'Editar canción')}</DialogTitle>
+                    <DialogDescription className="text-[#EDEDED]/60">{t('edit_song_desc', 'Modifica los detalles de la canción')}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">Nombre</Label>
+                        <Label className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
                         <Input
                             value={editSongForm.name}
                             onChange={(e) => setEditSongForm({ ...editSongForm, name: e.target.value })}
@@ -655,7 +658,7 @@ export function SongManager() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">Banda</Label>
+                        <Label className="text-[#EDEDED]">{t('band', 'Banda')}</Label>
                         <Input
                             value={editSongForm.originalBand}
                             onChange={(e) => setEditSongForm({ ...editSongForm, originalBand: e.target.value })}
@@ -663,7 +666,7 @@ export function SongManager() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">BPM</Label>
+                        <Label className="text-[#EDEDED]">{t('bpm', 'BPM')}</Label>
                         <Input
                             type="number"
                             value={editSongForm.bpm === null ? '' : editSongForm.bpm}
@@ -675,7 +678,7 @@ export function SongManager() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">Tonalidad</Label>
+                        <Label className="text-[#EDEDED]">{t('key', 'Tonalidad')}</Label>
                         <Input
                             value={editSongForm.key}
                             onChange={(e) => setEditSongForm({ ...editSongForm, key: e.target.value })}
@@ -689,7 +692,7 @@ export function SongManager() {
                         disabled={isSavingSong}
                         className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]"
                     >
-                        {isSavingSong ? 'Guardando...' : 'Guardar cambios'}
+                        {isSavingSong ? t('saving', 'Guardando...') : t('save_changes', 'Guardar cambios')}
                     </Button>
                 </div>
             </DialogContent>
@@ -698,4 +701,3 @@ export function SongManager() {
   </DndProvider>
 );
 }
-
