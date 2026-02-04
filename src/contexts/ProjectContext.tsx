@@ -449,14 +449,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const updateSong = async (projectId: string, listId: string, songId: string, data: Partial<Song>) => {
     try {
         const payload: any = {};
-        if (data.name) payload.name = data.name;
-        if (data.bpm) payload.bpm = data.bpm;
-        if (data.key) payload.songKey = data.key;
-        if (data.originalBand) payload.originalBand = data.originalBand;
-        
-        await api.put(`/songs/${songId}`, payload);
-        
-        updateLocalProject(projectId, (p) => ({
+        if (data.name !== undefined) payload.name = data.name;
+        if (data.bpm !== undefined) payload.bpm = data.bpm;
+        if (data.key !== undefined) payload.songKey = data.key;
+        if (data.originalBand !== undefined) payload.originalBand = data.originalBand;
+      const res = await api.put(`/songs/${songId}`, payload);
+      
+      updateLocalProject(projectId, (p) => ({
           ...p,
           songLists: p.songLists.map(l => l.id === listId ? {
             ...l,
