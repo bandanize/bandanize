@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/app/components/ui/separator';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
+import { PageLayout } from '@/app/components/PageLayout';
 
 export function UserProfile() {
   const { user, updateProfile, logout } = useAuth();
@@ -75,8 +76,8 @@ export function UserProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0C] relative">
-      <header className="min-h-[84px] pt-[env(safe-area-inset-top)] bg-[#151518] border-b border-black/10 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full">
+    <PageLayout
+      headerContent={
         <div className="max-w-4xl w-full mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -91,8 +92,8 @@ export function UserProfile() {
             <LanguageSwitcher />
           </div>
         </div>
-      </header>
-
+      }
+    >
       <main className="max-w-4xl w-full mx-auto py-8 px-6 space-y-6">
         {/* Información Personal */}
         <Card className="bg-[#151518] border-[#2B2B31]">
@@ -238,6 +239,6 @@ export function UserProfile() {
           </CardContent>
         </Card>
       </main>
-    </div>
+    </PageLayout>
   );
 }

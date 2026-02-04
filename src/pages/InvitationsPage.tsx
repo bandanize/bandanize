@@ -6,6 +6,7 @@ import { Check, X, Mail, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
+import { PageLayout } from '@/app/components/PageLayout';
 
 export function InvitationsPage() {
   const { invitations, acceptInvitation, rejectInvitation } = useProjects();
@@ -31,8 +32,8 @@ export function InvitationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0C] relative">
-      <header className="min-h-[84px] pt-[env(safe-area-inset-top)] bg-[#151518] border-b border-black/10 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full">
+    <PageLayout
+      headerContent={
         <div className="max-w-4xl w-full mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -44,8 +45,8 @@ export function InvitationsPage() {
             <LanguageSwitcher />
           </div>
         </div>
-      </header>
-
+      }
+    >
       <main className="max-w-4xl mx-auto p-6">
         {!invitations?.length ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
@@ -93,6 +94,6 @@ export function InvitationsPage() {
           </div>
         )}
       </main>
-    </div>
+    </PageLayout>
   );
 }
