@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import api from '@/services/api';
 
 interface User {
@@ -19,16 +19,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
+  const [user, setUser] = useState<User | null>(() => {
     // Check for token and load user
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('currentUser');
-    if (token && storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('currentUser');
+        if (token && storedUser) {
+            try {
+                return JSON.parse(storedUser);
+            } catch {
+                return null;
+            }
+        }
     }
-  }, []);
+    return null;
+  });
 
   const login = async (username: string, password: string) => {
     try {

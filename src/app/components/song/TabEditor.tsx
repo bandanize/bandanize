@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -105,17 +105,9 @@ export function TabEditor({
 }: TabEditorProps) {
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
-  const [hasChanges, setHasChanges] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    setEditingContent(tab.content || '');
-    setHasChanges(false);
-  }, [tab.id, tab.content]);
-
-  useEffect(() => {
-    setHasChanges(editingContent !== (tab.content || ''));
-  }, [editingContent, tab.content]);
+  
+  const hasChanges = editingContent !== (tab.content || '');
 
   const handleInsertText = (text: string) => {
     if (!textareaRef.current) return;
@@ -206,7 +198,7 @@ export function TabEditor({
           <Textarea
             ref={textareaRef}
             value={editingContent}
-            onChange={(e) => setEditingContent(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingContent(e.target.value)}
             className="font-mono text-sm min-h-[400px] bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED] resize-none leading-relaxed p-4"
             placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
             spellCheck={false}
@@ -231,7 +223,7 @@ export function TabEditor({
           
           {tab.files && tab.files.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {tab.files.map((file) => (
+                  {tab.files.map((file: any) => (
                       <div key={file.url} className="flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg group">
                           {file.type.startsWith('audio') ? (
                               <FileAudio className="size-5 text-blue-500" />

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useProjects, Song } from '@/contexts/ProjectContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { FileText, Upload } from 'lucide-react';
@@ -61,7 +61,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     try {
       await updateSong(currentProject.id, listId, song.id, data);
       toast.success(t('song_updated', 'Canción actualizada'));
-    } catch (error) {
+    } catch {
       toast.error(t('song_update_error', 'Error al guardar canción'));
     } finally {
       setIsSavingSong(false);
@@ -89,7 +89,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             content: '',
           });
           toast.success(t('tab_created', 'Tablatura creada'));
-      } catch (e) {
+      } catch {
           toast.error(t('create_error', "Error al crear tablatura"));
       }
   };
@@ -108,7 +108,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
        try {
            await updateTablature(currentProject.id, listId, song.id, tabId, data);
            toast.success(t('info_updated', 'Información actualizada'));
-       } catch (error) {
+       } catch {
            toast.error(t('update_error', 'Error al actualizar'));
        }
   };
@@ -119,7 +119,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
       try {
           await updateTablature(currentProject.id, listId, song.id, selectedTabId, { content });
           toast.success(t('tab_updated', 'Tablatura actualizada'));
-      } catch (error) {
+      } catch {
           toast.error(t('tab_update_error', 'Error al guardar tablatura'));
       } finally {
           setIsSavingTab(false);
@@ -223,7 +223,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
           
           toast.success(t('file_uploaded_success', 'Archivo subido correctamente'), { id: toastId });
 
-      } catch (error: any) {
+      } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
           console.error("Upload error", error);
           let errorMessage = t('upload_error_generic', 'Error al subir el archivo');
           if (error.response) {
@@ -312,6 +312,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
         {selectedTab && (
             <div className="lg:col-span-2 space-y-4">
                 <TabEditor 
+                    key={selectedTab.id}
                     tab={selectedTab}
                     songName={song.name}
                     onSave={handleSaveTabContent}

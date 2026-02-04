@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import api from '@/services/api';
 import { toast } from 'sonner';
@@ -110,18 +110,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
-  // Fetch projects from API
-  useEffect(() => {
-    if (user) {
-      fetchProjects();
-      fetchInvitations();
-    } else {
-      setProjects([]);
-      setInvitations([]);
-    }
-  }, [user]);
-
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       const response = await api.get('/bands/my-bands');
       // Map API response to Project interface
@@ -176,16 +165,28 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error fetching projects", error);
     }
-  };
+  }, [user]);
   
-  const fetchInvitations = async () => {
+  const fetchInvitations = useCallback(async () => {
     try {
         const response = await api.get('/invitations/mine');
         setInvitations(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
         console.error("Error fetching invitations", error);
     }
-  };
+  }, []);
+
+  // Fetch projects from API
+  useEffect(() => {
+    if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchProjects();
+      fetchInvitations();
+    } else {
+      setProjects([]);
+      setInvitations([]);
+    }
+  }, [user, fetchProjects, fetchInvitations]);
 
   const createProject = async (name: string, description: string, imageUrl?: string) => {
     if (!user) return;
@@ -231,7 +232,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         if (data.description) bandData.description = data.description;
         if (data.imageUrl) bandData.photo = data.imageUrl;
 
-        const response = await api.put(`/bands/${projectId}`, bandData);
+        await api.put(`/bands/${projectId}`, bandData);
         // Optimize: just update local state instead of refetching or use response
         
         setProjects(projects.map(p => {
@@ -453,7 +454,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         if (data.bpm !== undefined) payload.bpm = data.bpm;
         if (data.key !== undefined) payload.songKey = data.key;
         if (data.originalBand !== undefined) payload.originalBand = data.originalBand;
-      const res = await api.put(`/songs/${songId}`, payload);
+      await api.put(`/songs/${songId}`, payload);
       
       updateLocalProject(projectId, (p) => ({
           ...p,

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useProjects, Song, SongList, Project } from '@/contexts/ProjectContext';
+import { useProjects, Song, SongList } from '@/contexts/ProjectContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/app/components/ui/accordion';
-import { Plus, Trash2, Edit, Check, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
@@ -18,6 +18,7 @@ import { TouchBackend } from 'react-dnd-touch-backend';
 
 // --- Sortable Components ---
 
+// ItemType for DnD
 const ItemType = 'SONG_ROW';
 
 
@@ -99,12 +100,13 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
-    end: (item, monitor) => {
+    end: () => {
         onDrop();
     }
   });
 
   const opacity = isDragging ? 0.4 : 1;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   drag(drop(ref));
 
   return (
@@ -136,7 +138,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
             variant="ghost"
             size="sm"
             className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-[#EDEDED] hover:bg-[#2B2B31] transition-all"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onEdit(listId, song);
             }}
@@ -149,7 +151,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
         variant="ghost"
         size="sm"
         className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20 transition-all"
-        onClick={(e) => {
+        onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             onDelete(listId, song.id);
         }}
@@ -220,68 +222,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
 // ... Inline SongListEditor ...
 
 
-// Inline component for editing list metadata with manual save
-const SongListEditor = ({ list, currentProject, onDelete }: { list: SongList, currentProject: Project, onDelete: (id: string) => void }) => {
-  const { updateSongList } = useProjects();
-  const { t } = useTranslation();
-  const [name, setName] = useState(list.name);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    setHasChanges(name !== list.name);
-  }, [name, list.name]);
-
-  const handleSave = async () => {
-    if (!currentProject || !name.trim()) return;
-
-    setIsSaving(true);
-    try {
-        await updateSongList(currentProject.id, list.id, name);
-        setHasChanges(false);
-        toast.success(t('list_updated', 'Lista actualizada'));
-    } catch (error) {
-        toast.error(t('update_error', 'Error al guardar'));
-    } finally {
-        setIsSaving(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-2 mb-4 p-1">
-        <div className="flex-1">
-          <Label htmlFor={`list-name-${list.id}`} className="sr-only">{t('list_name', 'Nombre de la lista')}</Label>
-          <Input 
-            id={`list-name-${list.id}`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-9 bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
-          />
-        </div>
-        <div className="flex items-center gap-1 min-w-[80px] justify-end">
-            {hasChanges && (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#A3E635] hover:text-[#A3E635] hover:bg-[#A3E635]/10 h-8 w-8 p-0"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                >
-                    <Check className="size-4" />
-                </Button>
-            )}
-            <Button
-                variant="ghost"
-                size="sm"
-                className="text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20 h-8 w-8 p-0"
-                onClick={() => onDelete(list.id)}
-            >
-                <Trash2 className="size-4" />
-            </Button>
-        </div>
-    </div>
-  );
-};
 
 export function SongManager() {
   const { currentProject, createSongList, updateSongList, deleteSongList, createSong, reorderSongs, deleteSong, updateSong } = useProjects();
@@ -337,7 +278,7 @@ export function SongManager() {
         await updateSongList(currentProject.id, listToEdit.id, editListName);
         setEditListDialog(false);
         toast.success(t('list_updated', 'Lista actualizada'));
-    } catch (error) {
+    } catch {
         toast.error(t('list_update_error', 'Error al actualizar la lista'));
     }
   };
@@ -360,17 +301,17 @@ export function SongManager() {
 
   const handleCreateSong = () => {
     if (!currentProject || !selectedListId || !songData.name.trim()) return;
-    // @ts-ignore - backend handles nulls, ProjectContext type might need update but works runtime
-    createSong(currentProject.id, selectedListId, songData);
+    createSong(currentProject.id, selectedListId, {
+      ...songData,
+      bpm: songData.bpm ?? undefined // Handle null to undefined
+    });
     setSongData({ name: '', originalBand: '', bpm: null, key: '' });
     setOpenSongDialog(false);
     setSelectedListId(null);
     toast.success(t('song_created', 'Canción creada'));
   };
 
-  const handleSelectSong = (listId: string, song: Song) => {
-    setSelectedSongRef({ listId, songId: song.id });
-  };
+
 
   const handleReorder = (listId: string, songIds: string[]) => {
       if (!currentProject) return;
@@ -393,19 +334,18 @@ export function SongManager() {
 
       setIsSavingSong(true);
       try {
-          // @ts-ignore - type mismatch in context vs component but logic is sound
           await updateSong(currentProject.id, editingSong.listId, editingSong.song.id, {
               name: editSongForm.name,
               originalBand: editSongForm.originalBand,
-              bpm: editSongForm.bpm,
-              key: editSongForm.key // Fix naming if needed (songKey vs key)
+              bpm: editSongForm.bpm ?? undefined,
+              key: editSongForm.key
           });
           // Also try mapping key -> songKey just in case context expects songKey
            
           setIsEditSongOpen(false);
           setEditingSong(null);
           toast.success(t('song_updated', "Canción actualizada"));
-      } catch (error) {
+      } catch {
           toast.error(t('song_update_error', "Error al actualizar la canción"));
       } finally {
           setIsSavingSong(false);
@@ -496,7 +436,7 @@ export function SongManager() {
                              <div
                                   role="button"
                                   className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-[#A3E635] hover:bg-[#A3E635]/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                  onClick={(e) => {
+                                  onClick={(e: React.MouseEvent) => {
                                       e.stopPropagation();
                                       setListToEdit(list);
                                       setEditListName(list.name);
@@ -509,7 +449,7 @@ export function SongManager() {
                               <div
                                   role="button"
                                   className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                  onClick={(e) => {
+                                  onClick={(e: React.MouseEvent) => {
                                       e.stopPropagation();
                                       handleDeleteList(list.id);
                                   }}

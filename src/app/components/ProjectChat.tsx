@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { Send } from 'lucide-react';
@@ -149,7 +149,7 @@ export function ProjectChat() {
                         return isNaN(date.getTime()) 
                           ? 'Ahora' 
                           : formatDistanceToNow(date, { addSuffix: true, locale: es });
-                      } catch (e) {
+                      } catch {
                         return 'Ahora';
                       }
                     })()}
