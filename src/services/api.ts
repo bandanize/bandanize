@@ -24,18 +24,19 @@ api.interceptors.request.use(
 // Response interceptor to handle errors
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
+        const _res = error.response;
         // Handle 401 Unauthorized
-        if (error.response && error.response.status === 401) {
+        if (_res?.status === 401) {
             // Don't redirect if it's a login attempt failure (invalid credentials)
-            if (!error.config.url.includes('/auth/login')) {
+            if (!error.config.url.includes('/auth/login') && !window.location.pathname.includes('/login')) {
                 localStorage.removeItem('token');
-                localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentUser'); // Keep currentUser as per original, or change to 'user' if intended
                 window.location.href = '/login';
             }
         }
         // 403 Forbidden shouldn't log out, just reject promise (UI can show error)
-        if (error.response && error.response.status === 403) {
+        if (_res?.status === 403) {
             console.error("Access forbidden (403)", error.config.url);
         }
         return Promise.reject(error);

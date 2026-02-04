@@ -5,11 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/app/components/ui/dropdown-menu';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { ArrowLeft, MessageSquare, Music, Users, Settings, LogOut, User, Mail, PenLine } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Music, Users, LogOut, PenLine } from 'lucide-react';
 import { ProjectChat } from '@/app/components/ProjectChat';
 import { SongManager } from '@/app/components/SongManager';
 import { MembersPanel } from '@/app/components/MembersPanel';
@@ -25,8 +24,8 @@ import { PageLayout } from '@/app/components/PageLayout';
 export function ProjectHub() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { currentProject, updateProject, leaveProject, deleteProject, invitations } = useProjects();
-  const { user, logout } = useAuth();
+  const { currentProject, updateProject, leaveProject, deleteProject } = useProjects();
+  const { user } = useAuth();
   const onlineCount = usePresence(currentProject?.id);
   const [activeTab, setActiveTab] = useState('songs');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -218,7 +217,7 @@ export function ProjectHub() {
                             if (window.confirm(t('delete_confirmation', "Are you sure?"))) {
                                 try {
                                     await handleDeleteProject(); 
-                                } catch (e) {
+                                } catch {
                                     toast.error(t('delete_error', "Error al eliminar proyecto"));
                                 }
                             }

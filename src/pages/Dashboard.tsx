@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { LogOut, Plus, Music2, Users, User, Settings, Mail, Cookie } from 'lucide-react';
+import { LogOut, Plus, Music2, Users, User, Settings, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WelcomeModal } from '@/app/components/WelcomeModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/app/components/ui/dropdown-menu';
@@ -31,10 +31,14 @@ export function Dashboard() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    // Check if this is the first time the user logs in
-    const hasSeenWelcome = localStorage.getItem(`welcome_seen_${user?.id}`);
-    if (!hasSeenWelcome && user) {
-      setShowWelcome(true);
+    // Check if this is the first time the  useEffect(() => {
+    if (user) {
+      const hasSeenWelcome = localStorage.getItem(`welcome_seen_${user.id}`);
+      if (!hasSeenWelcome) {
+        // Use timeout to avoid synchronous state update during effect
+        const timer = setTimeout(() => setShowWelcome(true), 0);
+        return () => clearTimeout(timer);
+      }
     }
   }, [user]);
 
