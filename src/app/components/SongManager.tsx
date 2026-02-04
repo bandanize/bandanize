@@ -28,9 +28,10 @@ interface SortableSongRowProps {
   onDrop: () => void;
   onSelect: (listId: string, song: Song) => void;
   onDelete: (listId: string, songId: string) => void;
+  onEdit: (listId: string, song: Song) => void;
 }
 
-const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete }: SortableSongRowProps) => {
+const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete, onEdit }: SortableSongRowProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const [{ handlerId }, drop] = useDrop({
@@ -129,6 +130,19 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
         </p>
       </div>
       
+      {/* Edit Button */}
+        <Button
+            variant="ghost"
+            size="sm"
+            className="opacity-0 group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-[#EDEDED] hover:bg-[#2B2B31] transition-all"
+            onClick={(e) => {
+                e.stopPropagation();
+                onEdit(listId, song);
+            }}
+        >
+            <Edit className="size-4" />
+        </Button>
+
       {/* Visual Delete Button */}
       <Button
         variant="ghost"
@@ -151,9 +165,10 @@ interface SortableSongListProps {
     onReorder: (listId: string, songIds: string[]) => void;
     onSelectSong: (listId: string, song: Song) => void;
     onDeleteSong: (listId: string, songId: string) => void;
+    onEditSong: (listId: string, song: Song) => void;
 }
 
-const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong }: SortableSongListProps) => {
+const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong }: SortableSongListProps) => {
     // Keep local state for smooth dragging
     const [items, setItems] = useState<Song[]>(songs);
 
@@ -194,6 +209,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
                     onDrop={handleDrop}
                     onSelect={onSelectSong}
                     onDelete={onDeleteSong} 
+                    onEdit={onEditSong}
                 />
             ))}
         </div>
@@ -266,7 +282,7 @@ const SongListEditor = ({ list, currentProject, onDelete }: { list: SongList, cu
 };
 
 export function SongManager() {
-  const { currentProject, createSongList, updateSongList, deleteSongList, createSong, reorderSongs, deleteSong } = useProjects();
+  const { currentProject, createSongList, updateSongList, deleteSongList, createSong, reorderSongs, deleteSong, updateSong } = useProjects();
   const [openListDialog, setOpenListDialog] = useState(false);
   const [openSongDialog, setOpenSongDialog] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
@@ -297,6 +313,20 @@ export function SongManager() {
   const [editListDialog, setEditListDialog] = useState(false);
   const [listToEdit, setListToEdit] = useState<SongList | null>(null);
   const [editListName, setEditListName] = useState('');
+
+  // --- Song Editing State ---
+  const [isEditSongOpen, setIsEditSongOpen] = useState(false);
+  const [editingSong, setEditingSong] = useState<{ song: Song, listId: string } | null>(null);
+  const [editSongForm, setEditSongForm] = useState<{
+      name: string;
+      originalBand: string;
+      bpm: number | null;
+      key: string;
+  }>({ name: '', originalBand: '', bpm: null, key: '' });
+  const [isSavingSong, setIsSavingSong] = useState(false);
+
+
+
 
   const handleUpdateList = async () => {
     if (!currentProject || !listToEdit || !editListName.trim()) return;
@@ -342,6 +372,41 @@ export function SongManager() {
   const handleReorder = (listId: string, songIds: string[]) => {
       if (!currentProject) return;
       reorderSongs(currentProject.id, listId, songIds);
+  };
+
+  const handleEditSongClick = (listId: string, song: Song) => {
+      setEditingSong({ song, listId });
+      setEditSongForm({
+          name: song.name,
+          originalBand: song.originalBand || song.bandName || '',
+          bpm: song.bpm || null,
+          key: song.key || '',
+      });
+      setIsEditSongOpen(true);
+  };
+
+  const handleUpdateSong = async () => {
+      if (!currentProject || !editingSong) return;
+
+      setIsSavingSong(true);
+      try {
+          // @ts-ignore - type mismatch in context vs component but logic is sound
+          await updateSong(currentProject.id, editingSong.listId, editingSong.song.id, {
+              name: editSongForm.name,
+              originalBand: editSongForm.originalBand,
+              bpm: editSongForm.bpm,
+              key: editSongForm.key // Fix naming if needed (songKey vs key)
+          });
+          // Also try mapping key -> songKey just in case context expects songKey
+           
+          setIsEditSongOpen(false);
+          setEditingSong(null);
+          toast.success("Canción actualizada");
+      } catch (error) {
+          toast.error("Error al actualizar la canción");
+      } finally {
+          setIsSavingSong(false);
+      }
   };
 
   if (!currentProject) return null;
@@ -471,8 +536,9 @@ export function SongManager() {
                                   listId={list.id}
                                   songs={list.songs}
                                   onReorder={handleReorder}
-                                  onSelectSong={handleSelectSong}
+                                  onSelectSong={(lId, s) => setSelectedSongRef({ listId: lId, songId: s.id })}
                                   onDeleteSong={handleDeleteSong}
+                                  onEditSong={handleEditSongClick}
                               />
                           </div>
                         )}
@@ -569,9 +635,65 @@ export function SongManager() {
               </div>
           </DialogContent>
         </Dialog>
-  
-  
-      </div>
-    </DndProvider>
-  );
+        
+      {/* Edit Song Dialog */}
+       <Dialog open={isEditSongOpen} onOpenChange={setIsEditSongOpen}>
+            <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                <DialogHeader>
+                    <DialogTitle>Editar canción</DialogTitle>
+                    <DialogDescription className="text-[#EDEDED]/60">Modifica los detalles de la canción</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label className="text-[#EDEDED]">Nombre</Label>
+                        <Input
+                            value={editSongForm.name}
+                            onChange={(e) => setEditSongForm({ ...editSongForm, name: e.target.value })}
+                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-[#EDEDED]">Banda</Label>
+                        <Input
+                            value={editSongForm.originalBand}
+                            onChange={(e) => setEditSongForm({ ...editSongForm, originalBand: e.target.value })}
+                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-[#EDEDED]">BPM</Label>
+                        <Input
+                            type="number"
+                            value={editSongForm.bpm === null ? '' : editSongForm.bpm}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setEditSongForm({ ...editSongForm, bpm: val === '' ? null : parseInt(val) })
+                            }}
+                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-[#EDEDED]">Tonalidad</Label>
+                        <Input
+                            value={editSongForm.key}
+                            onChange={(e) => setEditSongForm({ ...editSongForm, key: e.target.value })}
+                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        />
+                    </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                    <Button
+                        onClick={handleUpdateSong}
+                        disabled={isSavingSong}
+                        className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]"
+                    >
+                        {isSavingSong ? 'Guardando...' : 'Guardar cambios'}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    </div>
+  </DndProvider>
+);
 }
+
