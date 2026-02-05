@@ -23,7 +23,15 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                         alt={file.name} 
                         className="max-h-[70vh] w-auto object-contain rounded-md"
                     />
-                ) : file.type.startsWith('image') ? null : (
+                ) : file.type.startsWith('video') ? (
+                    <video 
+                        controls 
+                        className="max-h-[70vh] w-full"
+                        src={getMediaUrl(file.url)}
+                    >
+                        Your browser does not support the video element.
+                    </video>
+                ) : (
                     <audio 
                         controls 
                         className="w-full"
