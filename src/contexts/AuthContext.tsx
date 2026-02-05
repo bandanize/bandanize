@@ -35,6 +35,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   });
 
+  // Verify token on mount
+  React.useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // We use the new /me endpoint which requires authentication
+          await api.get('/auth/me');
+        } catch (error) {
+          console.log("Token verification failed, logging out");
+          // Logout logic duplicated here to avoid dependency cycle or closure issues before logout is defined
+          setUser(null);
+          localStorage.removeItem('currentUser');
+          localStorage.removeItem('token');
+          if (!window.location.pathname.includes('/login')) {
+             window.location.href = '/login';
+          }
+        }
+      }
+    };
+    verifyToken();
+  }, []);
+
   const login = async (username: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { username, password });
