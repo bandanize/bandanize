@@ -77,4 +77,22 @@ export const uploadFile = async (file: File, type: 'image' | 'audio' | 'video' |
     return response.data; // Returns filename/URL
 };
 
+export const getMediaUrl = (path: string | undefined) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+
+    const baseUrl = import.meta.env.VITE_API_URL || '';
+
+    // If no VITE_API_URL (Docker/Proxy mode), keep as is (relative)
+    if (!baseUrl) return path;
+
+    // Cloudflare/Direct mode: Ensure absolute URL
+    // precise normalization to avoid double /api or missing /api
+    const cleanBase = baseUrl.replace(/\/+$/, '').replace(/\/api$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    const apiPath = cleanPath.startsWith('/api') ? cleanPath : `/api${cleanPath}`;
+
+    return `${cleanBase}${apiPath}`;
+};
+
 export default api;

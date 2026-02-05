@@ -15,7 +15,7 @@ import { SongManager } from '@/app/components/SongManager';
 import { MembersPanel } from '@/app/components/MembersPanel';
 import { toast } from 'sonner';
 
-import { uploadFile } from '@/services/api';
+import { uploadFile, getMediaUrl } from '@/services/api';
 
 import { usePresence } from '@/hooks/usePresence';
 import { useTranslation } from 'react-i18next';
@@ -100,8 +100,7 @@ export function ProjectHub() {
       try {
           toast.loading(t('uploading', "Subiendo imagen..."));
           const filename = await uploadFile(file, 'image');
-          const baseUrl = import.meta.env.VITE_API_URL || '';
-          const fullUrl = `${baseUrl ? (baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl) : ''}/api/uploads/images/${filename}`;
+          const fullUrl = getMediaUrl(`/api/uploads/images/${filename}`);
           
           setEditData(prev => ({ ...prev, imageUrl: fullUrl }));
           toast.dismiss();

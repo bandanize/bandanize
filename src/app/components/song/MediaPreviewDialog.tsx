@@ -1,5 +1,8 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
+import { X } from 'lucide-react';
+import { Button } from '@/app/components/ui/button';
+import { getMediaUrl } from '@/services/api';
 
 interface MediaPreviewDialogProps {
   file: { url: string; type: string; name: string } | null;
@@ -18,15 +21,15 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
             <div className="mt-4 flex justify-center">
                 {file.type.startsWith('image') ? (
                     <img 
-                        src={file.url.startsWith('/uploads') ? (import.meta.env.VITE_API_URL || '/api') + file.url : file.url} 
+                        src={getMediaUrl(file.url)} 
                         alt={file.name} 
                         className="max-h-[70vh] w-auto object-contain rounded-md"
                     />
-                ) : (
+                ) : file.type.startsWith('image') ? null : (
                     <audio 
                         controls 
                         className="w-full"
-                        src={file.url.startsWith('/uploads') ? (import.meta.env.VITE_API_URL || '/api') + file.url : file.url} 
+                        src={getMediaUrl(file.url)}
                     >
                         Your browser does not support the audio element.
                     </audio>

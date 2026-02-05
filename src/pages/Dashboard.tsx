@@ -11,7 +11,7 @@ import { LogOut, Plus, Music2, Users, User, Settings, Mail } from 'lucide-react'
 import { useNavigate } from 'react-router-dom';
 import { WelcomeModal } from '@/app/components/WelcomeModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/app/components/ui/dropdown-menu';
-import { uploadFile } from '@/services/api';
+import { uploadFile, getMediaUrl } from '@/services/api';
 import { toast } from 'sonner';
 import CookiesImage from '@/assets/cookies.svg';
 import EmptyProjectsImage from '@/assets/empty-projects.svg';
@@ -69,8 +69,7 @@ export function Dashboard() {
       try {
           toast.loading(t('uploading', "Subiendo imagen..."));
           const filename = await uploadFile(file, 'image');
-          const baseUrl = import.meta.env.VITE_API_URL || '/api';
-          const fullUrl = `${baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl}/api/uploads/images/${filename}`;
+          const fullUrl = getMediaUrl(`/api/uploads/images/${filename}`);
           setProjectImage(fullUrl);
           toast.dismiss();
           toast.success(t('image_uploaded', "Imagen subida"));

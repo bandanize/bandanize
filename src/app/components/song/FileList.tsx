@@ -3,9 +3,10 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Plus, FileAudio, Image as ImageIcon, File, Eye, Play, Download, Trash2 } from 'lucide-react';
 import { Progress } from '@/app/components/ui/progress';
-import { Song } from '@/contexts/ProjectContext';
+import { Song, ProjectContext, useProjects } from '@/contexts/ProjectContext';
+import { getMediaUrl } from '@/services/api';
 import { useTranslation } from 'react-i18next';
-import SpeakerImage from '@/assets/speaker.svg';
+import SpeakerIcon from '@/assets/speaker.svg';
 
 interface FileListProps {
   song: Song;
@@ -53,7 +54,7 @@ export function FileList({
       <CardContent>
         {song.files.length === 0 ? (
           <>
-            <img src={SpeakerImage} alt="speaker" className="size-12 mx-auto text-[#EDEDED]/40 mb-2" />
+            <img src={SpeakerIcon} alt="speaker" className="size-12 mx-auto text-[#EDEDED]/40 mb-2" />
             <p className="text-sm text-[#EDEDED]/40 text-center py-4">
               {t('no_files', 'No hay archivos adjuntos')}
             </p>
@@ -86,7 +87,7 @@ export function FileList({
                     )}
                     
                       <a 
-                      href={`${file.url.startsWith('/uploads') ? (import.meta.env.VITE_API_URL || '/api') + file.url : file.url}`} 
+                      href={getMediaUrl(file.url)}
                       download 
                       target="_blank"
                       rel="noopener noreferrer"

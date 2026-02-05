@@ -9,6 +9,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Tablature } from '@/contexts/ProjectContext';
+import { getMediaUrl } from '@/services/api';
 import { INSTRUMENTS } from './constants';
 
 function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
@@ -237,7 +238,7 @@ export function TabEditor({
                           </div>
                           <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                <a 
-                                  href={`${file.url.startsWith('/uploads') ? (import.meta.env.VITE_API_URL || '/api') + file.url : file.url}`} 
+                                  href={getMediaUrl(file.url)}
                                   download 
                                   target="_blank"
                                   rel="noopener noreferrer"
