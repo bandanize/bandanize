@@ -53,6 +53,7 @@ export function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                autoComplete="email"
                 className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] placeholder:text-[#EDEDED]/25 h-[36px] rounded-[8px]"
               />
             </div>
@@ -64,6 +65,7 @@ export function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
                 className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] h-[36px] rounded-[8px]"
               />
               <div className="flex justify-end">

@@ -16,6 +16,16 @@ i18n
     .init({
         debug: false,
         fallbackLng: 'es',
+        detection: {
+            // order and from where user language should be detected
+            order: ['cookie', 'localStorage', 'navigator'],
+            // keys or params to lookup language from
+            lookupCookie: 'i18next',
+            lookupLocalStorage: 'i18nextLng',
+            // cache user language on
+            caches: ['cookie', 'localStorage'],
+            cookieMinutes: 10080, // 7 days
+        },
         interpolation: {
             escapeValue: false, // not needed for react as it escapes by default
         },
