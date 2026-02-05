@@ -43,8 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           // We use the new /me endpoint which requires authentication
           await api.get('/auth/me');
-        } catch (error) {
-          console.log("Token verification failed, logging out");
+        } catch {
+          // Token verification failed, logging out
           // Logout logic duplicated here to avoid dependency cycle or closure issues before logout is defined
           setUser(null);
           localStorage.removeItem('currentUser');
