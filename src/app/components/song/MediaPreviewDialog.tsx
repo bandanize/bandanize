@@ -1,7 +1,5 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
-import { X } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
 import { getMediaUrl } from '@/services/api';
 
 interface MediaPreviewDialogProps {

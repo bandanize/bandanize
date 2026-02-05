@@ -3,7 +3,7 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Plus, FileAudio, Image as ImageIcon, File, Eye, Play, Download, Trash2 } from 'lucide-react';
 import { Progress } from '@/app/components/ui/progress';
-import { Song, ProjectContext, useProjects } from '@/contexts/ProjectContext';
+import { Song } from '@/contexts/ProjectContext';
 import { getMediaUrl } from '@/services/api';
 import { useTranslation } from 'react-i18next';
 import SpeakerIcon from '@/assets/speaker.svg';
