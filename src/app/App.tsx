@@ -8,6 +8,8 @@ import { ProjectHub } from '@/pages/ProjectHub';
 import { UserProfile } from '@/pages/UserProfile';
 import { InvitationsPage } from '@/pages/InvitationsPage';
 import { Toaster } from '@/app/components/ui/sonner';
+import { ThemeProvider } from '@/app/components/theme-provider'; // Wrapper we will create
+import { CookiesProvider } from 'react-cookie'; // For general cookie usage throughout the app
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -60,12 +62,16 @@ function AppRoutes() {
 export default function App() {
   return (
     <Router>
-      <AuthProvider>
-        <ProjectProvider>
-          <AppRoutes />
-          <Toaster />
-        </ProjectProvider>
-      </AuthProvider>
+      <CookiesProvider>
+        <ThemeProvider storageKey="vite-ui-theme">
+          <AuthProvider>
+            <ProjectProvider>
+              <AppRoutes />
+              <Toaster />
+            </ProjectProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </CookiesProvider>
     </Router>
   );
 }

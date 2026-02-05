@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useCookies } from 'react-cookie';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/contexts/ProjectContext';
 import { Button } from '@/app/components/ui/button';
@@ -26,7 +27,8 @@ export function Dashboard() {
   const [projectDescription, setProjectDescription] = useState('');
   const [projectImage, setProjectImage] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
-  const [showCookies, setShowCookies] = useState(() => !localStorage.getItem('cookieConsent'));
+  const [cookies, setCookie] = useCookies(['cookieConsent', 'lastProjectId']);
+  const [showCookies, setShowCookies] = useState(() => !cookies.cookieConsent);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -148,6 +150,17 @@ export function Dashboard() {
         <div className="flex justify-between items-center mb-6 max-w-[1216px] w-full mx-auto h-[36px]">
           <h2 className="text-[20px] font-bold text-[#EDEDED] font-sans leading-7">{t('your_projects')}</h2>
           
+          {/* Quick Access for Last Project */}
+          {cookies.lastProjectId && projects.find(p => p.id === cookies.lastProjectId) && (
+             <Button 
+                variant="outline"
+                className="ml-4 h-[36px] border-[#A3E635] text-[#A3E635] hover:bg-[#A3E635]/10 hidden md:flex items-center gap-2"
+                onClick={() => handleProjectClick(cookies.lastProjectId)}
+             >
+                <span>🚀 {t('resume', 'Reanudar')}: {projects.find(p => p.id === cookies.lastProjectId)?.name}</span>
+             </Button>
+          )}
+
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="w-9 sm:w-[148px] h-[36px] bg-[#A3E635] hover:bg-[#92d030] text-[#151518] rounded-[8px] font-sans text-[14px] font-normal px-0 sm:px-4">
@@ -299,7 +312,7 @@ export function Dashboard() {
                      <Button 
                         onClick={() => {
                           setShowCookies(false);
-                          localStorage.setItem('cookieConsent', 'true');
+                          setCookie('cookieConsent', 'declined', { path: '/', maxAge: 365 * 24 * 60 * 60 });
                         }}
                         className="flex-1 h-[36px] bg-[#151518] border border-[#2B2B31] rounded-[8px] text-[#EDEDED] font-poppins text-[14px] font-normal hover:bg-[#1f1f22]"
                      >
@@ -308,7 +321,7 @@ export function Dashboard() {
                      <Button 
                         onClick={() => {
                           setShowCookies(false);
-                          localStorage.setItem('cookieConsent', 'true');
+                          setCookie('cookieConsent', 'true', { path: '/', maxAge: 365 * 24 * 60 * 60 });
                         }}
                         className="flex-1 h-[36px] bg-[#A3E635] hover:bg-[#92d030] rounded-[8px] text-[#151518] font-poppins text-[14px] font-normal"
                      >

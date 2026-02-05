@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useCookies } from 'react-cookie';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,16 +38,25 @@ export function ProjectHub() {
 
   const { t } = useTranslation();
 
-  // Sync edit data when dialog opens
-  React.useEffect(() => {
-    if (editDialogOpen && currentProject) {
+  const [, setCookie] = useCookies(['lastProjectId']);
+
+  // Set last active project cookie
+  useEffect(() => {
+    if (projectId) {
+      setCookie('lastProjectId', projectId, { path: '/', maxAge: 30 * 24 * 60 * 60 }); // 30 days
+    }
+  }, [projectId, setCookie]);
+
+  const openEditDialog = () => {
+    if (currentProject) {
       setEditData({
         name: currentProject.name,
         description: currentProject.description,
         imageUrl: currentProject.imageUrl || '',
       });
+      setEditDialogOpen(true);
     }
-  }, [editDialogOpen, currentProject]);
+  };
 
   const handleUpdateProject = async () => {
     if (!currentProject) return;
@@ -154,7 +164,7 @@ export function ProjectHub() {
               <>
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-[#151518] border border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] font-sans text-[14px] font-normal flex h-[36px] w-9 sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
+                  <Button onClick={openEditDialog} className="bg-[#151518] border border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] font-sans text-[14px] font-normal flex h-[36px] w-9 sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
                     <PenLine className="size-4 sm:mr-2" />
                     <span className="hidden sm:inline">{t('edit_project', 'Editar proyecto')}</span>
                   </Button>
