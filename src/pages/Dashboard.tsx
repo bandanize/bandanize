@@ -69,7 +69,8 @@ export function Dashboard() {
       try {
           toast.loading(t('uploading', "Subiendo imagen..."));
           const filename = await uploadFile(file, 'image');
-          const fullUrl = `/api/uploads/images/${filename}`;
+          const baseUrl = import.meta.env.VITE_API_URL || '/api';
+          const fullUrl = `${baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl}/api/uploads/images/${filename}`;
           setProjectImage(fullUrl);
           toast.dismiss();
           toast.success(t('image_uploaded', "Imagen subida"));

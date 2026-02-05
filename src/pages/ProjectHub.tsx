@@ -101,7 +101,7 @@ export function ProjectHub() {
           toast.loading(t('uploading', "Subiendo imagen..."));
           const filename = await uploadFile(file, 'image');
           const baseUrl = import.meta.env.VITE_API_URL || '';
-          const fullUrl = `${baseUrl}/api/uploads/images/${filename}`;
+          const fullUrl = `${baseUrl ? (baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl) : ''}/api/uploads/images/${filename}`;
           
           setEditData(prev => ({ ...prev, imageUrl: fullUrl }));
           toast.dismiss();

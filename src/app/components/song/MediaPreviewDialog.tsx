@@ -18,7 +18,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
             <div className="mt-4 flex justify-center">
                 {file.type.startsWith('image') ? (
                     <img 
-                        src={(import.meta.env.VITE_API_URL || '') + (file.url.startsWith('/uploads') ? '/api' + file.url : file.url)} 
+                        src={file.url.startsWith('/uploads') ? (import.meta.env.VITE_API_URL || '/api') + file.url : file.url} 
                         alt={file.name} 
                         className="max-h-[70vh] w-auto object-contain rounded-md"
                     />
@@ -26,7 +26,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                     <audio 
                         controls 
                         className="w-full"
-                        src={(import.meta.env.VITE_API_URL || '') + (file.url.startsWith('/uploads') ? '/api' + file.url : file.url)} 
+                        src={file.url.startsWith('/uploads') ? (import.meta.env.VITE_API_URL || '/api') + file.url : file.url} 
                     >
                         Your browser does not support the audio element.
                     </audio>

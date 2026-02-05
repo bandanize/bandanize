@@ -86,7 +86,7 @@ export function FileList({
                     )}
                     
                       <a 
-                      href={`${(import.meta.env.VITE_API_URL || '') + (file.url.startsWith('/uploads') ? '/api' + file.url : file.url)}`} 
+                      href={`${file.url.startsWith('/uploads') ? (import.meta.env.VITE_API_URL || '/api') + file.url : file.url}`} 
                       download 
                       target="_blank"
                       rel="noopener noreferrer"

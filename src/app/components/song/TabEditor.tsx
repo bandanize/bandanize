@@ -237,7 +237,7 @@ export function TabEditor({
                           </div>
                           <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                <a 
-                                  href={`${(import.meta.env.VITE_API_URL || '') + (file.url.startsWith('/uploads') ? '/api' + file.url : file.url)}`} 
+                                  href={`${file.url.startsWith('/uploads') ? (import.meta.env.VITE_API_URL || '/api') + file.url : file.url}`} 
                                   download 
                                   target="_blank"
                                   rel="noopener noreferrer"
