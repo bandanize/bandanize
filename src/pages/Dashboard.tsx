@@ -256,7 +256,7 @@ export function Dashboard() {
                   <div className="w-[116px] h-[116px] flex-shrink-0 rounded-[9px] overflow-hidden flex items-center justify-center">
                     {project.imageUrl ? (
                         <img
-                          src={project.imageUrl}
+                          src={getMediaUrl(project.imageUrl)}
                           alt={project.name}
                           className="w-full h-full object-cover"
                         />
