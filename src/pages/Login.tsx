@@ -112,16 +112,52 @@ function Register({ onBack }: { onBack: () => void }) {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false); // New success state
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     try {
       await register(email, password, name, username);
+      setSuccess(true); // Set success on successful registration
     } catch (err: any) {
       setError(err.message || 'Error al registrarse');
     }
   };
+
+  if (success) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C] p-4">
+          <Card className="w-[448px] bg-[#151518] border-[#2B2B31] rounded-[14px] p-6 shadow-none">
+            <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
+              <div className="flex items-center justify-center">
+                 <div className="w-[112px] h-[112px] flex items-center justify-center bg-white/5 rounded-full mb-4">
+                   <img src={Logo} alt="Bandanize Logo" className="size-16" />
+                </div>
+              </div>
+              <CardTitle className="text-[30px] font-bold text-[#EDEDED] font-sans text-center leading-8">Check your email</CardTitle>
+              <CardDescription className="text-[16px] text-[#EDEDED]/60 text-center font-normal font-sans">
+                 We've sent a verification link to <strong>{email}</strong>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+               <div className="text-center space-y-4">
+                    <p className="text-[#EDEDED]/80 text-[14px]">
+                        Please check your inbox and click the link to verify your account and start using Bandanize.
+                    </p>
+                    <Button 
+                        onClick={onBack}
+                        variant="outline"
+                        className="w-full bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#1f1f22] hover:text-white font-sans text-[14px] h-[36px] rounded-[8px]"
+                    >
+                        Back to Login
+                    </Button>
+               </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C] p-4">

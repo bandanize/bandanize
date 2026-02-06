@@ -7,6 +7,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import { ProjectHub } from '@/pages/ProjectHub';
 import { UserProfile } from '@/pages/UserProfile';
 import { InvitationsPage } from '@/pages/InvitationsPage';
+import { VerifyEmail } from '@/pages/VerifyEmail';
 
 import { ForgotPassword } from '@/pages/ForgotPassword';
 import { ResetPassword } from '@/pages/ResetPassword';
@@ -59,6 +60,7 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );
