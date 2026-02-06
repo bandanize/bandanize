@@ -21,7 +21,7 @@ import { PageLayout } from '@/app/components/PageLayout';
 
 export function Dashboard() {
   const { user, logout } = useAuth();
-  const { projects, createProject, selectProject, invitations } = useProjects();
+  const { projects, createProject, selectProject, invitations, isLoading } = useProjects();
   const [open, setOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
@@ -226,8 +226,12 @@ export function Dashboard() {
           </Dialog>
         </div>
 
-        {/* Project List or Empty State */}
-        {projects.length === 0 ? (
+        {/* Project List or Loading or Empty State */}
+        {isLoading ? (
+             <div className="flex items-center justify-center min-h-[300px]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A3E635]"></div>
+             </div>
+        ) : projects.length === 0 ? (
           <div className="max-w-[1166px] w-full min-h-[336px] mx-auto flex flex-col items-center justify-center gap-6">
             <div className="w-[327px] h-[206px] flex items-center justify-center">
                  <img src={EmptyProjectsImage} alt="EmptyProjects" className="w-full h-full object-contain" />

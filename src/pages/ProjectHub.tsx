@@ -25,7 +25,7 @@ import { PageLayout } from '@/app/components/PageLayout';
 export function ProjectHub() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { currentProject, updateProject, leaveProject, deleteProject } = useProjects();
+  const { currentProject, projects, updateProject, leaveProject, deleteProject, selectProject, isLoading } = useProjects();
   const { user } = useAuth();
   const onlineCount = usePresence(currentProject?.id);
   const [activeTab, setActiveTab] = useState('songs');
@@ -46,6 +46,24 @@ export function ProjectHub() {
       setCookie('lastProjectId', projectId, { path: '/', maxAge: 30 * 24 * 60 * 60 }); // 30 days
     }
   }, [projectId, setCookie]);
+
+  // Handle auto-selection on refresh
+  useEffect(() => {
+      if (!isLoading && projectId && !currentProject && projects.length > 0) {
+          selectProject(projectId);
+      }
+  }, [isLoading, projectId, currentProject, projects, selectProject]);
+
+  if (isLoading) {
+       return (
+         <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C]">
+             <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A3E635]"></div>
+                  <p className="text-[#EDEDED] opacity-60">{t('loading_project', 'Cargando proyecto...')}</p>
+             </div>
+         </div>
+       );
+  }
 
   const openEditDialog = () => {
     if (currentProject) {

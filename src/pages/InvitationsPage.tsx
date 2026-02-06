@@ -9,7 +9,7 @@ import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { PageLayout } from '@/app/components/PageLayout';
 
 export function InvitationsPage() {
-  const { invitations, acceptInvitation, rejectInvitation, setInvitations } = useProjects(); // Added setInvitations
+  const { invitations, acceptInvitation, rejectInvitation, setInvitations, isLoading } = useProjects(); // Added setInvitations
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -105,7 +105,11 @@ export function InvitationsPage() {
       }
     >
       <main className="max-w-4xl mx-auto p-6">
-        {!invitations?.length ? (
+        {isLoading ? (
+             <div className="flex items-center justify-center min-h-[50vh]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A3E635]"></div>
+             </div>
+        ) : !invitations?.length ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
             <div className="bg-[#151518] p-4 rounded-full mb-4 border border-[#2B2B31]">
               <Mail className="size-8 text-[#EDEDED]/60" />
@@ -132,7 +136,7 @@ export function InvitationsPage() {
                 <CardFooter className="flex gap-2">
                   <Button 
                     className="flex-1 bg-[#A3E635] text-[#151518] hover:bg-[#92d030]" 
-                    onClick={() => handleAccept(inv.id, inv.bandName)}
+                    onClick={() => handleAccept(inv.id)}
                   >
                     <Check className="size-4 mr-2" />
                     {t('accept_invitation', 'Aceptar')}
@@ -140,7 +144,7 @@ export function InvitationsPage() {
                   <Button 
                     variant="outline" 
                     className="flex-1 bg-[#151518] border-[#2B2B31] text-red-500 hover:bg-red-900/20 hover:text-red-400"
-                    onClick={() => handleReject(inv.id, inv.bandName)}
+                    onClick={() => handleReject(inv.id)}
                   >
                     <X className="size-4 mr-2" />
                     {t('decline_invitation', 'Rechazar')}
