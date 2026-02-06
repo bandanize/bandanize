@@ -92,7 +92,18 @@ export const getMediaUrl = (path: string | undefined) => {
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     const apiPath = cleanPath.startsWith('/api') ? cleanPath : `/api${cleanPath}`;
 
+
     return `${cleanBase}${apiPath}`;
+};
+
+export const forgotPassword = async (email: string) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+    const response = await api.post('/auth/reset-password', { token, newPassword });
+    return response.data;
 };
 
 export default api;

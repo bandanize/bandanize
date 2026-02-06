@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -69,7 +70,7 @@ export function Login() {
                 className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] h-[36px] rounded-[8px]"
               />
               <div className="flex justify-end">
-                <a href="#" className="text-[14px] text-[#EDEDED]/60 underline font-sans">He olvidado mi contraseña</a>
+                <Link to="/forgot-password" className="text-[14px] text-[#EDEDED]/60 underline font-sans">He olvidado mi contraseña</Link>
               </div>
             </div>
             
