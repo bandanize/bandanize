@@ -20,7 +20,11 @@ export function Login() {
     try {
       await login(username, password);
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+      if (err.response && err.response.data && typeof err.response.data === 'string') {
+        setError(err.response.data);
+      } else {
+        setError(err.message || 'Error al iniciar sesión');
+      }
     }
   };
 

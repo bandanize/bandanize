@@ -96,8 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         username 
       });
       
-      // After register, auto-login
-      await login(username, password);
+      // After register, do NOT auto-login. Let the user verify email.
+      // await login(username, password);
       
     } catch (error) {
       console.error("Register error", error);
