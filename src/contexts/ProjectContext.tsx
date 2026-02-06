@@ -74,6 +74,7 @@ export interface Invitation {
 interface ProjectContextType {
   projects: Project[];
   invitations: Invitation[];
+  isLoading: boolean;
   currentProject: Project | null;
   createProject: (name: string, description: string, imageUrl?: string) => Promise<void>;
   updateProject: (projectId: string, data: Partial<Project>) => Promise<void>;
@@ -108,6 +109,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
   const fetchProjects = useCallback(async () => {
@@ -164,6 +166,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setProjects(mappedProjects);
     } catch (error) {
       console.error("Error fetching projects", error);
+    } finally {
+      setIsLoading(false);
     }
   }, [user]);
   
@@ -185,6 +189,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     } else {
       setProjects([]);
       setInvitations([]);
+      setIsLoading(false);
     }
   }, [user, fetchProjects, fetchInvitations]);
 
@@ -672,6 +677,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     <ProjectContext.Provider value={{
       projects,
       invitations,
+      isLoading,
       currentProject,
       createProject,
       updateProject,
