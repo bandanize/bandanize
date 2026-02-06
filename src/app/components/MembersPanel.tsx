@@ -86,7 +86,7 @@ export function MembersPanel() {
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2 flex flex-col">
                     <Label className="text-[#EDEDED]">{t('user_label', 'Usuario')}</Label>
-                    <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                    <Popover open={openCombobox} onOpenChange={setOpenCombobox} modal={true}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
