@@ -146,7 +146,8 @@ export function ProjectHub() {
   return (
     <PageLayout
       headerContent={
-        <div className="max-w-[1216px] w-full mx-auto flex flex-wrap items-center gap-4 px-4 sm:px-6">
+        <div className="max-w-[1280px] w-full mx-auto px-4 sm:px-6">
+            <div className="max-w-[1216px] w-full mx-auto flex flex-wrap items-center gap-4">
             <Button 
                 variant="ghost" 
                 onClick={() => navigate('/dashboard')} 
@@ -265,9 +266,11 @@ export function ProjectHub() {
             )}
             </div>
         </div>
+        </div>
       }
     >
-      <div className="max-w-[1216px] w-full mx-auto py-8 px-4 sm:px-6">
+      <div className="max-w-[1280px] w-full mx-auto py-8 px-4 sm:px-6">
+         <div className="max-w-[1216px] w-full mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="bg-card rounded-[14px] p-0 h-[36px] flex items-center w-full max-w-[303px] mx-auto">
             <TabsTrigger 
@@ -307,6 +310,7 @@ export function ProjectHub() {
             </TabsContent>
           </div>
         </Tabs>
+         </div>
       </div>
     </PageLayout>
   );

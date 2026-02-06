@@ -88,58 +88,60 @@ export function Dashboard() {
   return (
     <PageLayout
       headerContent={
-        <div className="max-w-[1216px] w-full flex justify-between items-center mx-auto px-6">
-          {/* Logo Section */}
-          <div className="flex items-center gap-3">
-            <div className="w-[52px] h-[52px] bg-white/10 rounded-full flex items-center justify-center">
-                 <img src="/favicon.svg" alt="Bandanize" className="size-8" />
+        <div className="max-w-[1280px] w-full mx-auto px-6">
+          <div className="max-w-[1216px] w-full flex justify-between items-center mx-auto">
+            {/* Logo Section */}
+            <div className="flex items-center gap-3">
+              <div className="w-[52px] h-[52px] bg-white/10 rounded-full flex items-center justify-center">
+                   <img src="/favicon.svg" alt="Bandanize" className="size-8" />
+              </div>
+              <div>
+                <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">Bandanize</h1>
+                <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">{t('welcome')}, {user?.name}</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">Bandanize</h1>
-              <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">{t('welcome')}, {user?.name}</p>
+
+            <div className="flex items-center gap-4">
+               <LanguageSwitcher />
+
+               {/* User Button */}
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-9 sm:w-[148px] h-[36px] bg-card border-border rounded-[8px] text-foreground text-[14px] font-normal font-sans hover:bg-accent hover:text-white px-0 sm:px-4"
+                    >
+                      <User className="size-4 sm:mr-2" />
+                      <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
+                      {(invitations?.length || 0) > 0 && (
+                        <span className="ml-2 bg-destructive text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
+                          {invitations.length}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-card border-border text-foreground">
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
+                      <Settings className="size-4 mr-2" />
+                      {t('my_profile')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/invitations')} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
+                      <Mail className="size-4 mr-2" />
+                      {t('invitations')}
+                      {(invitations?.length || 0) > 0 && (
+                        <span className="ml-auto bg-destructive/20 text-destructive-foreground text-xs rounded-full px-2 py-0.5">
+                          {invitations.length}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuItem onClick={logout} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
+                      <LogOut className="size-4 mr-2" />
+                      {t('logout')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+               </DropdownMenu>
             </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-             <LanguageSwitcher />
-
-             {/* User Button */}
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-9 sm:w-[148px] h-[36px] bg-card border-border rounded-[8px] text-foreground text-[14px] font-normal font-sans hover:bg-accent hover:text-white px-0 sm:px-4"
-                  >
-                    <User className="size-4 sm:mr-2" />
-                    <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
-                    {(invitations?.length || 0) > 0 && (
-                      <span className="ml-2 bg-destructive text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
-                        {invitations.length}
-                      </span>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-card border-border text-foreground">
-                  <DropdownMenuItem onClick={() => navigate('/profile')} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
-                    <Settings className="size-4 mr-2" />
-                    {t('my_profile')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/invitations')} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
-                    <Mail className="size-4 mr-2" />
-                    {t('invitations')}
-                    {(invitations?.length || 0) > 0 && (
-                      <span className="ml-auto bg-destructive/20 text-destructive-foreground text-xs rounded-full px-2 py-0.5">
-                        {invitations.length}
-                      </span>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-border" />
-                  <DropdownMenuItem onClick={logout} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
-                    <LogOut className="size-4 mr-2" />
-                    {t('logout')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-             </DropdownMenu>
           </div>
         </div>
       }
