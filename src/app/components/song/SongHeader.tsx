@@ -19,16 +19,16 @@ export function SongHeader({ song, onBack, onDelete }: SongHeaderProps) {
 
   return (
 
-      <Card className="bg-[#151518] border-[#2B2B31]">
+      <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
-              <Button variant="ghost" onClick={onBack} className="text-[#EDEDED] hover:bg-[#2B2B31]">
+              <Button variant="ghost" onClick={onBack} className="text-foreground hover:bg-accent">
                 <ArrowLeft className="size-4" />
               </Button>
               <div>
-                <CardTitle className="text-2xl text-[#EDEDED]">{song.name}</CardTitle>
-                <p className="text-[#EDEDED]/60 mt-1">
+                <CardTitle className="text-2xl text-foreground">{song.name}</CardTitle>
+                <p className="text-muted-foreground mt-1">
                   {song.originalBand || song.bandName}
                   {song.bpm ? ` • ${song.bpm} BPM` : ''}
                   {song.key ? ` • ${song.key}` : ''}
@@ -37,7 +37,7 @@ export function SongHeader({ song, onBack, onDelete }: SongHeaderProps) {
             </div>
             <Button 
               variant="destructive"
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               onClick={onDelete}
             >
               <Trash2 className="size-4 md:mr-2" />

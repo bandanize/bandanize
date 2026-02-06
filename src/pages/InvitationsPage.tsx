@@ -94,10 +94,10 @@ export function InvitationsPage() {
         <div className="max-w-4xl w-full mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" onClick={() => navigate('/dashboard')} className="hover:bg-white/5 text-[#EDEDED]">
+              <Button variant="ghost" onClick={() => navigate('/dashboard')} className="hover:bg-accent text-foreground">
                 <ArrowLeft className="size-4" />
               </Button>
-              <h1 className="text-[24px] font-normal font-poppins text-[#EDEDED] leading-8">{t('project_invitations', 'Invitaciones de Proyecto')}</h1>
+              <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">{t('project_invitations', 'Invitaciones de Proyecto')}</h1>
             </div>
             <LanguageSwitcher />
           </div>
@@ -107,35 +107,35 @@ export function InvitationsPage() {
       <main className="max-w-4xl mx-auto p-6">
         {isLoading ? (
              <div className="flex items-center justify-center min-h-[50vh]">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A3E635]"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
              </div>
         ) : !invitations?.length ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
-            <div className="bg-[#151518] p-4 rounded-full mb-4 border border-[#2B2B31]">
-              <Mail className="size-8 text-[#EDEDED]/60" />
+            <div className="bg-card p-4 rounded-full mb-4 border border-border">
+              <Mail className="size-8 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold mb-2 text-[#EDEDED]">{t('no_invitations', 'No tienes invitaciones pendientes')}</h2>
-            <p className="text-[#EDEDED]/60">
+            <h2 className="text-xl font-semibold mb-2 text-foreground">{t('no_invitations', 'No tienes invitaciones pendientes')}</h2>
+            <p className="text-muted-foreground">
               {t('invitations_desc', 'Cuando te inviten a un proyecto, aparecerá aquí.')}
             </p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {invitations.map((inv) => (
-              <Card key={inv.id} className="bg-[#151518] border-[#2B2B31]">
+              <Card key={inv.id} className="bg-card border-border">
                 <CardHeader>
-                  <CardTitle className="text-[#EDEDED]">{inv.bandName}</CardTitle>
-                  <CardDescription className="text-[#EDEDED]/60">{t('invited_to_collab', 'Te han invitado a colaborar')}</CardDescription>
+                  <CardTitle className="text-foreground">{inv.bandName}</CardTitle>
+                  <CardDescription className="text-muted-foreground">{t('invited_to_collab', 'Te han invitado a colaborar')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-2 text-sm text-[#EDEDED]/60">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="size-4" />
                     <span>{t('pending_invitation', 'Invitación pendiente')}</span>
                   </div>
                 </CardContent>
                 <CardFooter className="flex gap-2">
                   <Button 
-                    className="flex-1 bg-[#A3E635] text-[#151518] hover:bg-[#92d030]" 
+                    className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90" 
                     onClick={() => handleAccept(inv.id)}
                   >
                     <Check className="size-4 mr-2" />
@@ -143,7 +143,7 @@ export function InvitationsPage() {
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="flex-1 bg-[#151518] border-[#2B2B31] text-red-500 hover:bg-red-900/20 hover:text-red-400"
+                    className="flex-1 bg-card border-border text-destructive hover:bg-destructive/20 hover:text-destructive-foreground"
                     onClick={() => handleReject(inv.id)}
                   >
                     <X className="size-4 mr-2" />

@@ -16,7 +16,7 @@ export function LanguageSwitcher() {
       variant="ghost"
       size="sm"
       onClick={toggleLanguage}
-      className="text-[#EDEDED]/60 hover:text-[#EDEDED] hover:bg-[#2B2B31]"
+      className="text-muted-foreground hover:text-foreground hover:bg-accent"
     >
       <Languages className="size-4 mr-2" />
       <span className="uppercase">{i18n.language}</span>

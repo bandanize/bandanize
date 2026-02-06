@@ -69,37 +69,37 @@ export function MembersPanel() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-[#151518] border-[#2B2B31]">
+      <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-[#EDEDED]">{t('project_members', 'Miembros del proyecto')}</CardTitle>
+            <CardTitle className="text-foreground">{t('project_members', 'Miembros del proyecto')}</CardTitle>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                   <UserPlus className="size-4 mr-2" />
                   {t('invite_member', 'Invitar miembro')}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[400px] overflow-visible bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+              <DialogContent className="sm:max-w-[400px] overflow-visible bg-card border-border text-foreground">
                 <DialogHeader>
-                  <DialogTitle className="text-[#EDEDED]">{t('invite_member', 'Invitar miembro')}</DialogTitle>
-                  <DialogDescription className="text-[#EDEDED]/60">
+                  <DialogTitle className="text-foreground">{t('invite_member', 'Invitar miembro')}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
                     {t('invite_desc', 'Busca un usuario por email o nombre para invitarlo.')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2 flex flex-col">
-                    <Label className="text-[#EDEDED]">{t('user_label', 'Usuario')}</Label>
-                    <div className="border border-[#2B2B31] rounded-md overflow-hidden bg-[#151518]">
-                      <Command shouldFilter={false} className="bg-[#151518]">
+                    <Label className="text-foreground">{t('user_label', 'Usuario')}</Label>
+                    <div className="border border-border rounded-md overflow-hidden bg-card">
+                      <Command shouldFilter={false} className="bg-card">
                         <CommandInput 
                           placeholder={t('search_placeholder', "Buscar por email o nombre...")}
                           value={searchValue}
                           onValueChange={setSearchValue}
-                          className="text-[#EDEDED]"
+                          className="text-foreground"
                         />
                         <CommandList>
-                          <CommandEmpty className="py-2 text-center text-sm text-[#EDEDED]/60">
+                          <CommandEmpty className="py-2 text-center text-sm text-muted-foreground">
                              {searchValue ? t('no_users_found', "No se encontraron usuarios.") : t('start_typing', "Escribe para buscar...")}
                           </CommandEmpty>
                           <CommandGroup>
@@ -111,7 +111,7 @@ export function MembersPanel() {
                                   setEmail(currentValue === email ? "" : currentValue);
                                   setSearchValue(user.email); // Auto-fill search with selected email for clarity
                                 }}
-                                className="data-[selected=true]:bg-[#2B2B31] text-[#EDEDED] cursor-pointer"
+                                className="data-[selected=true]:bg-accent text-foreground cursor-pointer"
                               >
                                 <Check
                                   className={cn(
@@ -121,7 +121,7 @@ export function MembersPanel() {
                                 />
                                 <div className="flex flex-col">
                                     <span>{user.name}</span>
-                                    <span className="text-xs text-[#EDEDED]/60">{user.email}</span>
+                                    <span className="text-xs text-muted-foreground">{user.email}</span>
                                 </div>
                               </CommandItem>
                             ))}
@@ -130,7 +130,7 @@ export function MembersPanel() {
                       </Command>
                     </div>
                   </div>
-                  <Button onClick={handleInviteMember} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]" disabled={!email}>
+                  <Button onClick={handleInviteMember} className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={!email}>
                     {t('invite_to_project', 'Invitar al proyecto')}
                   </Button>
                 </div>
@@ -143,17 +143,17 @@ export function MembersPanel() {
             {currentProject.members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg group"
+                className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group"
               >
-                <div className="size-10 bg-[#2B2B31] rounded-full flex items-center justify-center">
-                  <User className="size-5 text-[#EDEDED]" />
+                <div className="size-10 bg-secondary rounded-full flex items-center justify-center">
+                  <User className="size-5 text-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-[#EDEDED]">
+                  <p className="font-medium text-foreground">
                       {member.name} 
-                      {currentProject.ownerId === member.id && <span className="ml-2 text-xs text-[#A3E635] border border-[#A3E635] px-1 rounded">{t('owner_badge', 'Owner')}</span>}
+                      {currentProject.ownerId === member.id && <span className="ml-2 text-xs text-primary border border-primary px-1 rounded">{t('owner_badge', 'Owner')}</span>}
                   </p>
-                  <div className="flex items-center text-sm text-[#EDEDED]/60">
+                  <div className="flex items-center text-sm text-muted-foreground">
                     <Mail className="size-3 mr-1" />
                     {member.email}
                   </div>
@@ -164,7 +164,7 @@ export function MembersPanel() {
                     <Button
                         variant="ghost" 
                         size="icon"
-                        className="opacity-0 group-hover:opacity-100 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20 data-[state=open]:opacity-100"
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/20 data-[state=open]:opacity-100"
                         onClick={() => {
                             if (confirm(t('kick_confirm', `¿Estás seguro de que quieres expulsar a ${member.name}?`).replace('${name}', member.name))) {
                                 kickMember(currentProject.id, member.id);

@@ -31,14 +31,14 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
   return (
     <div className="space-y-6 mt-4">
       <div>
-        <Label className="text-sm font-medium mb-3 block text-[#EDEDED]">{t('string_templates', 'Plantillas de cuerdas')}</Label>
+        <Label className="text-sm font-medium mb-3 block text-foreground">{t('string_templates', 'Plantillas de cuerdas')}</Label>
         <div className="flex gap-2 flex-wrap">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => onInsert(guitarStrings)}
-            className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+            className="bg-card border-border text-foreground hover:bg-accent"
           >
             <Guitar className="size-4 mr-2" />
             {t('guitar_6', 'Guitarra (6 cuerdas)')}
@@ -48,7 +48,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
             variant="outline"
             size="sm"
             onClick={() => onInsert(bassStrings)}
-            className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+            className="bg-card border-border text-foreground hover:bg-accent"
           >
             <Music2 className="size-4 mr-2" />
             {t('bass_4', 'Bajo (4 cuerdas)')}
@@ -58,7 +58,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
             variant="outline"
             size="sm"
             onClick={() => onInsert('---')}
-            className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+            className="bg-card border-border text-foreground hover:bg-accent"
           >
             {t('simple_line', 'Línea simple')}
           </Button>
@@ -66,7 +66,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
       </div>
 
       <div>
-        <Label className="text-sm font-medium mb-3 block text-[#EDEDED]">{t('symbols_techniques', 'Símbolos y técnicas')}</Label>
+        <Label className="text-sm font-medium mb-3 block text-foreground">{t('symbols_techniques', 'Símbolos y técnicas')}</Label>
         <div className="flex gap-2 flex-wrap">
           {symbols.map((symbol) => (
             <Button
@@ -76,7 +76,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
               size="sm"
               onClick={() => onInsert(symbol.value)}
               title={symbol.desc}
-              className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] min-w-[32px]"
+              className="bg-card border-border text-foreground hover:bg-accent min-w-[32px]"
             >
               {symbol.label}
             </Button>
@@ -143,8 +143,8 @@ export function TabEditor({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
             {getInstrumentIcon(tab.instrumentIcon || 'guitar')}
-            <h3 className="font-medium text-[#EDEDED] text-lg">{tab.name}</h3>
-            <span className="text-sm text-[#EDEDED]/60 px-2 py-0.5 bg-[#2B2B31] rounded">
+            <h3 className="font-medium text-foreground text-lg">{tab.name}</h3>
+            <span className="text-sm text-foreground/60 px-2 py-0.5 bg-accent/50 rounded">
                 {tab.tuning || 'Standard'}
             </span>
         </div>
@@ -155,7 +155,7 @@ export function TabEditor({
                     size="sm" 
                     onClick={() => onSave(editingContent)} 
                     disabled={isSaving}
-                    className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                     <Save className="size-4 mr-2" />
                     {isSaving ? t('saving', 'Guardando...') : t('save_changes', 'Guardar cambios')}
@@ -164,7 +164,7 @@ export function TabEditor({
             <Button
                 variant="outline"
                 size="sm"
-                className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+                className="bg-card border-border text-foreground hover:bg-accent"
                 onClick={() => {
                     const text = `${tab.name}\n${tab.tuning || 'Standard'}\n\n${editingContent}`;
                     const blob = new Blob([text], { type: 'text/plain' });
@@ -186,7 +186,7 @@ export function TabEditor({
               <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 bg-[#2B2B31]/50 text-[#EDEDED]/60 hover:text-[#EDEDED] hover:bg-[#2B2B31]"
+                  className="h-8 bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-accent"
                   onClick={() => {
                       navigator.clipboard.writeText(editingContent);
                       toast.success("Copiado al portapapeles");
@@ -200,7 +200,7 @@ export function TabEditor({
             ref={textareaRef}
             value={editingContent}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingContent(e.target.value)}
-            className="font-mono text-sm min-h-[400px] bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED] resize-none leading-relaxed p-4"
+            className="font-mono text-sm min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4"
             placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
             spellCheck={false}
           />
@@ -208,14 +208,14 @@ export function TabEditor({
 
       <TablatureControls onInsert={handleInsertText} />
 
-      <div className="mt-8 pt-8 border-t border-[#2B2B31]">
+      <div className="mt-8 pt-8 border-t border-border">
           <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium text-[#EDEDED]">{t('attached_files', 'Archivos adjuntos')}</h4>
+              <h4 className="font-medium text-foreground">{t('attached_files', 'Archivos adjuntos')}</h4>
               <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => onUpload(tab.id)}
-                  className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
+                  className="bg-card border-border text-foreground hover:bg-accent"
               >
                   <Upload className="size-4 mr-2" />
                   {t('add_file', 'Añadir archivo')}
@@ -225,16 +225,16 @@ export function TabEditor({
           {tab.files && tab.files.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {tab.files.map((file: any) => (
-                      <div key={file.url} className="flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg group">
+                      <div key={file.url} className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group">
                           {file.type.startsWith('audio') ? (
                               <FileAudio className="size-5 text-blue-500" />
                           ) : file.type.startsWith('image') ? (
                               <ImageIcon className="size-5 text-green-500" />
                           ) : (
-                              <File className="size-5 text-[#EDEDED]/60" />
+                              <File className="size-5 text-muted-foreground" />
                           )}
                           <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-[#EDEDED] truncate">{file.name}</p>
+                              <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
                           </div>
                           <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                <a 
@@ -242,14 +242,14 @@ export function TabEditor({
                                   download 
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="p-2 hover:bg-[#2B2B31] rounded-md text-[#EDEDED]/60"
+                                  className="p-2 hover:bg-accent rounded-md text-muted-foreground"
                               >
                                   <Download className="size-4" />
                               </a>
                               <Button
                                   variant="ghost" 
                                   size="icon"
-                                  className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                  className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
                                   onClick={() => onDeleteFile(tab.id, file.url)}
                               >
                                   <Trash2 className="size-4" />
@@ -259,7 +259,7 @@ export function TabEditor({
                   ))}
               </div>
           ) : (
-              <p className="text-sm text-[#EDEDED]/40 italic">{t('no_files_tab', 'No hay archivos en esta tablatura')}</p>
+              <p className="text-sm text-muted-foreground/60 italic">{t('no_files_tab', 'No hay archivos en esta tablatura')}</p>
           )}
       </div>
     </div>

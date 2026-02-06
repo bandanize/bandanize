@@ -81,12 +81,12 @@ export function UserProfile() {
         <div className="max-w-4xl w-full mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-                <Button variant="ghost" onClick={() => navigate('/dashboard')} className="hover:bg-white/5 text-[#EDEDED]">
+                <Button variant="ghost" onClick={() => navigate('/dashboard')} className="hover:bg-accent text-foreground">
                 <ArrowLeft className="size-4" />
                 </Button>
                 <div>
-                <h1 className="text-[24px] font-normal font-poppins text-[#EDEDED] leading-8">{t('my_profile', 'Mi Perfil')}</h1>
-                <p className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">{t('personal_info', 'Gestiona tu información personal')}</p>
+                <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">{t('my_profile', 'Mi Perfil')}</h1>
+                <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">{t('personal_info', 'Gestiona tu información personal')}</p>
                 </div>
             </div>
             <LanguageSwitcher />
@@ -96,116 +96,116 @@ export function UserProfile() {
     >
       <main className="max-w-4xl w-full mx-auto py-8 px-6 space-y-6">
         {/* Información Personal */}
-        <Card className="bg-[#151518] border-[#2B2B31]">
+        <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <User className="size-5 text-[#A3E635]" />
-              <CardTitle className="text-[#EDEDED]">{t('personal_info', 'Información Personal')}</CardTitle>
+              <User className="size-5 text-primary" />
+              <CardTitle className="text-foreground">{t('personal_info', 'Información Personal')}</CardTitle>
             </div>
-            <CardDescription className="text-[#EDEDED]/60">
+            <CardDescription className="text-muted-foreground">
               {t('update_project_info', 'Actualiza tu información de perfil')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[#EDEDED]">{t('name', 'Nombre completo')}</Label>
+              <Label htmlFor="name" className="text-foreground">{t('name', 'Nombre completo')}</Label>
               <Input
                 id="name"
                 value={profileData.name}
                 onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                 placeholder="Tu nombre"
-                className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                className="bg-input-background border-border text-foreground"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#EDEDED]">{t('email', 'Email')}</Label>
+              <Label htmlFor="email" className="text-foreground">{t('email', 'Email')}</Label>
               <Input
                 id="email"
                 type="email"
                 value={user?.email || ''}
                 disabled
-                className="bg-[#0B0B0C]/50 border-[#2B2B31] text-[#EDEDED]/50"
+                className="bg-input-background/50 border-border text-muted-foreground"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="instrument" className="text-[#EDEDED]">Instrumento principal</Label>
+              <Label htmlFor="instrument" className="text-foreground">Instrumento principal</Label>
               <Input
                 id="instrument"
                 value={profileData.instrument}
                 onChange={(e) => setProfileData({ ...profileData, instrument: e.target.value })}
                 placeholder="Ej: Guitarra, Bajo, Batería..."
-                className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                className="bg-input-background border-border text-foreground"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="bio" className="text-[#EDEDED]">Biografía</Label>
+              <Label htmlFor="bio" className="text-foreground">Biografía</Label>
               <Textarea
                 id="bio"
                 value={profileData.bio}
                 onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
                 placeholder="Cuéntanos un poco sobre ti..."
-                className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                className="bg-input-background border-border text-foreground"
                 rows={4}
               />
             </div>
             
-            <Button onClick={handleUpdateProfile} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+            <Button onClick={handleUpdateProfile} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
               <Save className="size-4 mr-2" />
               {t('save_changes', 'Guardar cambios')}
             </Button>
           </CardContent>
         </Card>
 
-        <Separator className="bg-[#2B2B31]" />
+        <Separator className="bg-border" />
 
         {/* Cambiar Contraseña */}
-        <Card className="bg-[#151518] border-[#2B2B31]">
+        <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Lock className="size-5 text-[#A3E635]" />
-              <CardTitle className="text-[#EDEDED]">{t('change_password', 'Cambiar Contraseña')}</CardTitle>
+              <Lock className="size-5 text-primary" />
+              <CardTitle className="text-foreground">{t('change_password', 'Cambiar Contraseña')}</CardTitle>
             </div>
-            <CardDescription className="text-[#EDEDED]/60">
+            <CardDescription className="text-muted-foreground">
               {t('update_password', 'Actualiza tu contraseña de acceso')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleChangePassword} className="space-y-4">
                 <div className="space-y-2">
-                <Label htmlFor="currentPassword" className="text-[#EDEDED]">{t('current_password', 'Contraseña actual')}</Label>
+                <Label htmlFor="currentPassword" className="text-foreground">{t('current_password', 'Contraseña actual')}</Label>
                 <Input
                     id="currentPassword"
                     type="password"
                     value={passwordData.currentPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-input-background border-border text-foreground"
                     autoComplete="current-password"
                 />
                 </div>
                 
                 <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-[#EDEDED]">{t('new_password', 'Nueva contraseña')}</Label>
+                <Label htmlFor="newPassword" className="text-foreground">{t('new_password', 'Nueva contraseña')}</Label>
                 <Input
                     id="newPassword"
                     type="password"
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-input-background border-border text-foreground"
                     autoComplete="new-password"
                 />
                 </div>
                 
                 <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-[#EDEDED]">{t('new_password', 'Confirmar nueva contraseña')}</Label>
+                <Label htmlFor="confirmPassword" className="text-foreground">{t('new_password', 'Confirmar nueva contraseña')}</Label>
                 <Input
                     id="confirmPassword"
                     type="password"
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-input-background border-border text-foreground"
                     autoComplete="new-password"
                 />
                 </div>
@@ -213,7 +213,7 @@ export function UserProfile() {
                 <Button 
                 type="submit"
                 variant="outline" 
-                className="w-full bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#1f1f22]"
+                className="w-full bg-card border-border text-foreground hover:bg-accent"
                 disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
                 >
                 {t('change_password', 'Cambiar contraseña')}
@@ -222,13 +222,13 @@ export function UserProfile() {
           </CardContent>
         </Card>
 
-        <Separator className="bg-[#2B2B31]" />
+        <Separator className="bg-border" />
 
         {/* Zona de peligro */}
-        <Card className="bg-[#151518] border-red-900/50">
+        <Card className="bg-card border-destructive/50">
           <CardHeader>
-            <CardTitle className="text-red-500">{t('danger_zone', 'Zona de peligro')}</CardTitle>
-            <CardDescription className="text-[#EDEDED]/60">
+            <CardTitle className="text-destructive">{t('danger_zone', 'Zona de peligro')}</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Acciones irreversibles
             </CardDescription>
           </CardHeader>

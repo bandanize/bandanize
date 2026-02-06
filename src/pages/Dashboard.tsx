@@ -95,8 +95,8 @@ export function Dashboard() {
                  <img src="/favicon.svg" alt="Bandanize" className="size-8" />
             </div>
             <div>
-              <h1 className="text-[24px] font-normal font-poppins text-[#EDEDED] leading-8">Bandanize</h1>
-              <p className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">{t('welcome')}, {user?.name}</p>
+              <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">Bandanize</h1>
+              <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">{t('welcome')}, {user?.name}</p>
             </div>
           </div>
 
@@ -108,33 +108,33 @@ export function Dashboard() {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="w-9 sm:w-[148px] h-[36px] bg-[#151518] border-[#2B2B31] rounded-[8px] text-[#EDEDED] text-[14px] font-normal font-sans hover:bg-[#1f1f22] hover:text-white px-0 sm:px-4"
+                    className="w-9 sm:w-[148px] h-[36px] bg-card border-border rounded-[8px] text-foreground text-[14px] font-normal font-sans hover:bg-accent hover:text-white px-0 sm:px-4"
                   >
                     <User className="size-4 sm:mr-2" />
                     <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
                     {(invitations?.length || 0) > 0 && (
-                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
+                      <span className="ml-2 bg-destructive text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
                         {invitations.length}
                       </span>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
-                  <DropdownMenuItem onClick={() => navigate('/profile')} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
+                <DropdownMenuContent className="bg-card border-border text-foreground">
+                  <DropdownMenuItem onClick={() => navigate('/profile')} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
                     <Settings className="size-4 mr-2" />
                     {t('my_profile')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/invitations')} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
+                  <DropdownMenuItem onClick={() => navigate('/invitations')} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
                     <Mail className="size-4 mr-2" />
                     {t('invitations')}
                     {(invitations?.length || 0) > 0 && (
-                      <span className="ml-auto bg-red-500/20 text-red-400 text-xs rounded-full px-2 py-0.5">
+                      <span className="ml-auto bg-destructive/20 text-destructive-foreground text-xs rounded-full px-2 py-0.5">
                         {invitations.length}
                       </span>
                     )}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-[#2B2B31]" />
-                  <DropdownMenuItem onClick={logout} className="focus:bg-white/5 focus:text-[#EDEDED] cursor-pointer">
+                  <DropdownMenuSeparator className="bg-border" />
+                  <DropdownMenuItem onClick={logout} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
                     <LogOut className="size-4 mr-2" />
                     {t('logout')}
                   </DropdownMenuItem>
@@ -148,13 +148,13 @@ export function Dashboard() {
         
         {/* Projects Header Row */}
         <div className="flex justify-between items-center mb-6 max-w-[1216px] w-full mx-auto h-[36px]">
-          <h2 className="text-[20px] font-bold text-[#EDEDED] font-sans leading-7">{t('your_projects')}</h2>
+          <h2 className="text-[20px] font-bold text-foreground font-sans leading-7">{t('your_projects')}</h2>
           
           {/* Quick Access for Last Project */}
           {cookies.lastProjectId && projects.find(p => p.id === cookies.lastProjectId) && (
              <Button 
                 variant="outline"
-                className="ml-4 h-[36px] border-[#A3E635] text-[#A3E635] hover:bg-[#A3E635]/10 hidden md:flex items-center gap-2"
+                className="ml-4 h-[36px] border-primary text-primary hover:bg-primary/10 hidden md:flex items-center gap-2"
                 onClick={() => handleProjectClick(cookies.lastProjectId)}
              >
                 <span>🚀 {t('resume', 'Reanudar')}: {projects.find(p => p.id === cookies.lastProjectId)?.name}</span>
@@ -163,62 +163,62 @@ export function Dashboard() {
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="w-9 sm:w-[148px] h-[36px] bg-[#A3E635] hover:bg-[#92d030] text-[#151518] rounded-[8px] font-sans text-[14px] font-normal px-0 sm:px-4">
-                <Plus className="size-4 sm:mr-2 stroke-[1.33px] text-[#151518]" />
+              <Button className="w-9 sm:w-[148px] bg-primary hover:bg-primary/90 text-primary-foreground px-0 sm:px-4">
+                <Plus className="size-4 sm:mr-2 text-primary-foreground" />
                 <span className="hidden sm:inline">{t('new_project')}</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+            <DialogContent className="bg-card border-border text-foreground">
               <DialogHeader>
-                <DialogTitle className="text-[#EDEDED]">{t('create_new_project_title')}</DialogTitle>
-                <DialogDescription className="text-[#EDEDED]/60">
+                <DialogTitle className="text-foreground">{t('create_new_project_title')}</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                    {t('create_new_project_desc')}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="project-name" className="text-[#EDEDED]">{t('project_name')}</Label>
+                  <Label htmlFor="project-name" className="text-foreground">{t('project_name')}</Label>
                   <Input
                     id="project-name"
                     placeholder="Ej: The Sodawaves"
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-input-background border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="project-description" className="text-[#EDEDED]">{t('description')}</Label>
+                  <Label htmlFor="project-description" className="text-foreground">{t('description')}</Label>
                   <Textarea
                     id="project-description"
                     placeholder="Ej: Banda de alternative rock"
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-input-background border-border text-foreground"
                   />
                 </div>
                  <div className="space-y-2">
-                  <Label htmlFor="project-image" className="text-[#EDEDED]">{t('image')}</Label>
+                  <Label htmlFor="project-image" className="text-foreground">{t('image')}</Label>
                   <div className="flex gap-2">
                        <Input
                         id="project-image"
                         placeholder="https://ejemplo.com/imagen.jpg"
                         value={projectImage}
                         onChange={(e) => setProjectImage(e.target.value)}
-                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED] flex-1"
+                        className="bg-input-background border-border text-foreground flex-1"
                       />
                   </div>
-                   <div className="mt-2 text-[#EDEDED]/60">
+                   <div className="mt-2 text-muted-foreground">
                        <Label htmlFor="create-upload-image" className="text-xs mb-1 block">{t('or_upload_image')}</Label>
                        <Input
                           id="create-upload-image"
                           type="file"
                           accept="image/*"
                           onChange={handleFileUpload}
-                          className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                          className="bg-input-background border-border text-foreground"
                        />
                    </div>
                 </div>
-                <Button onClick={handleCreateProject} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                <Button onClick={handleCreateProject} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                   {t('create_project')}
                 </Button>
               </div>
@@ -229,7 +229,7 @@ export function Dashboard() {
         {/* Project List or Loading or Empty State */}
         {isLoading ? (
              <div className="flex items-center justify-center min-h-[300px]">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A3E635]"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
              </div>
         ) : projects.length === 0 ? (
           <div className="max-w-[1166px] w-full min-h-[336px] mx-auto flex flex-col items-center justify-center gap-6">
@@ -237,14 +237,14 @@ export function Dashboard() {
                  <img src={EmptyProjectsImage} alt="EmptyProjects" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col items-center gap-1">
-                <h3 className="text-[20px] font-bold text-[#EDEDED] font-sans leading-6 text-center">{t('no_projects_yet')}</h3>
-                <p className="text-[14px] font-normal text-[#EDEDED]/60 font-sans leading-5 text-center">{t('create_first_project')}</p>
+                <h3 className="text-[20px] font-bold text-foreground font-sans leading-6 text-center">{t('no_projects_yet')}</h3>
+                <p className="text-[14px] font-normal text-muted-foreground font-sans leading-5 text-center">{t('create_first_project')}</p>
             </div>
             <Button 
                 onClick={() => setOpen(true)}
-                className="w-auto sm:w-[148px] h-[36px] bg-[#0B0B0C] border border-[#2B2B31] rounded-[8px] text-[#EDEDED] font-sans text-[14px] font-normal hover:bg-[#1f1f22] px-4"
+                className="w-auto sm:w-[148px] h-[36px] bg-card border border-border rounded-[8px] text-foreground font-sans text-[14px] font-normal hover:bg-accent px-4"
             >
-                 <Plus className="size-4 mr-2 stroke-[1.33px] text-[#EDEDED]" />
+                 <Plus className="size-4 mr-2 stroke-[1.33px] text-foreground" />
                  {t('new_project')}
             </Button>
           </div>
@@ -253,7 +253,7 @@ export function Dashboard() {
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="w-full h-[140px] bg-[#151518] border border-[#2B2B31] rounded-[14px] p-[12px] gap-[10px] flex cursor-pointer hover:shadow-lg transition-shadow"
+                className="w-full h-[140px] bg-card border border-border rounded-[14px] p-[12px] gap-[10px] flex cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => handleProjectClick(project.id)}
               >
                   {/* Image Section */}
@@ -274,13 +274,13 @@ export function Dashboard() {
                   {/* Content Section */}
                   <div className="flex flex-col h-[116px] flex-1 gap-1 min-w-0">
                       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                           <h3 className="text-[16px] font-normal font-poppins text-[#EDEDED] leading-4 truncate">{project.name}</h3>
-                           <p className="text-[16px] font-normal font-poppins text-[#EDEDED] leading-6 line-clamp-3 text-ellipsis overflow-hidden h-[72px] opacity-60">
+                           <h3 className="text-[16px] font-normal font-poppins text-foreground leading-4 truncate">{project.name}</h3>
+                           <p className="text-[16px] font-normal font-poppins text-foreground leading-6 line-clamp-3 text-ellipsis overflow-hidden h-[72px] opacity-60">
                                {project.description || 'Sin descripción'}
                            </p>
                       </div>
                       <div className="flex items-center gap-2 h-[20px]">
-                           <div className="flex items-center gap-2 text-[#EDEDED]">
+                           <div className="flex items-center gap-2 text-foreground">
                                 <Users className="size-4" />
                                 <span className="text-[14px] font-normal font-sans leading-5">
                                     {project.members.length} {project.members.length === 1 ? 'miembro' : 'miembros'}
@@ -298,7 +298,7 @@ export function Dashboard() {
       
       {/* Cookies Overlay */}
       {showCookies && (
-          <div className="fixed bottom-4 left-4 z-50 w-[calc(100vw-32px)] sm:w-[400px] h-auto bg-[#151518] rounded-[14px] flex flex-col shadow-2xl border border-white/5 overflow-hidden">
+          <div className="fixed bottom-4 left-4 z-50 w-[calc(100vw-32px)] sm:w-[400px] h-auto bg-card rounded-[14px] flex flex-col shadow-2xl border border-white/5 overflow-hidden">
              {/* Image placeholder */}
              <div className="w-full h-[200px] bg-white/5 flex items-center justify-center">
                  <img src={CookiesImage} alt="Cookies" />
@@ -306,8 +306,8 @@ export function Dashboard() {
              
              <div className="p-6 flex flex-col gap-4">
                  <div className="flex flex-col gap-2">
-                     <h4 className="text-[20px] font-medium font-poppins text-[#EDEDED] leading-6">{t('cookies_privacy')}</h4>
-                     <p className="text-[12px] font-normal font-poppins text-[#EDEDED] leading-4">
+                     <h4 className="text-[20px] font-medium font-poppins text-foreground leading-6">{t('cookies_privacy')}</h4>
+                     <p className="text-[12px] font-normal font-poppins text-foreground leading-4">
                          {t('cookies_text')}
                      </p>
                  </div>
@@ -318,7 +318,7 @@ export function Dashboard() {
                           setShowCookies(false);
                           setCookie('cookieConsent', 'declined', { path: '/', maxAge: 365 * 24 * 60 * 60 });
                         }}
-                        className="flex-1 h-[36px] bg-[#151518] border border-[#2B2B31] rounded-[8px] text-[#EDEDED] font-poppins text-[14px] font-normal hover:bg-[#1f1f22]"
+                        className="flex-1 h-[36px] bg-card border border-border rounded-[8px] text-foreground font-poppins text-[14px] font-normal hover:bg-accent"
                      >
                          {t('decline')}
                      </Button>
@@ -327,7 +327,7 @@ export function Dashboard() {
                           setShowCookies(false);
                           setCookie('cookieConsent', 'true', { path: '/', maxAge: 365 * 24 * 60 * 60 });
                         }}
-                        className="flex-1 h-[36px] bg-[#A3E635] hover:bg-[#92d030] rounded-[8px] text-[#151518] font-poppins text-[14px] font-normal"
+                        className="flex-1 h-[36px] bg-primary hover:bg-primary/90 rounded-[8px] text-primary-foreground font-poppins text-[14px] font-normal"
                      >
                          {t('accept')}
                      </Button>

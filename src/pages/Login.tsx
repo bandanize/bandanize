@@ -33,8 +33,8 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C] p-4">
-      <Card className="w-[448px] bg-[#151518] border-[#2B2B31] rounded-[14px] p-6 shadow-none">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
         <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
           <div className="flex items-center justify-center">
             {/* Replaced specific image with Music2 icon but styled to match size/theme approx or just keep icon */}
@@ -42,15 +42,15 @@ export function Login() {
                <img src={Logo} alt="Bandanize Logo" className="size-16" />
             </div>
           </div>
-          <CardTitle className="text-[30px] font-bold text-[#EDEDED] font-sans text-center leading-8">Bandanize</CardTitle>
-          <CardDescription className="text-[16px] text-[#EDEDED]/60 text-center font-normal font-sans">
+          <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">Bandanize</CardTitle>
+          <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
             Inicia sesión en tu cuenta de músico
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-[14px] text-[#EDEDED] font-normal">Email</Label>
+              <Label htmlFor="username" className="text-[14px] text-foreground font-normal">Email</Label>
               <Input
                 id="username"
                 type="text"
@@ -59,11 +59,11 @@ export function Login() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 autoComplete="email"
-                className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] placeholder:text-[#EDEDED]/25 h-[36px] rounded-[8px]"
+                className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground placeholder:text-muted-foreground/50 h-[36px] rounded-[8px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-[14px] text-[#EDEDED] font-normal">Contraseña</Label>
+              <Label htmlFor="password" className="text-[14px] text-foreground font-normal">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
@@ -71,10 +71,10 @@ export function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] h-[36px] rounded-[8px]"
+                className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground h-[36px] rounded-[8px]"
               />
               <div className="flex justify-end">
-                <Link to="/forgot-password" className="text-[14px] text-[#EDEDED]/60 underline font-sans">He olvidado mi contraseña</Link>
+                <Link to="/forgot-password" className="text-[14px] text-muted-foreground underline font-sans">He olvidado mi contraseña</Link>
               </div>
             </div>
             
@@ -87,14 +87,14 @@ export function Login() {
             <div className="flex flex-col gap-3 mt-4">
               <Button 
                 type="submit" 
-                className="w-full bg-[#A3E635] hover:bg-[#92d030] text-[#151518] font-sans text-[14px] h-[40px] rounded-[8px]"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-sans text-[14px] h-[40px] rounded-[8px]"
               >
                 Iniciar sesión
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#1f1f22] hover:text-white font-sans text-[14px] h-[36px] rounded-[8px]"
+                className="w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[36px] rounded-[8px]"
                 onClick={() => setShowRegister(true)}
               >
                 Crear cuenta
@@ -131,28 +131,28 @@ function Register({ onBack }: { onBack: () => void }) {
 
   if (success) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C] p-4">
-          <Card className="w-[448px] bg-[#151518] border-[#2B2B31] rounded-[14px] p-6 shadow-none">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <Card className="w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
             <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
               <div className="flex items-center justify-center">
                  <div className="w-[112px] h-[112px] flex items-center justify-center bg-white/5 rounded-full mb-4">
                    <img src={Logo} alt="Bandanize Logo" className="size-16" />
                 </div>
               </div>
-              <CardTitle className="text-[30px] font-bold text-[#EDEDED] font-sans text-center leading-8">Check your email</CardTitle>
-              <CardDescription className="text-[16px] text-[#EDEDED]/60 text-center font-normal font-sans">
+              <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">Check your email</CardTitle>
+              <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
                  We've sent a verification link to <strong>{email}</strong>.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
                <div className="text-center space-y-4">
-                    <p className="text-[#EDEDED]/80 text-[14px]">
+                    <p className="text-foreground/80 text-[14px]">
                         Please check your inbox and click the link to verify your account and start using Bandanize.
                     </p>
                     <Button 
                         onClick={onBack}
                         variant="outline"
-                        className="w-full bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#1f1f22] hover:text-white font-sans text-[14px] h-[36px] rounded-[8px]"
+                        className="w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[36px] rounded-[8px]"
                     >
                         Back to Login
                     </Button>
@@ -164,16 +164,16 @@ function Register({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C] p-4">
-      <Card className="w-[448px] bg-[#151518] border-[#2B2B31] rounded-[14px] p-6 shadow-none">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
         <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
           <div className="flex items-center justify-center">
              <div className="w-[112px] h-[112px] flex items-center justify-center bg-white/5 rounded-full mb-4">
                <img src={Logo} alt="Bandanize Logo" className="size-16" />
             </div>
           </div>
-          <CardTitle className="text-[30px] font-bold text-[#EDEDED] font-sans text-center leading-8">Crear cuenta</CardTitle>
-          <CardDescription className="text-[16px] text-[#EDEDED]/60 text-center font-normal font-sans">
+          <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">Crear cuenta</CardTitle>
+          <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
             Regístrate como músico en Bandanize
           </CardDescription>
         </CardHeader>
@@ -192,7 +192,7 @@ function Register({ onBack }: { onBack: () => void }) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-[14px] text-[#EDEDED] font-normal">Usuario</Label>
+              <Label htmlFor="username" className="text-[14px] text-foreground font-normal">Usuario</Label>
               <Input
                 id="username"
                 type="text"
@@ -200,11 +200,11 @@ function Register({ onBack }: { onBack: () => void }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] placeholder:text-[#EDEDED]/25 h-[36px] rounded-[8px]"
+                className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground placeholder:text-muted-foreground/50 h-[36px] rounded-[8px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[14px] text-[#EDEDED] font-normal">Email</Label>
+              <Label htmlFor="email" className="text-[14px] text-foreground font-normal">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -212,18 +212,18 @@ function Register({ onBack }: { onBack: () => void }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] placeholder:text-[#EDEDED]/25 h-[36px] rounded-[8px]"
+                className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground placeholder:text-muted-foreground/50 h-[36px] rounded-[8px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-[14px] text-[#EDEDED] font-normal">Contraseña</Label>
+              <Label htmlFor="password" className="text-[14px] text-foreground font-normal">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] h-[36px] rounded-[8px]"
+                className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground h-[36px] rounded-[8px]"
               />
             </div>
             {error && (
@@ -232,13 +232,13 @@ function Register({ onBack }: { onBack: () => void }) {
               </div>
             )}
             <div className="flex flex-col gap-3 mt-4">
-              <Button type="submit" className="w-full bg-[#A3E635] hover:bg-[#92d030] text-[#151518] font-sans text-[14px] h-[40px] rounded-[8px]">
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-sans text-[14px] h-[40px] rounded-[8px]">
                 Registrarse
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full bg-[#151518] border-[#2B2B31] text-[#EDEDED] hover:bg-[#1f1f22] hover:text-white font-sans text-[14px] h-[36px] rounded-[8px]"
+                className="w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[36px] rounded-[8px]"
                 onClick={onBack}
               >
                 Volver al inicio de sesión

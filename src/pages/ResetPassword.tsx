@@ -44,9 +44,9 @@ export function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C] p-4">
-        <Card className="w-[448px] bg-[#151518] border-[#2B2B31] rounded-[14px] p-6 shadow-none">
-            <CardContent className="pt-6 text-center text-[#EDEDED]">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
+            <CardContent className="pt-6 text-center text-foreground">
                 Token inválido o faltante. Por favor solicita un nuevo enlace.
                 <div className="mt-4">
                      <Link to="/forgot-password">
@@ -60,43 +60,43 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C] p-4">
-      <Card className="w-[448px] bg-[#151518] border-[#2B2B31] rounded-[14px] p-6 shadow-none">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
         <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
           <div className="flex items-center justify-center">
             <div className="w-[112px] h-[112px] flex items-center justify-center bg-white/5 rounded-full mb-4">
                <img src={Logo} alt="Bandanize Logo" className="size-16" />
             </div>
           </div>
-          <CardTitle className="text-[30px] font-bold text-[#EDEDED] font-sans text-center leading-8">
+          <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">
             Nueva contraseña
           </CardTitle>
-          <CardDescription className="text-[16px] text-[#EDEDED]/60 text-center font-normal font-sans">
+          <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
             Introduce tu nueva contraseña
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="space-y-2">
-              <Label htmlFor="newPassword" className="text-[14px] text-[#EDEDED] font-normal">Nueva Contraseña</Label>
+              <Label htmlFor="newPassword" className="text-[14px] text-foreground font-normal">Nueva Contraseña</Label>
               <Input
                 id="newPassword"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] h-[36px] rounded-[8px]"
+                className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground h-[36px] rounded-[8px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-[14px] text-[#EDEDED] font-normal">Confirmar Contraseña</Label>
+              <Label htmlFor="confirmPassword" className="text-[14px] text-foreground font-normal">Confirmar Contraseña</Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] h-[36px] rounded-[8px]"
+                className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground h-[36px] rounded-[8px]"
               />
             </div>
 
@@ -104,7 +104,7 @@ export function ResetPassword() {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full bg-[#A3E635] hover:bg-[#92d030] text-[#151518] font-sans text-[14px] h-[40px] rounded-[8px]"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-sans text-[14px] h-[40px] rounded-[8px]"
               >
                 {loading ? 'Restableciendo...' : 'Guardar contraseña'}
               </Button>

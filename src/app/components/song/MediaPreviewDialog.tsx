@@ -12,7 +12,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
 
   return (
     <Dialog open={!!file} onOpenChange={onClose}>
-        <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED] max-w-4xl w-full">
+        <DialogContent className="bg-card border-border text-foreground max-w-4xl w-full">
             <DialogHeader>
                 <DialogTitle>{file.name}</DialogTitle>
             </DialogHeader>

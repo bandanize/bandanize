@@ -113,20 +113,20 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
     <div
       ref={ref}
       style={{ opacity }}
-      className="group flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg hover:bg-[#151518] transition-all cursor-move mb-2"
+      className="group flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg hover:bg-card transition-all cursor-move mb-2"
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
       <div className="cursor-grab">
-           <GripVertical className="size-5 text-[#2B2B31] group-hover:text-[#EDEDED]/40" />
+           <GripVertical className="size-5 text-muted-foreground group-hover:text-muted-foreground/60" />
       </div>
      
       <div 
         className="flex-1 cursor-pointer"
         onClick={() => onSelect(listId, song)}
       >
-        <p className="font-medium text-[#EDEDED] text-[15px]">{song.name}</p>
-        <p className="text-xs text-[#EDEDED]/50 font-medium">
+        <p className="font-medium text-foreground text-[15px]">{song.name}</p>
+        <p className="text-xs text-muted-foreground font-medium">
           {song.originalBand || song.bandName}
           {song.bpm && ` • ${song.bpm} BPM`}
           {song.key && ` • ${song.key}`}
@@ -137,7 +137,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
         <Button
             variant="ghost"
             size="sm"
-            className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-[#EDEDED] hover:bg-[#2B2B31] transition-all"
+            className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
             onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onEdit(listId, song);
@@ -150,7 +150,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
       <Button
         variant="ghost"
         size="sm"
-        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20 transition-all"
+        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 transition-all"
         onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             onDelete(listId, song.id);
@@ -376,36 +376,36 @@ export function SongManager() {
   return (
     <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true }}>
       <div className="space-y-6">
-        <Card className="bg-[#151518] border-[#2B2B31]">
+        <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="text-[#EDEDED]">{t('songs_list', 'Listas de canciones')}</CardTitle>
+              <CardTitle className="text-foreground">{t('songs_list', 'Listas de canciones')}</CardTitle>
               <Dialog open={openListDialog} onOpenChange={setOpenListDialog}>
                 <DialogTrigger asChild>
-                  <Button className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                     <Plus className="size-4 md:mr-2" />
                     <span className="hidden md:inline">{t('new_list', 'Nueva lista')}</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                <DialogContent className="bg-card border-border text-foreground">
                   <DialogHeader>
                     <DialogTitle>{t('create_list', 'Crear lista de canciones')}</DialogTitle>
-                    <DialogDescription className="text-[#EDEDED]/60">
+                    <DialogDescription className="text-muted-foreground">
                       {t('create_list_desc', 'Agrupa tus canciones por álbum, setlist, etc.')}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="list-name" className="text-[#EDEDED]">{t('list_name', 'Nombre de la lista')}</Label>
+                      <Label htmlFor="list-name" className="text-foreground">{t('list_name', 'Nombre de la lista')}</Label>
                       <Input
                         id="list-name"
                         placeholder="Ej: Álbum 2024"
                         value={listName}
                         onChange={(e) => setListName(e.target.value)}
-                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        className="bg-background border-border text-foreground"
                       />
                     </div>
-                    <Button onClick={handleCreateList} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                    <Button onClick={handleCreateList} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                       {t('create_list', 'Crear lista')}
                     </Button>
                   </div>
@@ -415,7 +415,7 @@ export function SongManager() {
           </CardHeader>
           <CardContent>
             {currentProject.songLists.length === 0 ? (
-              <div className="text-center py-8 text-[#EDEDED]/40">
+              <div className="text-center py-8 text-muted-foreground">
                 <img src={SongListImage} alt="Song list" className="size-12 mx-auto mb-2" />
                 <p>{t('no_lists', 'No hay listas aún')}</p>
                 <p className="text-sm">{t('create_first_list', 'Crea tu primera lista de canciones')}</p>
@@ -423,19 +423,19 @@ export function SongManager() {
             ) : (
               <Accordion type="single" collapsible className="w-full space-y-4">
                 {currentProject.songLists.map((list) => (
-                  <AccordionItem key={list.id} value={list.id} className="border border-[#2B2B31] rounded-lg bg-[#151518] px-2 overflow-hidden last:border-b-[#2B2B31] last:border-b">
-                    <AccordionTrigger className="hover:no-underline text-[#EDEDED] hover:text-[#EDEDED]/80">
+                  <AccordionItem key={list.id} value={list.id} className="border border-border rounded-lg bg-card px-2 overflow-hidden last:border-b-border last:border-b">
+                    <AccordionTrigger className="hover:no-underline text-foreground hover:text-foreground/80">
                       <div className="flex items-center justify-between w-full pr-4">
                         <span className="font-medium text-lg">{list.name}</span>
                         <div className="flex items-center gap-3">
-                          <span className="text-sm text-[#EDEDED]/60 mr-2">
+                          <span className="text-sm text-muted-foreground mr-2">
                             {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
                           </span>
                           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                              {/* Edit List Button */}
                              <div
                                   role="button"
-                                  className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-[#A3E635] hover:bg-[#A3E635]/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
                                   onClick={(e: React.MouseEvent) => {
                                       e.stopPropagation();
                                       setListToEdit(list);
@@ -448,7 +448,7 @@ export function SongManager() {
                               {/* Delete List Button */}
                               <div
                                   role="button"
-                                  className="h-8 w-8 p-0 text-[#EDEDED]/60 hover:text-red-500 hover:bg-red-900/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
                                   onClick={(e: React.MouseEvent) => {
                                       e.stopPropagation();
                                       handleDeleteList(list.id);
@@ -465,7 +465,7 @@ export function SongManager() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full h-10 border border-[#2B2B31] bg-transparent text-[#EDEDED]/60 hover:text-[#EDEDED] hover:bg-[#2B2B31] hover:border-[#EDEDED]/20 justify-center mb-2"
+                          className="w-full h-10 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-2"
                           onClick={() => {
                             setSelectedListId(list.id);
                             setOpenSongDialog(true);
@@ -497,37 +497,37 @@ export function SongManager() {
         </Card>
   
         <Dialog open={openSongDialog} onOpenChange={setOpenSongDialog}>
-          <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+          <DialogContent className="bg-card border-border text-foreground">
             <DialogHeader>
               <DialogTitle>{t('add_song', 'Añadir canción')}</DialogTitle>
-              <DialogDescription className="text-[#EDEDED]/60">
+              <DialogDescription className="text-muted-foreground">
                 {t('add_song_desc', 'Completa la información de la canción')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="song-name" className="text-[#EDEDED]">{t('song_name', 'Nombre de la canción')} <span className="text-red-500">*</span></Label>
+                <Label htmlFor="song-name" className="text-foreground">{t('song_name', 'Nombre de la canción')} <span className="text-destructive">*</span></Label>
                 <Input
                   id="song-name"
                   placeholder="Ej: Wonderwall"
                   value={songData.name}
                   onChange={(e) => setSongData({ ...songData, name: e.target.value })}
-                  className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="band-name" className="text-[#EDEDED]">{t('original_band', 'Banda Original (Artista)')}</Label>
+                <Label htmlFor="band-name" className="text-foreground">{t('original_band', 'Banda Original (Artista)')}</Label>
                 <Input
                   id="band-name"
                   placeholder="Ej: Oasis"
                   value={songData.originalBand}
                   onChange={(e) => setSongData({ ...songData, originalBand: e.target.value })}
-                  className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bpm" className="text-[#EDEDED]">{t('bpm', 'BPM')}</Label>
+                  <Label htmlFor="bpm" className="text-foreground">{t('bpm', 'BPM')}</Label>
                   <Input
                     id="bpm"
                     type="number"
@@ -537,21 +537,21 @@ export function SongManager() {
                          const val = e.target.value;
                          setSongData({ ...songData, bpm: val === '' ? null : parseInt(val) })
                     }}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="key" className="text-[#EDEDED]">{t('key', 'Tonalidad')}</Label>
+                  <Label htmlFor="key" className="text-foreground">{t('key', 'Tonalidad')}</Label>
                   <Input
                     id="key"
                     placeholder="Opcional (Ej: C)"
                     value={songData.key}
                     onChange={(e) => setSongData({ ...songData, key: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
               </div>
-              <Button onClick={handleCreateSong} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+              <Button onClick={handleCreateSong} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                 {t('create_song', 'Crear canción')}
               </Button>
             </div>
@@ -559,22 +559,22 @@ export function SongManager() {
         </Dialog>
   
         <Dialog open={editListDialog} onOpenChange={setEditListDialog}>
-          <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+          <DialogContent className="bg-card border-border text-foreground">
               <DialogHeader>
                   <DialogTitle>{t('edit_list', 'Editar lista')}</DialogTitle>
-                  <DialogDescription className="text-[#EDEDED]/60">{t('edit_list_desc', 'cambia el nombre de la lista')}</DialogDescription>
+                  <DialogDescription className="text-muted-foreground">{t('edit_list_desc', 'cambia el nombre de la lista')}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                      <Label htmlFor="edit-list-name" className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
+                      <Label htmlFor="edit-list-name" className="text-foreground">{t('name', 'Nombre')}</Label>
                       <Input 
                           id="edit-list-name"
                           value={editListName}
                           onChange={(e) => setEditListName(e.target.value)}
-                          className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                          className="bg-background border-border text-foreground"
                       />
                   </div>
-                  <Button onClick={handleUpdateList} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                  <Button onClick={handleUpdateList} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                       {t('save_changes', 'Guardar cambios')}
                   </Button>
               </div>
@@ -583,30 +583,30 @@ export function SongManager() {
         
       {/* Edit Song Dialog */}
        <Dialog open={isEditSongOpen} onOpenChange={setIsEditSongOpen}>
-            <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+            <DialogContent className="bg-card border-border text-foreground">
                 <DialogHeader>
                     <DialogTitle>{t('edit_song', 'Editar canción')}</DialogTitle>
-                    <DialogDescription className="text-[#EDEDED]/60">{t('edit_song_desc', 'Modifica los detalles de la canción')}</DialogDescription>
+                    <DialogDescription className="text-muted-foreground">{t('edit_song_desc', 'Modifica los detalles de la canción')}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
+                        <Label className="text-foreground">{t('name', 'Nombre')}</Label>
                         <Input
                             value={editSongForm.name}
                             onChange={(e) => setEditSongForm({ ...editSongForm, name: e.target.value })}
-                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                            className="bg-background border-border text-foreground"
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">{t('band', 'Banda')}</Label>
+                        <Label className="text-foreground">{t('band', 'Banda')}</Label>
                         <Input
                             value={editSongForm.originalBand}
                             onChange={(e) => setEditSongForm({ ...editSongForm, originalBand: e.target.value })}
-                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                            className="bg-background border-border text-foreground"
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">{t('bpm', 'BPM')}</Label>
+                        <Label className="text-foreground">{t('bpm', 'BPM')}</Label>
                         <Input
                             type="number"
                             value={editSongForm.bpm === null ? '' : editSongForm.bpm}
@@ -614,15 +614,15 @@ export function SongManager() {
                                 const val = e.target.value;
                                 setEditSongForm({ ...editSongForm, bpm: val === '' ? null : parseInt(val) })
                             }}
-                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                            className="bg-background border-border text-foreground"
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[#EDEDED]">{t('key', 'Tonalidad')}</Label>
+                        <Label className="text-foreground">{t('key', 'Tonalidad')}</Label>
                         <Input
                             value={editSongForm.key}
                             onChange={(e) => setEditSongForm({ ...editSongForm, key: e.target.value })}
-                            className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                            className="bg-background border-border text-foreground"
                         />
                     </div>
                 </div>
@@ -630,7 +630,7 @@ export function SongManager() {
                     <Button
                         onClick={handleUpdateSong}
                         disabled={isSavingSong}
-                        className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                         {isSavingSong ? t('saving', 'Guardando...') : t('save_changes', 'Guardar cambios')}
                     </Button>

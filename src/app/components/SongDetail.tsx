@@ -260,17 +260,17 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
       />
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="bg-[#151518] rounded-[14px] p-0 h-[36px] w-fit">
+        <TabsList className="bg-card rounded-[14px] p-0 h-[36px] w-fit">
           <TabsTrigger 
             value="info"
-            className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] px-4 font-sans font-normal text-[14px]"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] px-4 font-sans font-normal text-[14px]"
           >
             <FileText className="size-4 mr-2" />
             {t('info', 'Info')}
           </TabsTrigger>
           <TabsTrigger 
             value="media"
-            className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] px-4 font-sans font-normal text-[14px]"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] px-4 font-sans font-normal text-[14px]"
           >
             <Upload className="size-4 mr-2" />
             {t('media', 'Media')}

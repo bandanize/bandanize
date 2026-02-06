@@ -83,37 +83,38 @@ export function TabList({
   };
 
   return (
-    <Card className="bg-[#151518] border-[#2B2B31] h-fit">
+
+    <Card className="bg-card border-border h-fit">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle className="text-[#EDEDED]">{t('tabs_title', 'Tablaturas')} ({song.tablatures.length})</CardTitle>
+          <CardTitle className="text-foreground">{t('tabs_title', 'Tablaturas')} ({song.tablatures.length})</CardTitle>
           <Dialog open={openTabDialog} onOpenChange={setOpenTabDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                 <Plus className="size-4 md:mr-2" />
                 <span className="hidden md:inline">{t('new_tab', 'Nueva tablatura')}</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+            <DialogContent className="bg-card border-border text-foreground">
               <DialogHeader>
                 <DialogTitle>{t('create_tab', 'Crear tablatura')}</DialogTitle>
-                <DialogDescription className="text-[#EDEDED]/60">
+                <DialogDescription className="text-muted-foreground">
                   {t('create_tab_desc', 'Añade una nueva tablatura para un instrumento')}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="tab-instrument" className="text-[#EDEDED]">{t('instrument', 'Instrumento')}</Label>
+                  <Label htmlFor="tab-instrument" className="text-foreground">{t('instrument', 'Instrumento')}</Label>
                   <Select
                     value={tabData.instrument}
                     onValueChange={(value) => setTabData({ ...tabData, instrument: value })}
                   >
-                    <SelectTrigger id="tab-instrument" className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]">
+                    <SelectTrigger id="tab-instrument" className="bg-background border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                    <SelectContent className="bg-card border-border text-foreground">
                       {INSTRUMENTS.map((inst) => (
-                        <SelectItem key={inst.value} value={inst.value} className="focus:bg-[#2B2B31] focus:text-[#EDEDED]">
+                        <SelectItem key={inst.value} value={inst.value} className="focus:bg-accent focus:text-accent-foreground">
                           {inst.label}
                         </SelectItem>
                       ))}
@@ -121,26 +122,26 @@ export function TabList({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tab-name" className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
+                  <Label htmlFor="tab-name" className="text-foreground">{t('name', 'Nombre')}</Label>
                   <Input
                     id="tab-name"
                     placeholder="Ej: Guitarra rítmica"
                     value={tabData.name}
                     onChange={(e) => setTabData({ ...tabData, name: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tab-tuning" className="text-[#EDEDED]">{t('tuning', 'Afinación')}</Label>
+                  <Label htmlFor="tab-tuning" className="text-foreground">{t('tuning', 'Afinación')}</Label>
                   <Input
                     id="tab-tuning"
                     placeholder="Opcional (Ej: Standard EADGBE)"
                     value={tabData.tuning}
                     onChange={(e) => setTabData({ ...tabData, tuning: e.target.value })}
-                    className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
-                <Button onClick={handleCreate} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                <Button onClick={handleCreate} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                   {t('create_tab', 'Crear tablatura')}
                 </Button>
               </div>
@@ -148,32 +149,32 @@ export function TabList({
           </Dialog>
 
            <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
-               <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+               <DialogContent className="bg-card border-border text-foreground">
                    <DialogHeader>
                        <DialogTitle>{t('edit_tab', 'Editar tablatura')}</DialogTitle>
                    </DialogHeader>
                    <div className="space-y-4 py-4">
                        <div className="space-y-2">
-                             <Label htmlFor="edit-tab-name" className="text-[#EDEDED]">{t('name', 'Nombre')}</Label>
+                             <Label htmlFor="edit-tab-name" className="text-foreground">{t('name', 'Nombre')}</Label>
                              <Input
                                id="edit-tab-name"
                                value={editTabDetails.name}
                                onChange={(e) => setEditTabDetails({ ...editTabDetails, name: e.target.value })}
-                               className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                               className="bg-background border-border text-foreground"
                              />
                        </div>
                        <div className="space-y-2">
-                           <Label htmlFor="edit-tab-instrument" className="text-[#EDEDED]">{t('instrument', 'Instrumento')}</Label>
+                           <Label htmlFor="edit-tab-instrument" className="text-foreground">{t('instrument', 'Instrumento')}</Label>
                            <Select
                                value={editTabDetails.instrument}
                                onValueChange={(value) => setEditTabDetails({ ...editTabDetails, instrument: value })}
                            >
-                               <SelectTrigger id="edit-tab-instrument" className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]">
+                               <SelectTrigger id="edit-tab-instrument" className="bg-background border-border text-foreground">
                                    <SelectValue />
                                </SelectTrigger>
-                               <SelectContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                               <SelectContent className="bg-card border-border text-foreground">
                                    {INSTRUMENTS.map((inst) => (
-                                       <SelectItem key={inst.value} value={inst.value} className="focus:bg-[#2B2B31] focus:text-[#EDEDED]">
+                                       <SelectItem key={inst.value} value={inst.value} className="focus:bg-accent focus:text-accent-foreground">
                                            {inst.label}
                                        </SelectItem>
                                    ))}
@@ -181,15 +182,15 @@ export function TabList({
                            </Select>
                        </div>
                        <div className="space-y-2">
-                           <Label htmlFor="edit-tab-tuning" className="text-[#EDEDED]">{t('tuning', 'Afinación')}</Label>
+                           <Label htmlFor="edit-tab-tuning" className="text-foreground">{t('tuning', 'Afinación')}</Label>
                            <Input
                                id="edit-tab-tuning"
                                value={editTabDetails.tuning}
                                onChange={(e) => setEditTabDetails({ ...editTabDetails, tuning: e.target.value })}
-                               className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                               className="bg-background border-border text-foreground"
                            />
                        </div>
-                       <Button onClick={handleUpdate} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                       <Button onClick={handleUpdate} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                            {t('save_changes', 'Guardar cambios')}
                        </Button>
                    </div>
@@ -200,36 +201,36 @@ export function TabList({
       <CardContent>
         {song.tablatures.length === 0 ? (
           <div className="text-center py-12">
-            <img src={TabImage} alt="tab" className="size-12 mx-auto text-[#EDEDED]/40 mb-2" />
-            <p className="text-[#EDEDED]/60">{t('no_tabs', 'No hay tablaturas aún')}</p>
-            <p className="text-sm text-[#EDEDED]/40">{t('create_first_tab', 'Crea tu primera tablatura')}</p>
+            <img src={TabImage} alt="tab" className="size-12 mx-auto text-muted-foreground/40 mb-2" />
+            <p className="text-muted-foreground/60">{t('no_tabs', 'No hay tablaturas aún')}</p>
+            <p className="text-sm text-muted-foreground/40">{t('create_first_tab', 'Crea tu primera tablatura')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2">
             {song.tablatures.map((tab) => (
               <Card
                 key={tab.id}
-                className={`cursor-pointer transition-all bg-[#0B0B0C] border-[#2B2B31] ${
-                  selectedTabId === tab.id ? 'ring-2 ring-[#A3E635]' : ''
+                className={`cursor-pointer transition-all bg-secondary/10 border-border ${
+                  selectedTabId === tab.id ? 'ring-2 ring-primary' : ''
                 }`}
                 onClick={() => onSelectTab(tab.id)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-[#151518] rounded-md border border-[#2B2B31]">
+                          <div className="p-2 bg-secondary/20 rounded-md border border-border">
                             {getInstrumentIcon(tab.instrumentIcon || 'guitar')}
                           </div>
                           <div>
-                            <h4 className="font-medium text-[#EDEDED]">{tab.name}</h4>
-                            <p className="text-xs text-[#EDEDED]/60">{tab.tuning || t('standard_tuning', 'Estandar')}</p>
+                            <h4 className="font-medium text-foreground">{tab.name}</h4>
+                            <p className="text-xs text-muted-foreground">{tab.tuning || t('standard_tuning', 'Estandar')}</p>
                           </div>
                         </div>
                         <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost" 
                               size="icon"
-                              className="h-8 w-8 text-[#EDEDED]/40 hover:text-[#A3E635] hover:bg-[#A3E635]/10"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
                               onClick={(e) => openEdit(e, tab)}
                             >
                               <Edit className="size-4" />
@@ -237,7 +238,7 @@ export function TabList({
                             <Button
                               variant="ghost" 
                               size="icon"
-                              className="h-8 w-8 text-[#EDEDED]/40 hover:text-red-500 hover:bg-red-900/20"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onDeleteTab(tab.id);

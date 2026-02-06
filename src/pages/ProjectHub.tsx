@@ -56,10 +56,10 @@ export function ProjectHub() {
 
   if (isLoading) {
        return (
-         <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C]">
+         <div className="min-h-screen flex items-center justify-center bg-background">
              <div className="flex flex-col items-center gap-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A3E635]"></div>
-                  <p className="text-[#EDEDED] opacity-60">{t('loading_project', 'Cargando proyecto...')}</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  <p className="text-foreground opacity-60">{t('loading_project', 'Cargando proyecto...')}</p>
              </div>
          </div>
        );
@@ -132,10 +132,10 @@ export function ProjectHub() {
 
   if (!currentProject || currentProject.id !== projectId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B0B0C]">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <p className="text-[#EDEDED]">{t('loading_project', 'Cargando proyecto...')}</p>
-          <Button onClick={() => navigate('/dashboard')} className="mt-4 bg-[#A3E635] text-[#151518]">
+          <p className="text-foreground">{t('loading_project', 'Cargando proyecto...')}</p>
+          <Button onClick={() => navigate('/dashboard')} className="mt-4 bg-primary text-primary-foreground">
             {t('back_to_dashboard', 'Volver al dashboard')}
           </Button>
         </div>
@@ -152,7 +152,7 @@ export function ProjectHub() {
                 onClick={() => navigate('/dashboard')} 
                 className="w-[40px] h-[36px] bg-transparent hover:bg-white/5 rounded-[8px] p-0"
             >
-              <ArrowLeft className="size-4 text-[#EDEDED]" />
+              <ArrowLeft className="size-4 text-foreground" />
             </Button>
             
             <div className="flex-1 flex items-center gap-3 min-w-[200px]">
@@ -164,10 +164,10 @@ export function ProjectHub() {
                    )}
                </div>
                <div className="min-w-0">
-                   <h1 className="text-[20px] sm:text-[24px] font-normal font-poppins text-[#EDEDED] leading-8 truncate">{currentProject.name}</h1>
+                   <h1 className="text-[20px] sm:text-[24px] font-normal font-poppins text-foreground leading-8 truncate">{currentProject.name}</h1>
                    <div className="flex items-center gap-1 mt-1">
-                       <span className="w-[7px] h-[7px] bg-[#A3E635] rounded-full inline-block"></span>
-                       <span className="text-[14px] font-normal font-poppins text-[#EDEDED]/60 leading-5">
+                       <span className="w-[7px] h-[7px] bg-primary rounded-full inline-block"></span>
+                       <span className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">
                            {onlineCount} {t('online', 'Online')}
                        </span>
                    </div>
@@ -181,66 +181,66 @@ export function ProjectHub() {
               <>
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={openEditDialog} className="bg-[#151518] border border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31] font-sans text-[14px] font-normal flex h-[36px] w-9 sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
+                  <Button onClick={openEditDialog} className="bg-card border border-border text-foreground hover:bg-accent font-sans text-[14px] font-normal flex h-[36px] w-9 sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
                     <PenLine className="size-4 sm:mr-2" />
                     <span className="hidden sm:inline">{t('edit_project', 'Editar proyecto')}</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-[#151518] border-[#2B2B31] text-[#EDEDED]">
+                <DialogContent className="bg-card border-border text-foreground">
                   <DialogHeader>
-                    <DialogTitle className="text-[#EDEDED]">{t('project_settings', 'Configuración del Proyecto')}</DialogTitle>
-                    <DialogDescription className="text-[#EDEDED]/60">
+                    <DialogTitle className="text-foreground">{t('project_settings', 'Configuración del Proyecto')}</DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
                       {t('update_project_info', 'Actualiza la información del proyecto o gestionalo.')}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 mt-4">
+                    <div className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-name" className="text-[#EDEDED]">{t('project_name', 'Nombre del proyecto')}</Label>
+                      <Label htmlFor="edit-name" className="text-foreground">{t('project_name', 'Nombre del proyecto')}</Label>
                       <Input
                         id="edit-name"
                         value={editData.name}
                         onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        className="bg-background border-border text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-description" className="text-[#EDEDED]">{t('description', 'Descripción')}</Label>
+                      <Label htmlFor="edit-description" className="text-foreground">{t('description', 'Descripción')}</Label>
                       <Textarea
                         id="edit-description"
                         value={editData.description}
                         onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                        className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                        className="bg-background border-border text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-image" className="text-[#EDEDED]">{t('image', 'Imagen del Proyecto')}</Label>
+                      <Label htmlFor="edit-image" className="text-foreground">{t('image', 'Imagen del Proyecto')}</Label>
                       <div className="flex gap-2">
                          <Input
                           id="edit-image"
                           value={editData.imageUrl}
                           onChange={(e) => setEditData({ ...editData, imageUrl: e.target.value })}
                           placeholder="URL de la imagen"
-                          className="flex-1 bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                          className="flex-1 bg-background border-border text-foreground"
                         />
                       </div>
                        <div className="mt-2">
-                           <Label htmlFor="upload-image" className="text-xs text-[#EDEDED]/60 mb-1 block">{t('or_upload_image', 'O subir imagen:')}</Label>
+                           <Label htmlFor="upload-image" className="text-xs text-muted-foreground mb-1 block">{t('or_upload_image', 'O subir imagen:')}</Label>
                            <Input
                               id="upload-image"
                               type="file"
                               accept="image/*"
                               onChange={handleFileUpload}
-                              className="bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED]"
+                              className="bg-background border-border text-foreground"
                            />
                        </div>
                     </div>
-                    <Button onClick={handleUpdateProject} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+                    <Button onClick={handleUpdateProject} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                       {t('save_changes', 'Guardar cambios')}
                     </Button>
                     
-                    <div className="border-t border-[#2B2B31] pt-4 mt-4">
-                        <Label className="text-red-500 mb-2 block">{t('danger_zone', 'Zona de Peligro')}</Label>
-                        <Button variant="destructive" className="w-full bg-red-900/20 text-red-500 hover:bg-red-900/40 border border-red-900/50" onClick={async () => {
+                    <div className="border-t border-border pt-4 mt-4">
+                        <Label className="text-destructive mb-2 block">{t('danger_zone', 'Zona de Peligro')}</Label>
+                        <Button variant="destructive" className="w-full bg-destructive/20 text-destructive hover:bg-destructive/40 border border-destructive/50" onClick={async () => {
                             if (window.confirm(t('delete_confirmation', "Are you sure?"))) {
                                 try {
                                     await handleDeleteProject(); 
@@ -269,24 +269,24 @@ export function ProjectHub() {
     >
       <div className="max-w-[1216px] w-full mx-auto py-8 px-4 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-[#151518] rounded-[14px] p-0 h-[36px] flex items-center w-full max-w-[303px] mx-auto">
+          <TabsList className="bg-card rounded-[14px] p-0 h-[36px] flex items-center w-full max-w-[303px] mx-auto">
             <TabsTrigger 
                 value="songs"
-                className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
             >
               <Music className="size-4 mr-2" />
               {t('songs', 'Canciones')}
             </TabsTrigger>
             <TabsTrigger 
                 value="chat"
-                className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
             >
               <MessageSquare className="size-4 mr-2" />
               {t('chat', 'Chat')}
             </TabsTrigger>
             <TabsTrigger 
                 value="members"
-                className="data-[state=active]:bg-[#0B0B0C] data-[state=active]:text-[#EDEDED] data-[state=active]:border data-[state=active]:border-[#2B2B31] data-[state=active]:shadow-none text-[#EDEDED]/60 rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
             >
               <Users className="size-4 mr-2" />
               {t('members', 'Miembros')}

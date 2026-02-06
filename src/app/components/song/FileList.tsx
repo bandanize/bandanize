@@ -30,19 +30,19 @@ export function FileList({
   const { t } = useTranslation();
 
   return (
-    <Card className="bg-[#151518] border-[#2B2B31]">
+    <Card className="bg-card border-border">
       <CardHeader>
         <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-[#EDEDED]">{t('files_media', 'Archivos y media')}</CardTitle>
-              <Button size="sm" onClick={() => onUpload('song')} disabled={isUploading} className="bg-[#A3E635] text-[#151518] hover:bg-[#92d030]">
+              <CardTitle className="text-foreground">{t('files_media', 'Archivos y media')}</CardTitle>
+              <Button size="sm" onClick={() => onUpload('song')} disabled={isUploading} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 <Plus className="size-4 md:mr-2" />
                 <span className="hidden md:inline">{t('add_file', 'Añadir archivo')}</span>
               </Button>
             </div>
             {isUploading && (
                 <div className="space-y-2">
-                    <div className="flex justify-between text-sm text-[#EDEDED]/60">
+                    <div className="flex justify-between text-sm text-muted-foreground">
                         <span>{uploadStatus}</span>
                         <span>{uploadProgress}%</span>
                     </div>
@@ -54,24 +54,24 @@ export function FileList({
       <CardContent>
         {song.files.length === 0 ? (
           <>
-            <img src={SpeakerIcon} alt="speaker" className="size-12 mx-auto text-[#EDEDED]/40 mb-2" />
-            <p className="text-sm text-[#EDEDED]/40 text-center py-4">
+            <img src={SpeakerIcon} alt="speaker" className="size-12 mx-auto text-muted-foreground/40 mb-2" />
+            <p className="text-sm text-muted-foreground/40 text-center py-4">
               {t('no_files', 'No hay archivos adjuntos')}
             </p>
           </>
         ) : (
           <div className="space-y-2">
             {song.files.map((file) => (
-              <div key={file.url} className="flex items-center gap-3 p-3 bg-[#0B0B0C] border border-[#2B2B31] rounded-lg group">
+              <div key={file.url} className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group">
                 {file.type.startsWith('audio') ? (
                   <FileAudio className="size-5 text-blue-500" />
                 ) : file.type.startsWith('image') ? (
                   <ImageIcon className="size-5 text-green-500" />
                 ) : (
-                  <File className="size-5 text-[#EDEDED]/60" />
+                  <File className="size-5 text-muted-foreground" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[#EDEDED] truncate" title={file.name}>{file.name}</p>
+                  <p className="text-sm font-medium text-foreground truncate" title={file.name}>{file.name}</p>
                 </div>
                 <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                     {(file.type.startsWith('audio') || file.type.startsWith('video') || file.type.startsWith('image')) && (
@@ -91,7 +91,7 @@ export function FileList({
                       download 
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 hover:bg-[#2B2B31] rounded-md text-[#EDEDED]/60"
+                      className="p-2 hover:bg-accent rounded-md text-muted-foreground"
                       title={t('download', "Descargar")}
                     >
                         <Download className="size-4" />
@@ -99,7 +99,7 @@ export function FileList({
                     <Button
                       variant="ghost" 
                       size="icon"
-                      className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
                       onClick={() => onDelete(file.url)}
                       title={t('delete', "Eliminar")}
                     >
