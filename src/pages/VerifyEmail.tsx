@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -22,21 +23,22 @@ export function VerifyEmail() {
 
     const verifyToken = async () => {
       try {
-        const response = await fetch(`/api/auth/verify-email?token=${token}`);
-        if (response.ok) {
+        const response = await api.get(`/auth/verify-email?token=${token}`);
+        if (response.status === 200) {
           setStatus('success');
           // Auto redirect after 5 seconds
           setTimeout(() => {
              navigate('/login');
           }, 5000);
         } else {
-          const errorText = await response.text();
+             // Should be caught by catch block if status is not 2xx, but just in case
           setStatus('error');
-          setMessage(errorText || t('verify_email_failed', 'Verification failed.'));
+          setMessage(t('verify_email_failed', 'Verification failed.'));
         }
-      } catch {
+      } catch (error: any) {
         setStatus('error');
-        setMessage(t('verify_email_error', 'An error occurred during verification.'));
+        const errorText = error.response?.data || t('verify_email_failed', 'Verification failed.');
+        setMessage(errorText);
       }
     };
 
