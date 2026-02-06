@@ -5,10 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { UserPlus, Mail, User, Check, ChevronsUpDown, Trash2 } from 'lucide-react';
+import { UserPlus, Mail, User, Check, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover";
 import { cn } from "@/app/components/ui/utils";
 import api from '@/services/api';
 import { useTranslation } from 'react-i18next';
@@ -20,10 +19,15 @@ export function MembersPanel() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   
+  interface User {
+    id: string;
+    email: string;
+    name: string;
+  }
+
   // Search states
-  const [openCombobox, setOpenCombobox] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<User[]>([]);
   // const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -86,58 +90,45 @@ export function MembersPanel() {
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2 flex flex-col">
                     <Label className="text-[#EDEDED]">{t('user_label', 'Usuario')}</Label>
-                    <Popover open={openCombobox} onOpenChange={setOpenCombobox} modal={true}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openCombobox}
-                          className="w-full justify-between bg-[#0B0B0C] border-[#2B2B31] text-[#EDEDED] hover:bg-[#2B2B31]"
-                        >
-                          {email
-                            ? searchResults.find((user) => user.email === email)?.name || email
-                            : t('search_user', "Buscar usuario...")}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[350px] p-0 bg-[#151518] border-[#2B2B31]">
-                        <Command shouldFilter={false} className="bg-[#151518]">
-                          <CommandInput 
-                            placeholder={t('search_placeholder', "Buscar por email o nombre...")}
-                            value={searchValue}
-                            onValueChange={setSearchValue}
-                            className="text-[#EDEDED]"
-                          />
-                          <CommandList>
-                            <CommandEmpty className="py-2 text-center text-sm text-[#EDEDED]/60">{t('no_users_found', "No se encontraron usuarios.")}</CommandEmpty>
-                            <CommandGroup>
-                              {searchResults.map((user) => (
-                                <CommandItem
-                                  key={user.id}
-                                  value={user.email} 
-                                  onSelect={(currentValue) => {
-                                    setEmail(currentValue === email ? "" : currentValue);
-                                    setOpenCombobox(false);
-                                  }}
-                                  className="data-[selected=true]:bg-[#2B2B31] text-[#EDEDED]"
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      email === user.email ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  <div className="flex flex-col">
-                                      <span>{user.name}</span>
-                                      <span className="text-xs text-[#EDEDED]/60">{user.email}</span>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <div className="border border-[#2B2B31] rounded-md overflow-hidden bg-[#151518]">
+                      <Command shouldFilter={false} className="bg-[#151518]">
+                        <CommandInput 
+                          placeholder={t('search_placeholder', "Buscar por email o nombre...")}
+                          value={searchValue}
+                          onValueChange={setSearchValue}
+                          className="text-[#EDEDED]"
+                        />
+                        <CommandList>
+                          <CommandEmpty className="py-2 text-center text-sm text-[#EDEDED]/60">
+                             {searchValue ? t('no_users_found', "No se encontraron usuarios.") : t('start_typing', "Escribe para buscar...")}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {searchResults.map((user) => (
+                              <CommandItem
+                                key={user.id}
+                                value={user.email} 
+                                onSelect={(currentValue) => {
+                                  setEmail(currentValue === email ? "" : currentValue);
+                                  setSearchValue(user.email); // Auto-fill search with selected email for clarity
+                                }}
+                                className="data-[selected=true]:bg-[#2B2B31] text-[#EDEDED] cursor-pointer"
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    email === user.email ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                    <span>{user.name}</span>
+                                    <span className="text-xs text-[#EDEDED]/60">{user.email}</span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </div>
                   </div>
                   <Button onClick={handleInviteMember} className="w-full bg-[#A3E635] text-[#151518] hover:bg-[#92d030]" disabled={!email}>
                     {t('invite_to_project', 'Invitar al proyecto')}
