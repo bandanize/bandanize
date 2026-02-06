@@ -29,7 +29,10 @@ api.interceptors.response.use(
         // Handle 401 Unauthorized or 403 Forbidden (Expired/Invalid Token)
         if (_res?.status === 401 || _res?.status === 403) {
             // Don't redirect if it's a login attempt failure (invalid credentials)
-            if (!error.config.url.includes('/auth/login') && !window.location.pathname.includes('/login')) {
+            const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
+            const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+
+            if (!error.config.url.includes('/auth/login') && !isPublicRoute) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('currentUser');
                 window.location.href = '/login';
