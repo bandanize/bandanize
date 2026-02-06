@@ -7,6 +7,9 @@ import { Dashboard } from '@/pages/Dashboard';
 import { ProjectHub } from '@/pages/ProjectHub';
 import { UserProfile } from '@/pages/UserProfile';
 import { InvitationsPage } from '@/pages/InvitationsPage';
+
+import { ForgotPassword } from '@/pages/ForgotPassword';
+import { ResetPassword } from '@/pages/ResetPassword';
 import { Toaster } from '@/app/components/ui/sonner';
 import { ThemeProvider } from '@/app/components/theme-provider'; // Wrapper we will create
 import { CookiesProvider } from 'react-cookie'; // For general cookie usage throughout the app
@@ -22,6 +25,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/dashboard"
         element={
