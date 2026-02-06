@@ -205,26 +205,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         city: 'Unknown' // Default
       };
       
-      const response = await api.post(`/bands/create/${user.id}`, bandData);
-      const newBand = response.data;
-      
-      const newProject: Project = {
-        id: String(newBand.id),
-        name: newBand.name,
-        description: newBand.description,
-        imageUrl: newBand.photo,
-        ownerId: user.id,
-        members: newBand.members ? newBand.members.map((m: any) => ({
-            id: String(m.id),
-            name: m.name,
-            email: m.email
-        })) : [{ id: user.id, name: user.name, email: user.email }],
-        songLists: [],
-        chat: [],
-        createdAt: new Date(),
-      };
-
-      setProjects([...projects, newProject]);
+      await api.post(`/bands/create/${user.id}`, bandData);
+      await fetchProjects();
     } catch (error) {
       console.error("Error creating project", error);
     }
@@ -295,7 +277,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const leaveProject = async (projectId: string) => {
       try {
           await api.post(`/bands/${projectId}/leave`);
-          setProjects(projects.filter(p => p.id !== projectId));
+          await fetchProjects();
           if (currentProject?.id === projectId) {
               setCurrentProject(null);
           }
@@ -322,7 +304,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const deleteProject = async (projectId: string) => {
     try {
         await api.delete(`/bands/${projectId}`);
-        setProjects(prev => prev.filter(p => p.id !== projectId));
+        await fetchProjects();
         if (currentProject?.id === projectId) {
             setCurrentProject(null);
         }
