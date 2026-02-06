@@ -49,7 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           localStorage.removeItem('currentUser');
           localStorage.removeItem('token');
-          if (!window.location.pathname.includes('/login')) {
+          const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
+          const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+          
+          if (!isPublicRoute) {
              window.location.href = '/login';
           }
         }
