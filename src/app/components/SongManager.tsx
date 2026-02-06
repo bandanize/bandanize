@@ -6,7 +6,7 @@ import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/app/components/ui/accordion';
-import { Plus, Trash2, Edit, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, ChevronDown } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
@@ -113,7 +113,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
     <div
       ref={ref}
       style={{ opacity }}
-      className="group flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg hover:bg-card transition-all cursor-move mb-2"
+      className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all cursor-move mb-4"
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
@@ -424,42 +424,49 @@ export function SongManager() {
               <Accordion type="single" collapsible className="w-full space-y-4">
                 {currentProject.songLists.map((list) => (
                   <AccordionItem key={list.id} value={list.id} className="border border-border rounded-lg bg-card px-2 overflow-hidden last:border-b-border last:border-b">
-                    <AccordionTrigger className="hover:no-underline text-foreground hover:text-foreground/80">
-                      <div className="flex items-center justify-between w-full pr-4">
-                        <span className="font-medium text-lg">{list.name}</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-muted-foreground mr-2">
-                            {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
-                          </span>
-                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                             {/* Edit List Button */}
-                             <div
-                                  role="button"
-                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                  onClick={(e: React.MouseEvent) => {
-                                      e.stopPropagation();
-                                      setListToEdit(list);
-                                      setEditListName(list.name);
-                                      setEditListDialog(true);
-                                  }}
-                              >
-                                  <Edit className="size-4" />
-                              </div>
-                              {/* Delete List Button */}
-                              <div
-                                  role="button"
-                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                  onClick={(e: React.MouseEvent) => {
-                                      e.stopPropagation();
-                                      handleDeleteList(list.id);
-                                  }}
-                              >
-                                  <Trash2 className="size-4" />
-                              </div>
-                          </div>
+                  <AccordionTrigger className="hover:no-underline text-foreground hover:text-foreground/80 group [&>svg]:hidden">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <span className="font-medium text-lg">{list.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-muted-foreground mr-2">
+                          {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
+                        </span>
+                        <div className="flex items-center gap-1">
+                           {/* Edit List Button */}
+                           <div
+                                role="button"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                onClick={(e: React.MouseEvent) => {
+                                    e.stopPropagation();
+                                    setListToEdit(list);
+                                    setEditListName(list.name);
+                                    setEditListDialog(true);
+                                }}
+                            >
+                                <Edit className="size-4" />
+                            </div>
+                            {/* Delete List Button */}
+                            <div
+                                role="button"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                onClick={(e: React.MouseEvent) => {
+                                    e.stopPropagation();
+                                    handleDeleteList(list.id);
+                                }}
+                            >
+                                <Trash2 className="size-4" />
+                            </div>
+                            {/* Chevron Button (Dropdown) - Visual only, triggers parent accordion */}
+                            <div
+                                role="button"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                            >
+                                <ChevronDown className="size-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                            </div>
                         </div>
                       </div>
-                    </AccordionTrigger>
+                    </div>
+                  </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-2 pt-2">
                         <Button
