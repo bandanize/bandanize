@@ -157,11 +157,13 @@ export function ProjectHub() {
             </Button>
             
             <div className="flex-1 flex items-center gap-3 min-w-[200px]">
-               <div className="size-[32px] rounded-[3px] bg-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+               <div className="size-10 flex items-center justify-center flex-shrink-0">
                    {currentProject.imageUrl ? (
-                       <img src={getMediaUrl(currentProject.imageUrl)} alt={currentProject.name} className="w-full h-full object-cover" />
+                       <img src={getMediaUrl(currentProject.imageUrl)} alt={currentProject.name} className="w-full h-full object-cover rounded-md" />
                    ) : (
-                       <div className="size-[32px] bg-[linear-gradient(135deg,#A3E635_0%,#FF96A5_100%)]" />
+                       <div className="flex items-center justify-center size-full">
+                           <Music className="size-6 text-primary" />
+                       </div>
                    )}
                </div>
                <div className="min-w-0">
