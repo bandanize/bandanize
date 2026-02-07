@@ -89,8 +89,8 @@ export function UserProfile() {
                 <ArrowLeft className="size-4" />
                 </Button>
                 <div>
-                <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">{t('my_profile', 'Mi Perfil')}</h1>
-                <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">{t('personal_info', 'Gestiona tu información personal')}</p>
+                <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8 select-none">{t('my_profile', 'Mi Perfil')}</h1>
+                <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5 select-none">{t('personal_info', 'Gestiona tu información personal')}</p>
                 </div>
             </div>
             <LanguageSwitcher />
@@ -104,7 +104,7 @@ export function UserProfile() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <User className="size-5 text-primary" />
-              <CardTitle className="text-foreground">{t('personal_info', 'Información Personal')}</CardTitle>
+              <CardTitle className="text-foreground select-none">{t('personal_info', 'Información Personal')}</CardTitle>
             </div>
             <CardDescription className="text-muted-foreground">
               {t('update_project_info', 'Actualiza tu información de perfil')}
@@ -170,7 +170,7 @@ export function UserProfile() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Lock className="size-5 text-primary" />
-              <CardTitle className="text-foreground">{t('change_password', 'Cambiar Contraseña')}</CardTitle>
+              <CardTitle className="text-foreground select-none">{t('change_password', 'Cambiar Contraseña')}</CardTitle>
             </div>
             <CardDescription className="text-muted-foreground">
               {t('update_password', 'Actualiza tu contraseña de acceso')}
@@ -231,7 +231,7 @@ export function UserProfile() {
         {/* Zona de peligro */}
         <Card className="bg-card border-destructive/50">
           <CardHeader>
-            <CardTitle className="text-destructive">{t('danger_zone', 'Zona de peligro')}</CardTitle>
+            <CardTitle className="text-destructive select-none">{t('danger_zone', 'Zona de peligro')}</CardTitle>
             <CardDescription className="text-muted-foreground">
               Acciones irreversibles
             </CardDescription>

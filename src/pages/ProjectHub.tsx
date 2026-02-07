@@ -156,8 +156,8 @@ export function ProjectHub() {
               <ArrowLeft className="size-4 text-foreground" />
             </Button>
             
-            <div className="flex-1 flex items-center gap-3 min-w-[200px]">
-               <div className="size-10 flex items-center justify-center flex-shrink-0">
+            <div className="flex-1 flex items-center gap-3 min-w-[200px] select-none">
+               <div className="size-10 flex items-center justify-center flex-shrink-0 pointer-events-none">
                    {currentProject.imageUrl ? (
                        <img src={getMediaUrl(currentProject.imageUrl)} alt={currentProject.name} className="w-full h-full object-cover rounded-md" />
                    ) : (

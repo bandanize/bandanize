@@ -123,7 +123,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
     <div
       ref={ref}
       style={{ opacity }}
-      className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all cursor-move mb-4"
+      className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all cursor-move mb-4 select-none"
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
@@ -389,7 +389,7 @@ export function SongManager() {
         <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="text-foreground">{t('songs_list', 'Listas de canciones')}</CardTitle>
+              <CardTitle className="text-foreground select-none">{t('songs_list', 'Listas de canciones')}</CardTitle>
               <Dialog open={openListDialog} onOpenChange={setOpenListDialog}>
                 <DialogTrigger asChild>
                   <Button className="bg-primary text-primary-foreground hover:bg-primary/90">

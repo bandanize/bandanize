@@ -73,7 +73,7 @@ export function MembersPanel() {
       <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-foreground">{t('project_members', 'Miembros del proyecto')}</CardTitle>
+            <CardTitle className="text-foreground select-none">{t('project_members', 'Miembros del proyecto')}</CardTitle>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90">

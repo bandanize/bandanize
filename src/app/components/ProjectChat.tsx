@@ -122,7 +122,7 @@ export function ProjectChat() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-280px)] bg-card rounded-xl border border-border overflow-hidden">
-      <div className="p-4 border-b border-border flex justify-between items-center bg-card">
+      <div className="p-4 border-b border-border flex justify-between items-center bg-card select-none">
         <div>
           <h3 className="text-foreground font-medium">Chat del Proyecto</h3>
           <p className="text-xs text-muted-foreground">General</p>

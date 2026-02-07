@@ -91,9 +91,9 @@ export function Dashboard() {
         <div className="max-w-[1280px] w-full mx-auto px-6">
           <div className="max-w-[1216px] w-full flex justify-between items-center mx-auto">
             {/* Logo Section */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 select-none">
               <div className="flex items-center justify-center">
-                   <img src="/favicon.svg" alt="Bandanize" className="size-10" />
+                   <img src="/favicon.svg" alt="Bandanize" className="size-10 pointer-events-none" />
               </div>
               <div>
                 <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">Bandanize</h1>
@@ -150,7 +150,7 @@ export function Dashboard() {
         
         {/* Projects Header Row */}
         <div className="flex justify-between items-center mb-6 max-w-[1216px] w-full mx-auto h-[36px]">
-          <h2 className="text-[20px] font-bold text-foreground font-sans leading-7">{t('your_projects')}</h2>
+          <h2 className="text-[20px] font-bold text-foreground font-sans leading-7 select-none">{t('your_projects')}</h2>
           
           {/* Quick Access for Last Project */}
           {cookies.lastProjectId && projects.find(p => p.id === cookies.lastProjectId) && (
@@ -234,9 +234,9 @@ export function Dashboard() {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
              </div>
         ) : projects.length === 0 ? (
-          <div className="max-w-[1166px] w-full min-h-[336px] mx-auto flex flex-col items-center justify-center gap-6">
+          <div className="max-w-[1166px] w-full min-h-[336px] mx-auto flex flex-col items-center justify-center gap-6 select-none">
             <div className="w-[327px] h-[206px] flex items-center justify-center">
-                 <img src={EmptyProjectsImage} alt="EmptyProjects" className="w-full h-full object-contain" />
+                 <img src={EmptyProjectsImage} alt="EmptyProjects" className="w-full h-full object-contain pointer-events-none" />
             </div>
             <div className="flex flex-col items-center gap-1">
                 <h3 className="text-[20px] font-bold text-foreground font-sans leading-6 text-center">{t('no_projects_yet')}</h3>
