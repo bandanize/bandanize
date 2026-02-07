@@ -12,10 +12,15 @@ export function ProjectChat() {
   const { currentProject, sendMessage } = useProjects();
   const { user } = useAuth();
   const [message, setMessage] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   useEffect(() => {
@@ -116,7 +121,7 @@ export function ProjectChat() {
   if (!currentProject) return null;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] bg-card rounded-xl border border-border overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-280px)] bg-card rounded-xl border border-border overflow-hidden">
       <div className="p-4 border-b border-border flex justify-between items-center bg-card">
         <div>
           <h3 className="text-foreground font-medium">Chat del Proyecto</h3>
@@ -124,7 +129,7 @@ export function ProjectChat() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {currentProject.chat.length === 0 ? (
           <div className="text-center text-muted-foreground/60 py-8">
             <p>No hay mensajes aún</p>
@@ -142,6 +147,15 @@ export function ProjectChat() {
                 
                 <div className={`flex flex-col gap-1 max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
                   <span className="text-sm text-foreground font-medium">{msg.userName}</span>
+                  <div 
+                    className={`p-3 rounded-lg text-sm break-words ${
+                      isMe 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-secondary text-foreground'
+                    }`}
+                  >
+                    {highlightMentions(msg.message, isMe)}
+                  </div>
                   <span className="text-[10px] text-muted-foreground">
                     {(() => {
                       try {
@@ -154,21 +168,11 @@ export function ProjectChat() {
                       }
                     })()}
                   </span>
-                  <div 
-                    className={`p-3 rounded-lg text-sm break-words ${
-                      isMe 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-secondary text-foreground'
-                    }`}
-                  >
-                    {highlightMentions(msg.message, isMe)}
-                  </div>
                 </div>
               </div>
             );
           })
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       <div className="p-4 border-t border-border bg-card relative">
