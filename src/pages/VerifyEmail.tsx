@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
+import { AxiosError } from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -35,9 +36,10 @@ export function VerifyEmail() {
           setStatus('error');
           setMessage(t('verify_email_failed', 'Verification failed.'));
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         setStatus('error');
-        const errorText = error.response?.data || t('verify_email_failed', 'Verification failed.');
+        const err = error as AxiosError<string>;
+        const errorText = err.response?.data || t('verify_email_failed', 'Verification failed.');
         setMessage(errorText);
       }
     };

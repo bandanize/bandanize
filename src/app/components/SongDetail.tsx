@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useProjects, Song } from '@/contexts/ProjectContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'; // Keep tabs import if used elsewhere or remove if unused. It is NOT used anymore in this file.
+// Tabs imports removed
 // Actually, I should remove unused imports.
-import { Upload } from 'lucide-react';
+
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { uploadFileWithRetry } from '@/services/api';

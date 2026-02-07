@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -20,8 +21,10 @@ export function ForgotPassword() {
       await forgotPassword(email);
       setSubmitted(true);
       toast.success('Correo enviado. Revisa tu bandeja de entrada.');
-    } catch (err: any) {
-      toast.error(err.response?.data || 'Error al enviar la solicitud');
+      toast.success('Correo enviado. Revisa tu bandeja de entrada.');
+    } catch (err: unknown) {
+      const error = err as AxiosError<string>;
+      toast.error(error.response?.data || 'Error al enviar la solicitud');
     } finally {
       setLoading(false);
     }

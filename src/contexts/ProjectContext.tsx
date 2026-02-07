@@ -220,7 +220,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   // Fetch projects from API
   useEffect(() => {
     if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       fetchProjects();
       fetchInvitations();
     } else {
@@ -251,7 +251,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const updateProject = async (projectId: string, data: Partial<Project>) => {
     try {
-        const bandData: Record<string, any> = {};
+        const bandData: Record<string, unknown> = {};
         if (data.name) bandData.name = data.name;
         if (data.description) bandData.description = data.description;
         if (data.imageUrl) bandData.photo = data.imageUrl;
@@ -473,7 +473,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const updateSong = async (projectId: string, listId: string, songId: string, data: Partial<Song>) => {
     try {
-        const payload: Record<string, any> = {};
+        const payload: Record<string, unknown> = {};
         if (data.name !== undefined) payload.name = data.name;
         if (data.bpm !== undefined) payload.bpm = data.bpm;
         if (data.key !== undefined) payload.songKey = data.key;

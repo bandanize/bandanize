@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -35,8 +36,10 @@ export function ResetPassword() {
       await resetPassword(token, newPassword);
       toast.success('Contraseña restablecida exitosamente');
       navigate('/login');
-    } catch (err: any) {
-      toast.error(err.response?.data || 'Error al restablecer la contraseña');
+      navigate('/login');
+    } catch (err: unknown) {
+      const error = err as AxiosError<string>;
+      toast.error(error.response?.data || 'Error al restablecer la contraseña');
     } finally {
       setLoading(false);
     }
