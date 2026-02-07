@@ -216,7 +216,7 @@ export function Dashboard() {
                           type="file"
                           accept="image/*"
                           onChange={handleFileUpload}
-                          className="bg-input-background border-border text-foreground"
+                          className="bg-card border-border text-foreground h-auto py-2.5 items-center file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer flex"
                        />
                    </div>
                 </div>
