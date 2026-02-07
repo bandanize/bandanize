@@ -306,7 +306,7 @@ export function Dashboard() {
                  <img src={CookiesImage} alt="Cookies" />
              </div>
              
-             <div className="p-6 flex flex-col gap-4">
+             <div className="px-6 pb-6 pt-8 flex flex-col gap-4">
                  <div className="flex flex-col gap-2">
                      <h4 className="text-[20px] font-medium font-poppins text-foreground leading-6">{t('cookies_privacy')}</h4>
                      <p className="text-[12px] font-normal font-poppins text-foreground leading-4">
@@ -320,7 +320,7 @@ export function Dashboard() {
                           setShowCookies(false);
                           setCookie('cookieConsent', 'declined', { path: '/', maxAge: 365 * 24 * 60 * 60 });
                         }}
-                        className="flex-1 h-[36px] bg-card border border-border rounded-[8px] text-foreground font-poppins text-[14px] font-normal hover:bg-accent"
+                        className="flex-1 h-[36px] bg-card border border-border rounded-[8px] text-foreground font-poppins text-[14px] hover:bg-accent"
                      >
                          {t('decline')}
                      </Button>
@@ -329,7 +329,7 @@ export function Dashboard() {
                           setShowCookies(false);
                           setCookie('cookieConsent', 'true', { path: '/', maxAge: 365 * 24 * 60 * 60 });
                         }}
-                        className="flex-1 h-[36px] bg-primary hover:bg-primary/90 rounded-[8px] text-primary-foreground font-poppins text-[14px] font-normal"
+                        className="flex-1 h-[36px] bg-primary hover:bg-primary/90 rounded-[8px] text-primary-foreground font-poppins text-[14px]"
                      >
                          {t('accept')}
                      </Button>
