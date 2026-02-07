@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
+import { AxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
@@ -56,8 +57,9 @@ export function UserProfile() {
         newPassword: '',
         confirmPassword: '',
       });
-    } catch (error: any) {
-      toast.error(error.response?.data || t('password_update_error', 'Error al actualizar la contraseña'));
+    } catch (error: unknown) {
+      const err = error as AxiosError<string>;
+      toast.error(err.response?.data || t('password_update_error', 'Error al actualizar la contraseña'));
     }
   };
 
@@ -69,8 +71,10 @@ export function UserProfile() {
         await api.delete(`/users/${user.id}`);
         toast.success('Cuenta eliminada correctamente');
         logout();
-      } catch (error: any) {
-        toast.error(error.response?.data || 'Error al eliminar la cuenta');
+        logout();
+      } catch (error: unknown) {
+         const err = error as AxiosError<string>;
+        toast.error(err.response?.data || 'Error al eliminar la cuenta');
       }
     }
   };

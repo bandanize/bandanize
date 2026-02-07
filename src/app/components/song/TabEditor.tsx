@@ -224,7 +224,7 @@ export function TabEditor({
           
           {tab.files && tab.files.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {tab.files.map((file: any) => (
+                  {tab.files.map((file: { url: string; type: string; name: string }) => (
                       <div key={file.url} className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group">
                           {file.type.startsWith('audio') ? (
                               <FileAudio className="size-5 text-blue-500" />

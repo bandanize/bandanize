@@ -65,6 +65,43 @@ export interface Project {
   createdAt: Date;
 }
 
+interface BandApiResponse {
+  id: number;
+  name: string;
+  description: string;
+  photo?: string;
+  ownerId?: number;
+  members?: { id: number; name: string; email: string }[];
+  users?: { id: number; name: string; email: string }[];
+  songLists?: {
+    id: number;
+    name: string;
+    songs?: {
+      id: number;
+      name: string;
+      originalBand?: string;
+      bpm?: number;
+      songKey?: string;
+      files?: MediaFile[];
+      tablatures?: {
+        id: number;
+        name: string;
+        instrument: string;
+        instrumentIcon: string;
+        tuning: string;
+        content: string;
+        files?: MediaFile[];
+      }[];
+    }[];
+  }[];
+  chatMessages?: {
+    id: number;
+    sender?: { id: number; name: string };
+    message?: string;
+    timestamp?: string;
+  }[];
+}
+
 export interface Invitation {
   id: string;
   bandId: string;
@@ -116,25 +153,25 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await api.get('/bands/my-bands');
       // Map API response to Project interface
-      const mappedProjects: Project[] = response.data.map((band: any) => ({
+      const mappedProjects: Project[] = response.data.map((band: BandApiResponse) => ({
         id: String(band.id),
         name: band.name,
         description: band.description,
         imageUrl: band.photo,
         ownerId: band.ownerId ? String(band.ownerId) : (user?.id || ''), // Use backend ownerId
-        members: band.members ? band.members.map((m: any) => ({
+        members: band.members ? band.members.map((m) => ({
           id: String(m.id),
           name: m.name,
           email: m.email
-        })) : band.users ? band.users.map((u: any) => ({ // Fallback if backend returns users list
+        })) : band.users ? band.users.map((u) => ({ // Fallback if backend returns users list
           id: String(u.id),
           name: u.name,
           email: u.email
         })) : [],
-        songLists: band.songLists ? band.songLists.map((list: any) => ({
+        songLists: band.songLists ? band.songLists.map((list) => ({
           id: String(list.id),
           name: list.name,
-          songs: list.songs ? list.songs.map((song: any) => ({
+          songs: list.songs ? list.songs.map((song) => ({
             id: String(song.id),
             name: song.name,
             bandName: band.name,
@@ -142,7 +179,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             bpm: song.bpm,
             key: song.songKey,
             files: song.files || [],
-            tablatures: song.tablatures ? song.tablatures.map((tab: any) => ({
+            tablatures: song.tablatures ? song.tablatures.map((tab) => ({
               id: String(tab.id),
               name: tab.name,
               instrument: tab.instrument,
@@ -153,7 +190,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             })) : []
           })) : []
         })) : [],
-        chat: band.chatMessages ? band.chatMessages.map((msg: any) => ({
+        chat: band.chatMessages ? band.chatMessages.map((msg) => ({
           id: String(msg.id),
           userId: msg.sender ? String(msg.sender.id) : 'unknown',
           userName: msg.sender ? msg.sender.name : 'Unknown User',
@@ -214,7 +251,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const updateProject = async (projectId: string, data: Partial<Project>) => {
     try {
-        const bandData: any = {};
+        const bandData: Record<string, any> = {};
         if (data.name) bandData.name = data.name;
         if (data.description) bandData.description = data.description;
         if (data.imageUrl) bandData.photo = data.imageUrl;
@@ -436,7 +473,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const updateSong = async (projectId: string, listId: string, songId: string, data: Partial<Song>) => {
     try {
-        const payload: any = {};
+        const payload: Record<string, any> = {};
         if (data.name !== undefined) payload.name = data.name;
         if (data.bpm !== undefined) payload.bpm = data.bpm;
         if (data.key !== undefined) payload.songKey = data.key;

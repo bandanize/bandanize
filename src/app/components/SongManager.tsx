@@ -16,11 +16,19 @@ import { useTranslation } from 'react-i18next';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { TouchBackend } from 'react-dnd-touch-backend';
 
+type Identifier = string | symbol;
+
 // --- Sortable Components ---
 
 // ItemType for DnD
 const ItemType = 'SONG_ROW';
 
+
+interface DragItem {
+  index: number;
+  id: string;
+  type: string;
+}
 
 interface SortableSongRowProps {
   song: Song;
@@ -36,14 +44,14 @@ interface SortableSongRowProps {
 const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete, onEdit }: SortableSongRowProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const [{ handlerId }, drop] = useDrop({
+  const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
     accept: ItemType,
     collect(monitor) {
       return {
         handlerId: monitor.getHandlerId(),
       };
     },
-    hover(item: any, monitor) {
+    hover(item: DragItem, monitor) {
       if (!ref.current) {
         return;
       }
@@ -64,8 +72,10 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
       // Determine mouse position
       const clientOffset = monitor.getClientOffset();
 
+      if (!clientOffset) return;
+      
       // Get pixels to the top
-      const hoverClientY = (clientOffset as any).y - hoverBoundingRect.top;
+      const hoverClientY = (clientOffset).y - hoverBoundingRect.top;
 
       // Only perform the move when the mouse has crossed half of the items height
       // When dragging downwards, only move when the cursor is below 50%

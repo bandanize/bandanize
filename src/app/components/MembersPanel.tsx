@@ -60,8 +60,9 @@ export function MembersPanel() {
       setEmail('');
       setSearchValue('');
       setOpen(false);
-    } catch (err: any) {
-      toast.error(err.message || t('invite_error', 'Error al enviar invitación'));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : t('invite_error', 'Error al enviar invitación');
+      toast.error(errorMessage);
     }
   };
 

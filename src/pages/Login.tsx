@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -19,11 +20,13 @@ export function Login() {
     setError('');
     try {
       await login(username, password);
-    } catch (err: any) {
-      if (err.response && err.response.data && typeof err.response.data === 'string') {
-        setError(err.response.data);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ data: string } | string>;
+      if (error.response && error.response.data && typeof error.response.data === 'string') {
+        setError(error.response.data);
       } else {
-        setError(err.message || 'Error al iniciar sesión');
+        // Fallback for generic error or object data
+        setError(error.message || 'Error al iniciar sesión');
       }
     }
   };
@@ -124,8 +127,9 @@ function Register({ onBack }: { onBack: () => void }) {
     try {
       await register(email, password, name, username);
       setSuccess(true); // Set success on successful registration
-    } catch (err: any) {
-      setError(err.message || 'Error al registrarse');
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message || 'Error al registrarse');
     }
   };
 
