@@ -274,27 +274,27 @@ export function ProjectHub() {
       <div className="max-w-[1280px] w-full mx-auto py-8 px-4 sm:px-6">
          <div className="max-w-[1216px] w-full mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-card rounded-[14px] p-0 h-[36px] flex items-center w-full max-w-[303px] mx-auto">
+          <TabsList className="bg-card rounded-[14px] p-0 h-[36px] flex items-center w-full sm:w-fit max-w-full mx-auto overflow-hidden">
             <TabsTrigger 
                 value="songs"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none sm:w-[120px] px-2 font-sans font-normal text-[14px] truncate"
             >
-              <Music className="size-4 mr-2" />
-              {t('songs', 'Canciones')}
+              <Music className="size-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{t('songs', 'Canciones')}</span>
             </TabsTrigger>
             <TabsTrigger 
                 value="chat"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none sm:w-[120px] px-2 font-sans font-normal text-[14px] truncate"
             >
-              <MessageSquare className="size-4 mr-2" />
-              {t('chat', 'Chat')}
+              <MessageSquare className="size-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{t('chat', 'Chat')}</span>
             </TabsTrigger>
             <TabsTrigger 
                 value="members"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none sm:w-[120px] px-2 font-sans font-normal text-[14px] truncate"
             >
-              <Users className="size-4 mr-2" />
-              {t('members', 'Miembros')}
+              <Users className="size-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{t('members', 'Miembros')}</span>
             </TabsTrigger>
           </TabsList>
 
