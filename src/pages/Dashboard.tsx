@@ -13,7 +13,6 @@ import { WelcomeModal } from '@/app/components/WelcomeModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/app/components/ui/dropdown-menu';
 import { uploadFile, getMediaUrl } from '@/services/api';
 import { toast } from 'sonner';
-import CookiesImage from '@/assets/cookies.svg';
 import EmptyProjectsImage from '@/assets/empty-projects.svg';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
@@ -27,8 +26,7 @@ export function Dashboard() {
   const [projectDescription, setProjectDescription] = useState('');
   const [projectImage, setProjectImage] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
-  const [cookies, setCookie] = useCookies(['cookieConsent', 'lastProjectId']);
-  const [showCookies, setShowCookies] = useState(() => !cookies.cookieConsent);
+  const [cookies] = useCookies(['lastProjectId']);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -298,45 +296,6 @@ export function Dashboard() {
 
       <WelcomeModal open={showWelcome} onClose={handleCloseWelcome} />
       
-      {/* Cookies Overlay */}
-      {showCookies && (
-          <div className="fixed bottom-4 left-4 z-50 w-[calc(100vw-32px)] sm:w-[400px] h-auto bg-card rounded-[14px] flex flex-col shadow-2xl border border-white/5 overflow-hidden">
-             {/* Image placeholder */}
-             <div className="w-full h-[200px] bg-white/5 flex items-center justify-center">
-                 <img src={CookiesImage} alt="Cookies" />
-             </div>
-             
-             <div className="px-6 pb-6 pt-8 flex flex-col gap-4">
-                 <div className="flex flex-col gap-2">
-                     <h4 className="text-[20px] font-medium font-poppins text-foreground leading-6">{t('cookies_privacy')}</h4>
-                     <p className="text-[12px] font-normal font-poppins text-foreground leading-4">
-                         {t('cookies_text')}
-                     </p>
-                 </div>
-                 
-                 <div className="flex gap-4 w-full">
-                     <Button 
-                        onClick={() => {
-                          setShowCookies(false);
-                          setCookie('cookieConsent', 'declined', { path: '/', maxAge: 365 * 24 * 60 * 60 });
-                        }}
-                        className="flex-1 h-[36px] bg-card border border-border rounded-[8px] text-foreground font-poppins text-[14px] hover:bg-accent"
-                     >
-                         {t('decline')}
-                     </Button>
-                     <Button 
-                        onClick={() => {
-                          setShowCookies(false);
-                          setCookie('cookieConsent', 'true', { path: '/', maxAge: 365 * 24 * 60 * 60 });
-                        }}
-                        className="flex-1 h-[36px] bg-primary hover:bg-primary/90 rounded-[8px] text-primary-foreground font-poppins text-[14px]"
-                     >
-                         {t('accept')}
-                     </Button>
-                 </div>
-             </div>
-          </div>
-      )}
     </PageLayout>
   );
 }

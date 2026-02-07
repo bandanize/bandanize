@@ -14,6 +14,7 @@ import { ResetPassword } from '@/pages/ResetPassword';
 import { Toaster } from '@/app/components/ui/sonner';
 import { ThemeProvider } from '@/app/components/theme-provider'; // Wrapper we will create
 import { CookiesProvider } from 'react-cookie'; // For general cookie usage throughout the app
+import { CookieConsent } from '@/app/components/CookieConsent';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -75,6 +76,7 @@ export default function App() {
             <ProjectProvider>
               <AppRoutes />
               <Toaster />
+              <CookieConsent />
             </ProjectProvider>
           </AuthProvider>
         </ThemeProvider>
