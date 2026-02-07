@@ -1,14 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { useProjects, Song } from '@/contexts/ProjectContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { FileText, Upload } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'; // Keep tabs import if used elsewhere or remove if unused. It is NOT used anymore in this file.
+// Actually, I should remove unused imports.
+import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { uploadFileWithRetry } from '@/services/api';
 
 // Sub-components
+// Sub-components
 import { SongHeader } from './song/SongHeader';
-import { SongInfo } from './song/SongInfo';
+import { SongEditDialog } from './song/SongEditDialog';
 import { FileList } from './song/FileList';
 import { TabList } from './song/TabList';
 import { TabEditor } from './song/TabEditor';
@@ -49,6 +51,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   // Saving states
   const [isSavingSong, setIsSavingSong] = useState(false);
   const [isSavingTab, setIsSavingTab] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Preview Dialog
   const [previewFile, setPreviewFile] = useState<{ url: string; type: string; name: string } | null>(null);
@@ -256,47 +259,28 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
         onBack={onBack} 
         onDelete={handleDeleteSong} 
         onUpdate={handleUpdateSong}
+        onEdit={() => setIsEditOpen(true)}
         isSaving={isSavingSong}
       />
 
-      <Tabs defaultValue="info" className="w-full">
-        <TabsList className="bg-card rounded-[14px] p-0 h-[36px] w-fit">
-          <TabsTrigger 
-            value="info"
-            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] px-4 font-sans font-normal text-[14px]"
-          >
-            <FileText className="size-4 mr-2" />
-            {t('info', 'Info')}
-          </TabsTrigger>
-          <TabsTrigger 
-            value="media"
-            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] px-4 font-sans font-normal text-[14px]"
-          >
-            <Upload className="size-4 mr-2" />
-            {t('media', 'Media')}
-          </TabsTrigger>
-        </TabsList>
+      <SongEditDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        song={song}
+        onUpdate={handleUpdateSong}
+        isSaving={isSavingSong}
+      />
 
-        <TabsContent value="info" className="mt-4">
-             <SongInfo 
-                song={song} 
-                onUpdate={handleUpdateSong} 
-                isSaving={isSavingSong} 
-             />
-        </TabsContent>
-
-        <TabsContent value="media" className="mt-4">
-             <FileList 
-                song={song} 
-                onUpload={() => handleFileUploadTrigger('song')}
-                isUploading={isUploading && uploadTarget?.type === 'song'}
-                uploadStatus={uploadStatus}
-                uploadProgress={uploadProgress}
-                onPreview={setPreviewFile}
-                onDelete={(url) => currentProject && deleteSongFile(currentProject.id, listId, song.id, url)}
-             />
-        </TabsContent>
-      </Tabs>
+      {/* Media Section */}
+      <FileList 
+        song={song} 
+        onUpload={() => handleFileUploadTrigger('song')}
+        isUploading={isUploading && uploadTarget?.type === 'song'}
+        uploadStatus={uploadStatus}
+        uploadProgress={uploadProgress}
+        onPreview={setPreviewFile}
+        onDelete={(url) => currentProject && deleteSongFile(currentProject.id, listId, song.id, url)}
+      />
 
       {/* Tablatures Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
