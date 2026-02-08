@@ -10,32 +10,39 @@ export function CookieConsent() {
   const { user } = useAuth();
   const [cookies, setCookie] = useCookies(['cookieConsent']);
 
+  const setZarazConsent = (allowed: boolean) => {
+    const attemptSet = (retries: number) => {
+      if (window.zaraz) {
+        try {
+          window.zaraz.consent.set({ 'Analytics': allowed });
+          console.debug(`Zaraz consent updated: Analytics=${allowed}`);
+        } catch (e) {
+          console.error("Failed to set Zaraz consent:", e);
+        }
+      } else if (retries > 0) {
+        setTimeout(() => attemptSet(retries - 1), 500);
+      } else {
+        console.warn("Zaraz window object not found after retries.");
+      }
+    };
+    attemptSet(10); // Try for 5 seconds
+  };
+
   useEffect(() => {
     // Sync with Zaraz if cookie exists
     if (cookies.cookieConsent) {
-      if (window.zaraz) {
-        try {
-            const consentStatus = cookies.cookieConsent === 'true';
-            window.zaraz.consent.set({ 'Analytics': consentStatus });
-        } catch (e) {
-            console.error("Zaraz not available", e);
-        }
-      }
+      setZarazConsent(cookies.cookieConsent === 'true');
     }
   }, [cookies.cookieConsent]);
 
   const handleAccept = () => {
     setCookie('cookieConsent', 'true', { path: '/', maxAge: 365 * 24 * 60 * 60 });
-    if (window.zaraz) {
-      window.zaraz.consent.set({ 'Analytics': true });
-    }
+    setZarazConsent(true);
   };
 
   const handleDecline = () => {
     setCookie('cookieConsent', 'declined', { path: '/', maxAge: 365 * 24 * 60 * 60 });
-    if (window.zaraz) {
-      window.zaraz.consent.set({ 'Analytics': false });
-    }
+    setZarazConsent(false);
   };
 
   // Only show if user is logged in and hasn't consented yet
