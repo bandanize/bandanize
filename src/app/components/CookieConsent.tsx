@@ -12,9 +12,11 @@ export function CookieConsent() {
 
   const setZarazConsent = (allowed: boolean) => {
     const attemptSet = (retries: number) => {
-      if (window.zaraz) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const zaraz = (window as any).zaraz;
+      if (zaraz && zaraz.consent && zaraz.consent.set) {
         try {
-          window.zaraz.consent.set({ 'Analytics': allowed });
+          zaraz.consent.set({ 'Analytics': allowed });
           console.debug(`Zaraz consent updated: Analytics=${allowed}`);
         } catch (e) {
           console.error("Failed to set Zaraz consent:", e);
@@ -22,7 +24,7 @@ export function CookieConsent() {
       } else if (retries > 0) {
         setTimeout(() => attemptSet(retries - 1), 500);
       } else {
-        console.warn("Zaraz window object not found after retries.");
+        console.warn("Zaraz window object (or consent API) not found after retries.");
       }
     };
     attemptSet(10); // Try for 5 seconds
