@@ -5,47 +5,62 @@ import { Button } from '@/app/components/ui/button';
 import CookiesImage from '@/assets/cookies.svg';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Define available consent types here for scalability
+const CONSENT_TYPES = ['Analytics', 'Marketing'] as const;
+type ConsentType = typeof CONSENT_TYPES[number];
+
+/**
+ * Updates Zaraz consent settings
+ */
+const updateZarazConsent = (consents: Partial<Record<ConsentType, boolean>>) => {
+  const attemptSet = (retries: number) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const zaraz = (window as any).zaraz;
+    
+    if (zaraz && zaraz.consent && zaraz.consent.set) {
+      try {
+        zaraz.consent.set(consents);
+      } catch {
+        // Silent fail or minimal error
+      }
+    } else if (retries > 0) {
+      setTimeout(() => attemptSet(retries - 1), 500);
+    }
+  };
+  attemptSet(10); // Try for 5 seconds
+};
+
 export function CookieConsent() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [cookies, setCookie] = useCookies(['cookieConsent']);
 
-  const setZarazConsent = (allowed: boolean) => {
-    const attemptSet = (retries: number) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const zaraz = (window as any).zaraz;
-      if (zaraz && zaraz.consent && zaraz.consent.set) {
-        try {
-          zaraz.consent.set({ 'Analytics': allowed });
-          console.debug(`Zaraz consent updated: Analytics=${allowed}`);
-        } catch (e) {
-          console.error("Failed to set Zaraz consent:", e);
-        }
-      } else if (retries > 0) {
-        setTimeout(() => attemptSet(retries - 1), 500);
-      } else {
-        console.warn("Zaraz window object (or consent API) not found after retries.");
-      }
-    };
-    attemptSet(10); // Try for 5 seconds
-  };
-
   useEffect(() => {
     // Sync with Zaraz if cookie exists
     if (cookies.cookieConsent) {
-      setZarazConsent(cookies.cookieConsent === 'true');
+      const isAllowed = cookies.cookieConsent === 'true';
+      // Apply to all types for now, can be granularized later
+      const consents: Record<string, boolean> = {};
+      CONSENT_TYPES.forEach(type => consents[type] = isAllowed);
+      updateZarazConsent(consents);
     }
   }, [cookies.cookieConsent]);
 
   const handleAccept = () => {
     setCookie('cookieConsent', 'true', { path: '/', maxAge: 365 * 24 * 60 * 60 });
-    setZarazConsent(true);
+    const consents: Record<string, boolean> = {};
+    CONSENT_TYPES.forEach(type => consents[type] = true);
+    updateZarazConsent(consents);
   };
 
   const handleDecline = () => {
     setCookie('cookieConsent', 'declined', { path: '/', maxAge: 365 * 24 * 60 * 60 });
-    setZarazConsent(false);
+    const consents: Record<string, boolean> = {};
+    CONSENT_TYPES.forEach(type => consents[type] = false);
+    updateZarazConsent(consents);
   };
+
+
 
   // Only show if user is logged in and hasn't consented yet
   if (!user || cookies.cookieConsent) return null;
