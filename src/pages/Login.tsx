@@ -40,10 +40,7 @@ export function Login() {
       <Card className="w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
         <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
           <div className="flex items-center justify-center">
-            {/* Replaced specific image with Music2 icon but styled to match size/theme approx or just keep icon */}
-            <div className="w-[112px] h-[112px] flex items-center justify-center bg-white/5 rounded-full mb-4">
-               <img src={Logo} alt="Bandanize Logo" className="size-16" />
-            </div>
+             <img src={Logo} alt="Bandanize Logo" className="size-28 mb-4" />
           </div>
           <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">Bandanize</CardTitle>
           <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
@@ -59,7 +56,7 @@ export function Login() {
                 type="text"
                 placeholder="tu@email.com"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                 required
                 autoComplete="email"
                 className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground placeholder:text-muted-foreground/50 h-[36px] rounded-[8px]"
@@ -71,7 +68,7 @@ export function Login() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
                 className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground h-[36px] rounded-[8px]"
@@ -139,9 +136,7 @@ function Register({ onBack }: { onBack: () => void }) {
           <Card className="w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
             <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
               <div className="flex items-center justify-center">
-                 <div className="w-[112px] h-[112px] flex items-center justify-center bg-white/5 rounded-full mb-4">
-                   <img src={Logo} alt="Bandanize Logo" className="size-16" />
-                </div>
+                 <img src={Logo} alt="Bandanize Logo" className="size-28 mb-4" />
               </div>
               <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">Check your email</CardTitle>
               <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
@@ -172,9 +167,7 @@ function Register({ onBack }: { onBack: () => void }) {
       <Card className="w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
         <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
           <div className="flex items-center justify-center">
-             <div className="w-[112px] h-[112px] flex items-center justify-center bg-white/5 rounded-full mb-4">
-               <img src={Logo} alt="Bandanize Logo" className="size-16" />
-            </div>
+             <img src={Logo} alt="Bandanize Logo" className="size-28 mb-4" />
           </div>
           <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">Crear cuenta</CardTitle>
           <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
@@ -190,7 +183,7 @@ function Register({ onBack }: { onBack: () => void }) {
                 type="text"
                 placeholder="Tu nombre completo"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                 required
                 className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] placeholder:text-[#EDEDED]/25 h-[36px] rounded-[8px]"
               />
@@ -202,7 +195,7 @@ function Register({ onBack }: { onBack: () => void }) {
                 type="text"
                 placeholder="Nombre de usuario"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                 required
                 className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground placeholder:text-muted-foreground/50 h-[36px] rounded-[8px]"
               />
@@ -214,7 +207,7 @@ function Register({ onBack }: { onBack: () => void }) {
                 type="email"
                 placeholder="tu@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 required
                 className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground placeholder:text-muted-foreground/50 h-[36px] rounded-[8px]"
               />
@@ -225,7 +218,7 @@ function Register({ onBack }: { onBack: () => void }) {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 required
                 className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground h-[36px] rounded-[8px]"
               />
