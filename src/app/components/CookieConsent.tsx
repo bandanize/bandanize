@@ -72,7 +72,7 @@ export function CookieConsent() {
         <img src={CookiesImage} alt="Cookies" />
       </div>
       
-      <div className="px-6 pb-6 pt-8 flex flex-col gap-4">
+      <div className="px-6 pb-6 pt-12 flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <h4 className="text-[20px] font-medium font-poppins text-foreground leading-6">{t('cookies_privacy')}</h4>
           <p className="text-[12px] font-normal font-poppins text-foreground leading-4">
