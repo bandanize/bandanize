@@ -124,7 +124,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           ref.current = node;
       }}
       style={{ opacity }}
-      className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all cursor-move mb-4 select-none"
+      className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all cursor-move select-none"
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
@@ -212,7 +212,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
     }, [items, listId, onReorder, songs]);
 
     return (
-        <div>
+        <div className="flex flex-col gap-4">
             {items.map((song, index) => (
                 <SortableSongRow
                     key={song.id}
@@ -434,9 +434,9 @@ export function SongManager() {
             ) : (
               <Accordion type="single" collapsible className="w-full space-y-4">
                 {currentProject.songLists.map((list) => (
-                  <AccordionItem key={list.id} value={list.id} className="border border-border rounded-lg bg-card px-2 overflow-hidden last:border-b-border last:border-b">
+                  <AccordionItem key={list.id} value={list.id} className="border border-border rounded-lg bg-card overflow-hidden last:border-b-border last:border-b">
                   <AccordionTrigger className="hover:no-underline text-foreground hover:text-foreground/80 group [&>svg]:hidden">
-                    <div className="flex items-center justify-between w-full pr-4">
+                    <div className="flex items-center justify-between w-full px-4">
                       <span className="font-medium text-lg">{list.name}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-muted-foreground mr-2">
@@ -479,11 +479,11 @@ export function SongManager() {
                     </div>
                   </AccordionTrigger>
                     <AccordionContent>
-                      <div className="space-y-2 pt-2">
+                      <div className="px-4 pt-0">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full h-10 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-2"
+                          className="w-full h-10 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-4"
                           onClick={() => {
                             setSelectedListId(list.id);
                             setOpenSongDialog(true);
@@ -494,7 +494,7 @@ export function SongManager() {
                         </Button>
   
                         {list.songs.length > 0 && (
-                          <div className="space-y-2">
+                           <div className="flex flex-col">
                               <SortableSongList 
                                   listId={list.id}
                                   songs={list.songs}
