@@ -151,6 +151,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
   const fetchProjects = useCallback(async () => {
+    setIsLoading(true);
     try {
       const response = await api.get('/bands/my-bands');
       // Map API response to Project interface

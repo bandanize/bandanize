@@ -17,6 +17,7 @@ import EmptyProjectsImage from '@/assets/empty-projects.svg';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { PageLayout } from '@/app/components/PageLayout';
+import { Skeleton } from '@/app/components/ui/skeleton';
 
 export function Dashboard() {
   const { user, logout } = useAuth();
@@ -256,9 +257,22 @@ export function Dashboard() {
 
         {/* Project List or Loading or Empty State */}
         {isLoading ? (
-             <div className="flex items-center justify-center min-h-[300px]">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-             </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1216px] w-full mx-auto">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="w-full h-[140px] bg-card border border-border rounded-[14px] p-[12px] gap-[10px] flex">
+                <Skeleton className="w-[116px] h-[116px] rounded-[9px]" />
+                <div className="flex flex-col h-[116px] flex-1 gap-2">
+                  <div className="flex flex-col gap-2 flex-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                  <div className="flex items-center gap-2 h-[20px]">
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : projects.length === 0 ? (
           <div className="max-w-[1166px] w-full min-h-[336px] mx-auto flex flex-col items-center justify-center gap-6 select-none">
             <div className="w-[327px] h-[206px] flex items-center justify-center">
