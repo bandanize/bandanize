@@ -46,8 +46,8 @@ export function WelcomeModal({ open, onClose }: WelcomeModalProps) {
           "!overflow-visible !max-h-[85vh]",
           "[&>button.absolute]:hidden" // Hides the default close button
         )}
-        onInteractOutside={(e: any) => e.preventDefault()}
-        onEscapeKeyDown={(e: any) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         
         {/* Header Image - Absolute Positioned */}

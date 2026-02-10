@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { LogOut, Plus, Music2, Users, User, Settings, Mail } from 'lucide-react';
+import { LogOut, Plus, Music2, Users, User, Settings, Mail, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WelcomeModal } from '@/app/components/WelcomeModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/app/components/ui/dropdown-menu';
@@ -26,18 +26,46 @@ export function Dashboard() {
   const [projectDescription, setProjectDescription] = useState('');
   const [projectImage, setProjectImage] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [cookies] = useCookies(['lastProjectId']);
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+        if (!projects.length) return;
+        
+        try {
+            const counts: Record<string, number> = {};
+            const { getUnreadNotificationCount } = await import('@/services/api');
+            
+            await Promise.all(projects.map(async (p) => {
+                try {
+                    const count = await getUnreadNotificationCount(p.id);
+                    if (count > 0) counts[p.id] = count;
+                } catch {
+                   // ignore individual failures
+                }
+            }));
+            
+            setUnreadCounts(counts);
+        } catch (error) {
+            console.error("Failed to fetch unread counts", error);
+        }
+    };
+    
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, [projects]);
+
 
   useEffect(() => {
     // Check if this is the first time the  useEffect(() => {
     if (user) {
       const hasSeenWelcome = localStorage.getItem(`welcome_seen_${user.id}`);
       if (!hasSeenWelcome) {
-        // Use timeout to avoid synchronous state update during effect
-        const timer = setTimeout(() => setShowWelcome(true), 0);
-        return () => clearTimeout(timer);
+        setShowWelcome(true);
       }
     }
   }, [user]);
@@ -286,6 +314,14 @@ export function Dashboard() {
                                     {project.members.length} {project.members.length === 1 ? 'miembro' : 'miembros'}
                                 </span>
                            </div>
+                           
+                           {/* Notification Badge */}
+                           {unreadCounts[project.id] > 0 && (
+                               <div className="ml-auto bg-destructive text-destructive-foreground text-[12px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm h-[22px]">
+                                   <Bell className="size-3" />
+                                   <span>{unreadCounts[project.id] > 99 ? '99+' : unreadCounts[project.id]}</span>
+                               </div>
+                           )}
                       </div>
                   </div>
               </div>

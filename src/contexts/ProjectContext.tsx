@@ -242,8 +242,29 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         city: 'Unknown' // Default
       };
       
-      await api.post(`/bands/create/${user.id}`, bandData);
-      await fetchProjects();
+      const response = await api.post(`/bands/create/${user.id}`, bandData);
+      
+      // Optimistic/Manual update to avoid refetching everything
+      const newInternalId = String(response.data.id);
+      
+      // We need to shape the new project to match the Project interface
+      const newProject: Project = {
+          id: newInternalId,
+          name: name,
+          description: description,
+          imageUrl: imageUrl,
+          ownerId: String(user.id),
+          members: [{ id: String(user.id), name: user.name, email: user.email }],
+          songLists: [],
+          chat: [],
+          createdAt: new Date() 
+      };
+
+      setProjects(prev => [...prev, newProject]);
+      // Explicitly select it? Or let the user do it?
+      // User flow usually redirects to dashboard or the new project.
+      // Dashboard will see it in the list now.
+      
     } catch (error) {
       console.error("Error creating project", error);
     }

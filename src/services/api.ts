@@ -109,4 +109,30 @@ export const resetPassword = async (token: string, newPassword: string) => {
     return response.data;
 };
 
+export const getProjectNotifications = async (projectId: string) => {
+    const response = await api.get(`/projects/${projectId}/notifications`);
+    return response.data;
+};
+
+export const getUnreadNotificationCount = async (projectId: string) => {
+    const response = await api.get(`/projects/${projectId}/notifications/unread-count`);
+    return response.data;
+};
+
+
+export const markNotificationsRead = async (projectId: string) => {
+    const response = await api.post(`/projects/${projectId}/notifications/mark-read`);
+    return response.data;
+};
+
+export const getUnreadChatStatus = async (projectId: string) => {
+    const response = await api.get(`/bands/${projectId}/chat/unread`);
+    return response.data;
+};
+
+export const markChatAsRead = async (projectId: string) => {
+    const response = await api.post(`/bands/${projectId}/chat/read`);
+    return response.data;
+};
+
 export default api;

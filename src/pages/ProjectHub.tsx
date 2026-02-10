@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { ArrowLeft, MessageSquare, Music, Users, LogOut, PenLine } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Music, Users, LogOut, PenLine, Bell } from 'lucide-react';
 import { ProjectChat } from '@/app/components/ProjectChat';
 import { SongManager } from '@/app/components/SongManager';
 import { MembersPanel } from '@/app/components/MembersPanel';
+import { NotificationFeed } from '@/app/components/NotificationFeed';
 import { toast } from 'sonner';
 
 import { uploadFile, getMediaUrl } from '@/services/api';
@@ -53,6 +54,37 @@ export function ProjectHub() {
           selectProject(projectId);
       }
   }, [isLoading, projectId, currentProject, projects, selectProject]);
+
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
+
+  // Fetch unread count & chat status
+  const fetchUnreadCount = React.useCallback(async () => {
+        if (currentProject) {
+            try {
+                const api = await import('@/services/api');
+                const [count, chatStatus] = await Promise.all([
+                    api.getUnreadNotificationCount(currentProject.id.toString()),
+                    api.getUnreadChatStatus(currentProject.id.toString())
+                ]);
+                setUnreadCount(count);
+                setHasUnreadChat(chatStatus);
+            } catch (error) {
+                console.error("Failed to fetch unread status", error);
+            }
+        }
+    }, [currentProject]);
+
+    useEffect(() => {
+        if (currentProject) {
+            fetchUnreadCount();
+            // Poll every 30 seconds
+            const interval = setInterval(fetchUnreadCount, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [currentProject, fetchUnreadCount]);
+
+
 
   if (isLoading) {
        return (
@@ -142,6 +174,24 @@ export function ProjectHub() {
       </div>
     );
   }
+
+    const handleTabChange = (value: string) => {
+        // If leaving notifications tab, mark as read
+        if (activeTab === 'notifications' && value !== 'notifications' && currentProject && unreadCount > 0) {
+            import('@/services/api').then(m => m.markNotificationsRead(currentProject.id.toString()))
+                .catch(err => console.error("Failed to mark notifications read", err));
+            setUnreadCount(0);
+        }
+        
+        // If leaving chat tab, mark as read
+        if (activeTab === 'chat' && value !== 'chat' && currentProject && hasUnreadChat) {
+             import('@/services/api').then(m => m.markChatAsRead(currentProject.id.toString()))
+                .catch(err => console.error("Failed to mark chat read", err));
+             setHasUnreadChat(false);
+        }
+        
+        setActiveTab(value);
+    };
 
   return (
     <PageLayout
@@ -273,28 +323,44 @@ export function ProjectHub() {
     >
       <div className="max-w-[1280px] w-full mx-auto py-8 px-4 sm:px-6">
          <div className="max-w-[1216px] w-full mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-card rounded-[14px] p-0 h-[36px] flex items-center w-full sm:w-fit max-w-full mx-auto overflow-hidden">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="bg-card rounded-[14px] p-0 h-[36px] flex items-center w-full sm:w-fit max-w-full mx-auto overflow-visible">
             <TabsTrigger 
                 value="songs"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none sm:w-[120px] px-2 font-sans font-normal text-[14px] truncate"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
               <Music className="size-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{t('songs', 'Canciones')}</span>
+              <span>{t('songs', 'Canciones')}</span>
             </TabsTrigger>
             <TabsTrigger 
                 value="chat"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none sm:w-[120px] px-2 font-sans font-normal text-[14px] truncate"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
             >
               <MessageSquare className="size-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{t('chat', 'Chat')}</span>
+              <span>{t('chat', 'Chat')}</span>
+              {hasUnreadChat && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 w-[8px] h-[8px] rounded-full border border-card shadow-sm z-10" />
+              )}
             </TabsTrigger>
             <TabsTrigger 
                 value="members"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none sm:w-[120px] px-2 font-sans font-normal text-[14px] truncate"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
               <Users className="size-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{t('members', 'Miembros')}</span>
+              <span>{t('members', 'Miembros')}</span>
+            </TabsTrigger>
+            <TabsTrigger 
+                value="notifications"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
+            >
+              <Bell className="size-4 mr-2 flex-shrink-0" />
+              <span>{t('notifications', 'Notificaciones')}</span>
+              {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center border border-card shadow-sm z-10 gap-0.5">
+                      <Bell className="size-[10px]" />
+                      <span>{unreadCount > 99 ? '99+' : unreadCount}</span>
+                  </span>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -309,6 +375,14 @@ export function ProjectHub() {
 
             <TabsContent value="members" className="m-0">
                 <MembersPanel />
+            </TabsContent>
+
+            <TabsContent value="notifications" className="m-0">
+                {currentProject && (
+                    <NotificationFeed 
+                        projectId={currentProject.id.toString()} 
+                    />
+                )}
             </TabsContent>
           </div>
         </Tabs>

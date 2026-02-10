@@ -104,25 +104,27 @@ export function MembersPanel() {
                              {searchValue ? t('no_users_found', "No se encontraron usuarios.") : t('start_typing', "Escribe para buscar...")}
                           </CommandEmpty>
                           <CommandGroup>
-                            {searchResults.map((user) => (
+                            {searchResults
+                              .filter(u => u.email !== user?.email && !currentProject.members.some(m => m.email === u.email))
+                              .map((u) => (
                               <CommandItem
-                                key={user.id}
-                                value={user.email} 
+                                key={u.id}
+                                value={u.email} 
                                 onSelect={(currentValue) => {
                                   setEmail(currentValue === email ? "" : currentValue);
-                                  setSearchValue(user.email); // Auto-fill search with selected email for clarity
+                                  setSearchValue(u.email); // Auto-fill search with selected email for clarity
                                 }}
                                 className="data-[selected=true]:bg-accent text-foreground cursor-pointer"
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    email === user.email ? "opacity-100" : "opacity-0"
+                                    email === u.email ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                                 <div className="flex flex-col">
-                                    <span>{user.name}</span>
-                                    <span className="text-xs text-muted-foreground">{user.email}</span>
+                                    <span>{u.name}</span>
+                                    <span className="text-xs text-muted-foreground">{u.email}</span>
                                 </div>
                               </CommandItem>
                             ))}
@@ -131,7 +133,7 @@ export function MembersPanel() {
                       </Command>
                     </div>
                   </div>
-                  <Button onClick={handleInviteMember} className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={!email}>
+                  <Button onClick={handleInviteMember} className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={!email || email === user?.email}>
                     {t('invite_to_project', 'Invitar al proyecto')}
                   </Button>
                 </div>

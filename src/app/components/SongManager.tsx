@@ -116,12 +116,13 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
   });
 
   const opacity = isDragging ? 0.4 : 1;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  drag(drop(ref));
 
   return (
     <div
-      ref={ref}
+      ref={(node) => {
+          drag(drop(node));
+          ref.current = node;
+      }}
       style={{ opacity }}
       className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all cursor-move mb-4 select-none"
       data-handler-id={handlerId}
@@ -254,9 +255,9 @@ export function SongManager() {
     key: '',
   });
 
-  const handleCreateList = () => {
+  const handleCreateList = async () => {
     if (!currentProject || !listName.trim()) return;
-    createSongList(currentProject.id, listName);
+    await createSongList(currentProject.id, listName);
     setListName('');
     setOpenListDialog(false);
     toast.success(t('list_created', 'Lista creada'));
@@ -309,9 +310,9 @@ export function SongManager() {
       }
   };
 
-  const handleCreateSong = () => {
+  const handleCreateSong = async () => {
     if (!currentProject || !selectedListId || !songData.name.trim()) return;
-    createSong(currentProject.id, selectedListId, {
+    await createSong(currentProject.id, selectedListId, {
       ...songData,
       bpm: songData.bpm ?? undefined // Handle null to undefined
     });
