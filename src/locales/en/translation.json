@@ -6,6 +6,7 @@
     "change_password": "Change Password",
     "current_password": "Current Password",
     "new_password": "New Password",
+    "confirm_new_password": "Confirm New Password",
     "update_password": "Update Password",
     "password_updated": "Password updated successfully",
     "password_update_error": "Error updating password",

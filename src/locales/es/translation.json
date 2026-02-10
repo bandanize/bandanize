@@ -6,6 +6,7 @@
     "change_password": "Cambiar contraseña",
     "current_password": "Contraseña actual",
     "new_password": "Nueva contraseña",
+    "confirm_new_password": "Confirmar nueva contraseña",
     "update_password": "Actualizar contraseña",
     "password_updated": "Contraseña actualizada correctamente",
     "password_update_error": "Error al actualizar contraseña",

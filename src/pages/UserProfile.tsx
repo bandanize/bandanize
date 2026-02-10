@@ -203,7 +203,7 @@ export function UserProfile() {
                 </div>
                 
                 <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-foreground">{t('new_password', 'Confirmar nueva contraseña')}</Label>
+                <Label htmlFor="confirmPassword" className="text-foreground">{t('confirm_new_password', 'Confirmar nueva contraseña')}</Label>
                 <Input
                     id="confirmPassword"
                     type="password"
