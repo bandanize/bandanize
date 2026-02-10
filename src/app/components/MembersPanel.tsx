@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useProjects } from '@/contexts/ProjectContext';
+import { useProjects, Member } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { UserPlus, Mail, User, Check, Trash2 } from 'lucide-react';
+import { UserPlus, User, Check, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/components/ui/command";
 import { cn } from "@/app/components/ui/utils";
@@ -17,17 +17,18 @@ export function MembersPanel() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
   
-  interface User {
+  interface SearchUser {
     id: string;
     email: string;
     name: string;
+    username: string; // Add username if available
   }
 
   // Search states
   const [searchValue, setSearchValue] = useState("");
-  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   // const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -52,12 +53,12 @@ export function MembersPanel() {
   }, [searchValue]);
 
   const handleInviteMember = async () => {
-    if (!currentProject || !email) return;
+    if (!currentProject || !selectedUserId) return;
 
     try {
-      await inviteMember(currentProject.id, email);
+      await inviteMember(currentProject.id, { userId: selectedUserId });
       toast.success(t('invitation_sent', 'Invitación enviada correctamente'));
-      setEmail('');
+      setSelectedUserId('');
       setSearchValue('');
       setOpen(false);
     } catch (err: unknown) {
@@ -85,7 +86,7 @@ export function MembersPanel() {
                 <DialogHeader>
                   <DialogTitle className="text-foreground">{t('invite_member', 'Invitar miembro')}</DialogTitle>
                   <DialogDescription className="text-muted-foreground">
-                    {t('invite_desc', 'Busca un usuario por email o nombre para invitarlo.')}
+                    {t('invite_desc', 'Busca un usuario por nombre para invitarlo.')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
@@ -94,7 +95,7 @@ export function MembersPanel() {
                     <div className="border border-border rounded-md overflow-hidden bg-card">
                       <Command shouldFilter={false} className="bg-card">
                         <CommandInput 
-                          placeholder={t('search_placeholder', "Buscar por email o nombre...")}
+                          placeholder={t('search_placeholder', "Buscar por nombre...")}
                           value={searchValue}
                           onValueChange={setSearchValue}
                           className="text-foreground"
@@ -105,26 +106,26 @@ export function MembersPanel() {
                           </CommandEmpty>
                           <CommandGroup>
                             {searchResults
-                              .filter(u => u.email !== user?.email && !currentProject.members.some(m => m.email === u.email))
-                              .map((u) => (
+                              .filter((u: SearchUser) => u.email !== user?.email && !currentProject.members.some((m: Member) => m.id === u.id))
+                              .map((u: SearchUser) => (
                               <CommandItem
                                 key={u.id}
-                                value={u.email} 
-                                onSelect={(currentValue) => {
-                                  setEmail(currentValue === email ? "" : currentValue);
-                                  setSearchValue(u.email); // Auto-fill search with selected email for clarity
+                                value={u.id} 
+                                onSelect={(currentValue: string) => {
+                                  setSelectedUserId(currentValue === selectedUserId ? "" : currentValue);
+                                  setSearchValue(u.name); // Auto-fill search with selected name for clarity
                                 }}
                                 className="data-[selected=true]:bg-accent text-foreground cursor-pointer"
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    email === u.email ? "opacity-100" : "opacity-0"
+                                    selectedUserId === u.id ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                                 <div className="flex flex-col">
                                     <span>{u.name}</span>
-                                    <span className="text-xs text-muted-foreground">{u.email}</span>
+                                    <span className="text-xs text-muted-foreground">@{u.username}</span>
                                 </div>
                               </CommandItem>
                             ))}
@@ -133,7 +134,7 @@ export function MembersPanel() {
                       </Command>
                     </div>
                   </div>
-                  <Button onClick={handleInviteMember} className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={!email || email === user?.email}>
+                  <Button onClick={handleInviteMember} className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={!selectedUserId}>
                     {t('invite_to_project', 'Invitar al proyecto')}
                   </Button>
                 </div>
@@ -143,7 +144,7 @@ export function MembersPanel() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {currentProject.members.map((member) => (
+            {currentProject.members.map((member: Member) => (
               <div
                 key={member.id}
                 className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group"
@@ -157,8 +158,7 @@ export function MembersPanel() {
                       {currentProject.ownerId === member.id && <span className="ml-2 text-xs text-primary border border-primary px-1 rounded">{t('owner_badge', 'Owner')}</span>}
                   </p>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Mail className="size-3 mr-1" />
-                    {member.email}
+                    @{member.username}
                   </div>
                 </div>
                 

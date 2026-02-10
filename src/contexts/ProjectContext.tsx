@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export interface Member {
   id: string;
   name: string;
+  username: string;
   email: string;
 }
 
@@ -71,8 +72,8 @@ interface BandApiResponse {
   description: string;
   photo?: string;
   ownerId?: number;
-  members?: { id: number; name: string; email: string }[];
-  users?: { id: number; name: string; email: string }[];
+  members?: { id: number; name: string; username: string; email: string }[];
+  users?: { id: number; name: string; username: string; email: string }[];
   songLists?: {
     id: number;
     name: string;
@@ -116,7 +117,7 @@ interface ProjectContextType {
   createProject: (name: string, description: string, imageUrl?: string) => Promise<void>;
   updateProject: (projectId: string, data: Partial<Project>) => Promise<void>;
   selectProject: (projectId: string) => void;
-  inviteMember: (projectId: string, email: string) => Promise<void>;
+  inviteMember: (projectId: string, identifier: { email?: string; userId?: string }) => Promise<void>;
   leaveProject: (projectId: string) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
   fetchInvitations: () => Promise<void>;
@@ -162,10 +163,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         members: band.members ? band.members.map((m) => ({
           id: String(m.id),
           name: m.name,
+          username: m.username || '',
           email: m.email
         })) : band.users ? band.users.map((u) => ({ // Fallback if backend returns users list
           id: String(u.id),
           name: u.name,
+          username: u.username || '',
           email: u.email
         })) : [],
         songLists: band.songLists ? band.songLists.map((list) => ({
@@ -254,7 +257,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           description: description,
           imageUrl: imageUrl,
           ownerId: String(user.id),
-          members: [{ id: String(user.id), name: user.name, email: user.email }],
+          members: [{ id: String(user.id), name: user.name, username: user.username, email: user.email }],
           songLists: [],
           chat: [],
           createdAt: new Date() 
@@ -301,9 +304,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     setCurrentProject(project || null);
   };
 
-  const inviteMember = async (projectId: string, email: string) => {
+  const inviteMember = async (projectId: string, identifier: { email?: string; userId?: string }) => {
     try {
-        await api.post(`/bands/${projectId}/invite`, { email });
+        await api.post(`/bands/${projectId}/invite`, identifier);
         // Don't update local member list yet as it is pending
     } catch (error) {
         console.error("Error inviting member", error);
