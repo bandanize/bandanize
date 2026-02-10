@@ -123,7 +123,7 @@ export function Dashboard() {
               </div>
               <div>
                 <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">Bandanize</h1>
-                <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">{t('welcome')}, {user?.name}</p>
+                <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">{t('Welcome')}, {user?.name?.split(' ')[0]}</p>
               </div>
             </div>
 
