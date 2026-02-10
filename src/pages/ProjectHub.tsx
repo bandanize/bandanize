@@ -331,15 +331,15 @@ export function ProjectHub() {
                 value="songs"
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
-              <Music className="size-4 mr-2 flex-shrink-0" />
-              <span>{t('songs', 'Canciones')}</span>
+              <Music className="size-4 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('songs', 'Canciones')}</span>
             </TabsTrigger>
             <TabsTrigger 
                 value="chat"
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
             >
-              <MessageSquare className="size-4 mr-2 flex-shrink-0" />
-              <span>{t('chat', 'Chat')}</span>
+              <MessageSquare className="size-4 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('chat', 'Chat')}</span>
               {hasUnreadChat && (
                     <span className="absolute -top-1 -right-1 bg-red-500 w-[8px] h-[8px] rounded-full border border-card shadow-sm z-10" />
               )}
@@ -348,15 +348,15 @@ export function ProjectHub() {
                 value="members"
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
-              <Users className="size-4 mr-2 flex-shrink-0" />
-              <span>{t('members', 'Miembros')}</span>
+              <Users className="size-4 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('members', 'Miembros')}</span>
             </TabsTrigger>
             <TabsTrigger 
                 value="notifications"
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
             >
-              <Bell className="size-4 mr-2 flex-shrink-0" />
-              <span>{t('notifications', 'Notificaciones')}</span>
+              <Bell className="size-4 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('notifications', 'Notificaciones')}</span>
               {unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center border border-card shadow-sm z-10 gap-0.5">
                       <Bell className="size-[10px]" />
