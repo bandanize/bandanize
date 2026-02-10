@@ -303,6 +303,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                     isSaving={isSavingTab}
                     onUpload={(tabId) => handleFileUploadTrigger('tab', tabId)}
                     onDeleteFile={(tabId, url) => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, tabId, url)}
+                    onPreview={setPreviewFile}
                 />
             </div>
         )}

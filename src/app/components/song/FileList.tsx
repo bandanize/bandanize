@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Plus, FileAudio, Image as ImageIcon, File, Eye, Play, Download, Trash2 } from 'lucide-react';
+import { Plus, FileAudio, Image as ImageIcon, File, Eye, Play, Download, Trash2, ExternalLink } from 'lucide-react';
 import { Progress } from '@/app/components/ui/progress';
 import { Song } from '@/contexts/ProjectContext';
 import { getMediaUrl } from '@/services/api';
@@ -73,29 +73,38 @@ export function FileList({
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate" title={file.name}>{file.name}</p>
                 </div>
-                <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                    {(file.type.startsWith('audio') || file.type.startsWith('video') || file.type.startsWith('image')) && (
-                      <Button
-                        variant="ghost" 
-                        size="icon"
-                        className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    {(file.type.startsWith('audio') || file.type.startsWith('video') || file.type.startsWith('image') || file.type === 'application/pdf') && (
+                      <button
+                        className="p-1.5 sm:p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded-md transition-colors"
                         onClick={() => onPreview(file)}
                         title={t('view_play', "Reproducir/Ver")}
                       >
-                          {file.type.startsWith('image') ? <Eye className="size-4" /> : <Play className="size-4" />}
-                      </Button>
+                          {file.type.startsWith('image') || file.type === 'application/pdf' ? <Eye className="size-4" /> : <Play className="size-4" />}
+                      </button>
                     )}
                     
-                      <a 
+                    <a 
+                      href={getMediaUrl(file.url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 sm:p-2 hover:bg-accent rounded-md text-muted-foreground transition-colors"
+                      title={t('open_new_tab', "Abrir en nueva pestaña")}
+                    >
+                        <ExternalLink className="size-4" />
+                    </a>
+
+                    <a 
                       href={getMediaUrl(file.url)}
                       download 
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 hover:bg-accent rounded-md text-muted-foreground"
+                      className="p-1.5 sm:p-2 hover:bg-accent rounded-md text-muted-foreground transition-colors"
                       title={t('download', "Descargar")}
                     >
                         <Download className="size-4" />
                     </a>
+
                     <Button
                       variant="ghost" 
                       size="icon"

@@ -4,7 +4,7 @@ import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { 
   Guitar, Music2, Music, Save, Download, FileText, Upload, 
-  FileAudio, Image as ImageIcon, File, Trash2 
+  FileAudio, Image as ImageIcon, File, Trash2, Eye, Play, ExternalLink 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -94,6 +94,7 @@ interface TabEditorProps {
   isSaving: boolean;
   onUpload: (tabId: string) => void;
   onDeleteFile: (tabId: string, fileUrl: string) => void;
+  onPreview: (file: { url: string; type: string; name: string }) => void;
 }
 
 export function TabEditor({ 
@@ -102,7 +103,8 @@ export function TabEditor({
   onSave, 
   isSaving, 
   onUpload, 
-  onDeleteFile 
+  onDeleteFile,
+  onPreview
 }: TabEditorProps) {
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
@@ -140,11 +142,11 @@ export function TabEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
             {getInstrumentIcon(tab.instrumentIcon || 'guitar')}
-            <h3 className="font-medium text-foreground text-lg">{tab.name}</h3>
-            <span className="text-sm text-foreground/60 px-2 py-0.5 bg-accent/50 rounded">
+            <h3 className="font-medium text-foreground text-lg truncate max-w-[200px] sm:max-w-none">{tab.name}</h3>
+            <span className="text-xs sm:text-sm text-foreground/60 px-2 py-0.5 bg-accent/50 rounded whitespace-nowrap">
                 {tab.tuning || 'Standard'}
             </span>
         </div>
@@ -155,16 +157,16 @@ export function TabEditor({
                     size="sm" 
                     onClick={() => onSave(editingContent)} 
                     disabled={isSaving}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="flex-1 sm:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                     <Save className="size-4 mr-2" />
-                    {isSaving ? t('saving', 'Guardando...') : t('save_changes', 'Guardar cambios')}
+                    <span className="truncate">{isSaving ? t('saving', 'C...') : t('save', 'Guardar')}</span>
                 </Button>
             )}
             <Button
                 variant="outline"
                 size="sm"
-                className="bg-card border-border text-foreground hover:bg-accent"
+                className="flex-1 sm:flex-none bg-card border-border text-foreground hover:bg-accent"
                 onClick={() => {
                     const text = `${tab.name}\n${tab.tuning || 'Standard'}\n\n${editingContent}`;
                     const blob = new Blob([text], { type: 'text/plain' });
@@ -211,9 +213,9 @@ export function TabEditor({
       <div className="mt-8 pt-8 border-t border-border">
           <div className="flex items-center justify-between mb-4">
               <h4 className="font-medium text-foreground">{t('attached_files', 'Archivos adjuntos')}</h4>
-              <Button 
-                  variant="outline" 
-                  size="sm" 
+              <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => onUpload(tab.id)}
                   className="bg-card border-border text-foreground hover:bg-accent"
               >
@@ -221,7 +223,7 @@ export function TabEditor({
                   {t('add_file', 'Añadir archivo')}
               </Button>
           </div>
-          
+
           {tab.files && tab.files.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {tab.files.map((file: { url: string; type: string; name: string }) => (
@@ -234,23 +236,45 @@ export function TabEditor({
                               <File className="size-5 text-muted-foreground" />
                           )}
                           <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+                              <p className="text-sm font-medium text-foreground truncate" title={file.name}>{file.name}</p>
                           </div>
-                          <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                               <a 
+                          <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                               {(file.type.startsWith('audio') || file.type.startsWith('video') || file.type.startsWith('image') || file.type === 'application/pdf') && (
+                                  <button
+                                    className="p-1.5 sm:p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded-md transition-colors"
+                                    onClick={() => onPreview(file)}
+                                    title={t('view_play', "Reproducir/Ver")}
+                                  >
+                                      {file.type.startsWith('image') || file.type === 'application/pdf' ? <Eye className="size-4" /> : <Play className="size-4" />}
+                                  </button>
+                                )}
+
+                                <a
                                   href={getMediaUrl(file.url)}
-                                  download 
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="p-2 hover:bg-accent rounded-md text-muted-foreground"
-                              >
+                                  className="p-1.5 sm:p-2 hover:bg-accent rounded-md text-muted-foreground transition-colors"
+                                  title={t('open_new_tab', "Abrir en nueva pestaña")}
+                                >
+                                    <ExternalLink className="size-4" />
+                                </a>
+
+                               <a
+                                  href={getMediaUrl(file.url)}
+                                  download
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 sm:p-2 hover:bg-accent rounded-md text-muted-foreground transition-colors"
+                                  title={t('download', "Descargar")}
+                               >
                                   <Download className="size-4" />
                               </a>
                               <Button
-                                  variant="ghost" 
+                                  variant="ghost"
                                   size="icon"
                                   className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
                                   onClick={() => onDeleteFile(tab.id, file.url)}
+                                  title={t('delete', "Eliminar")}
                               >
                                   <Trash2 className="size-4" />
                               </Button>
