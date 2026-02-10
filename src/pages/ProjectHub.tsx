@@ -207,15 +207,17 @@ export function ProjectHub() {
             </Button>
             
             <div className="flex-1 flex items-center gap-3 min-w-[200px] select-none">
-               <div className="size-10 flex items-center justify-center flex-shrink-0 pointer-events-none">
-                   {currentProject.imageUrl ? (
-                       <img src={getMediaUrl(currentProject.imageUrl)} alt={currentProject.name} className="w-full h-full object-cover rounded-md" />
-                   ) : (
-                       <div className="flex items-center justify-center size-full">
-                           <Music className="size-6 text-primary" />
-                       </div>
-                   )}
-               </div>
+                <div className="size-10 aspect-square flex-shrink-0 rounded-md overflow-hidden bg-white/5 flex items-center justify-center pointer-events-none">
+                    {currentProject.imageUrl ? (
+                        <img 
+                            src={getMediaUrl(currentProject.imageUrl)} 
+                            alt={currentProject.name} 
+                            className="w-full h-full object-cover" 
+                        />
+                    ) : (
+                        <Music className="size-6 text-primary" />
+                    )}
+                </div>
                <div className="min-w-0">
                    <h1 className="text-[20px] sm:text-[24px] font-normal font-poppins text-foreground leading-8 truncate">{currentProject.name}</h1>
                    <div className="flex items-center gap-1">
