@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { AxiosError } from 'axios';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import Logo from '@/assets/logo.svg';
-import { resetPassword } from '@/services/api';
+import { resetPassword, extractErrorMessage } from '@/services/api';
 import { toast } from 'sonner';
 
 export function ResetPassword() {
@@ -36,10 +35,8 @@ export function ResetPassword() {
       await resetPassword(token, newPassword);
       toast.success('Contraseña restablecida exitosamente');
       navigate('/login');
-      navigate('/login');
     } catch (err: unknown) {
-      const error = err as AxiosError<string>;
-      toast.error(error.response?.data || 'Error al restablecer la contraseña');
+      toast.error(extractErrorMessage(err, 'Error al restablecer la contraseña'));
     } finally {
       setLoading(false);
     }

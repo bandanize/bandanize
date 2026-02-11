@@ -17,14 +17,18 @@
   --muted-foreground: #717182;
   --accent: #1f1f22;
   --accent-foreground: #EDEDED;
-  --destructive: #7f1d1d; /* Red-900ish for background */
-  --destructive-foreground: #ef4444; /* Red-500 for text */
+  --destructive: #7f1d1d;
+  /* Red-900ish for background */
+  --destructive-foreground: #ef4444;
+  /* Red-500 for text */
   --border: #2B2B31;
-  --input: #2B2B31; /* Keeping input border same as border/secondary */
+  --input: #2B2B31;
+  /* Keeping input border same as border/secondary */
   --input-background: #0B0B0C;
   --ring: #A3E635;
-  
-  --radius: 0.5rem; /* 8px default radius based on usage */
+
+  --radius: 0.5rem;
+  /* 8px default radius based on usage */
 
   /* Charts - Keeping original values or mapped if needed */
   --chart-1: oklch(0.646 0.222 41.116);
@@ -45,29 +49,6 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
-}
-
-.dark {
-  /* Same as root since we are enforcing dark mode */
-  --background: #0B0B0C;
-  --foreground: #EDEDED;
-  --card: #151518;
-  --card-foreground: #EDEDED;
-  --popover: #151518;
-  --popover-foreground: #EDEDED;
-  --primary: #A3E635;
-  --primary-foreground: #151518;
-  --secondary: #2B2B31;
-  --secondary-foreground: #EDEDED;
-  --muted: #2B2B31;
-  --muted-foreground: #717182;
-  --accent: #1f1f22;
-  --accent-foreground: #EDEDED;
-  --destructive: #7f1d1d;
-  --destructive-foreground: #ef4444;
-  --border: #2B2B31;
-  --input: #2B2B31;
-  --ring: #A3E635;
 }
 
 @theme inline {

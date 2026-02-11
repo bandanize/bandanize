@@ -13,6 +13,7 @@ import { ArrowLeft, MessageSquare, Music, Users, LogOut, PenLine, Bell, Calendar
 import { ProjectChat } from '@/app/components/ProjectChat';
 import { SongManager } from '@/app/components/SongManager';
 import { MembersPanel } from '@/app/components/MembersPanel';
+import { getUnreadNotificationCount, getUnreadChatStatus } from '@/services/api';
 import { NotificationFeed } from '@/app/components/NotificationFeed';
 import { ProjectCalendar } from '@/app/components/ProjectCalendar';
 import { toast } from 'sonner';
@@ -73,10 +74,9 @@ export function ProjectHub() {
   const fetchUnreadCount = React.useCallback(async () => {
         if (currentProject) {
             try {
-                const api = await import('@/services/api');
                 const [count, chatStatus] = await Promise.all([
-                    api.getUnreadNotificationCount(currentProject.id.toString()),
-                    api.getUnreadChatStatus(currentProject.id.toString())
+                    getUnreadNotificationCount(currentProject.id.toString()),
+                    getUnreadChatStatus(currentProject.id.toString())
                 ]);
                 setUnreadCount(count);
                 setHasUnreadChat(chatStatus);

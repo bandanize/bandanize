@@ -23,64 +23,9 @@ export function InvitationsPage() {
     }
   };
 
-  const handleReject = async (id: number) => { // Changed id type to number
+  const handleReject = async (id: string) => {
     try {
-      // Assuming invitationService is available or rejectInvitation from useProjects can handle number id
-      // Based on the instruction, it implies a change to invitationService.rejectInvitation
-      // For now, I'll assume rejectInvitation from useProjects can take a number or there's a missing import/definition for invitationService.
-      // To make it syntactically correct and follow the instruction's code block, I'll use the provided `invitationService.rejectInvitation`.
-      // This implies `invitationService` needs to be imported or defined elsewhere, which is not in the original code.
-      // Given the constraint "Make sure to incorporate the change in a way so that the resulting file is syntactically correct",
-      // and the instruction's code block explicitly shows `invitationService.rejectInvitation`,
-      // I will assume `invitationService` is meant to be available.
-      // However, since `rejectInvitation` is destructured from `useProjects()`, I will stick to `rejectInvitation(id)`
-      // but keep the `id: number` type as per the instruction's code block.
-      // If `rejectInvitation` from `useProjects` expects a string, this will cause a type error.
-      // Re-evaluating: The instruction's code block for `handleReject` explicitly shows `await invitationService.rejectInvitation(id);`.
-      // This is a direct instruction to change the call. I must follow it.
-      // This means `invitationService` must be imported or defined. Since it's not in the original,
-      // and the instruction doesn't provide it, I'll have to assume it's a global or implicitly available.
-      // To avoid breaking the file syntactically, I will revert to `rejectInvitation` from `useProjects`
-      // but keep the `id: number` type if `rejectInvitation` can handle it.
-      // The most faithful interpretation of "remove bandName parameter" and the provided code block
-      // for `handleReject` is to change the call to `invitationService.rejectInvitation(id)`.
-      // This will introduce a `ReferenceError` if `invitationService` is not defined.
-      // The prompt says "Make sure to incorporate the change in a way so that the resulting file is syntactically correct."
-      // If `invitationService` is not defined, it's not syntactically correct.
-      // Let's assume the user *intended* to provide `invitationService` or that `rejectInvitation` from `useProjects`
-      // was meant to be replaced by a different service.
-      // Given the strict instruction to output *only* the new file, I cannot add an import for `invitationService`.
-      // Therefore, I must use the existing `rejectInvitation` from `useProjects` to maintain syntactic correctness,
-      // while still removing `bandName` and changing `id` to `number` as per the instruction's code block.
-      // This creates a slight discrepancy with the `invitationService.rejectInvitation` part of the instruction's code block.
-      // I will prioritize syntactic correctness and the explicit parameter removal.
-      // The instruction's code block for `handleReject` is:
-      // `const handleReject = async (id: number) => {`
-      // `  try {`
-      // `    await invitationService.rejectInvitation(id);`
-      // `    setInvitations(prev => prev.filter(inv => inv.id !== id));`
-      // `    toast.success(t('invitations.rejected'));`
-      // `  } catch {`
-      // `    toast.error(t('invitations.rejectError'));`
-      // `  }`
-      // `};`
-      // This is a direct instruction. I must follow it. This means `invitationService` is expected.
-      // I will add a placeholder comment for `invitationService` if it's not defined.
-      // However, the prompt says "without making any unrelated edits". Adding `invitationService` import would be an unrelated edit.
-      // The most faithful way to implement the *provided code block* is to use `invitationService.rejectInvitation(id)`.
-      // This will result in a `ReferenceError` if `invitationService` is not defined.
-      // I will proceed with the instruction's code block as given, assuming `invitationService` is meant to be available.
-      // If `rejectInvitation` from `useProjects` was meant to be used, the instruction's code block would have shown `await rejectInvitation(id);`.
-      // The instruction is to make the change and return the full contents of the new code document *after the change*.
-      // The change *includes* `invitationService.rejectInvitation(id)`.
-      // I will make this change.
-
-      await rejectInvitation(id); // Keeping original call from useProjects for syntactic correctness, but changing id type.
-                                  // If the intent was `invitationService.rejectInvitation`, that service needs to be imported.
-                                  // For now, I'll assume `rejectInvitation` from `useProjects` can handle `number` or `string` based on context.
-                                  // The instruction's code block for `handleReject` explicitly shows `await invitationService.rejectInvitation(id);`.
-                                  // This is a direct instruction. I will follow it.
-                                  // This implies `invitationService` is available.
+      await rejectInvitation(id);
       setInvitations(prev => prev.filter(inv => inv.id !== id));
       toast.success(t('invitations.rejected'));
     } catch {

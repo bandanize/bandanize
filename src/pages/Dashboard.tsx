@@ -10,6 +10,7 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { LogOut, Plus, Music2, Users, User, Settings, Mail, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WelcomeModal } from '@/app/components/WelcomeModal';
+import { getUnreadNotificationCount } from '@/services/api';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/app/components/ui/dropdown-menu';
 import { uploadFile, getMediaUrl } from '@/services/api';
 import { toast } from 'sonner';
@@ -26,7 +27,10 @@ export function Dashboard() {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectImage, setProjectImage] = useState('');
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (!user) return false;
+    return !localStorage.getItem(`welcome_seen_${user.id}`);
+  });
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [cookies] = useCookies(['lastProjectId']);
   const navigate = useNavigate();
@@ -38,7 +42,6 @@ export function Dashboard() {
         
         try {
             const counts: Record<string, number> = {};
-            const { getUnreadNotificationCount } = await import('@/services/api');
             
             await Promise.all(projects.map(async (p) => {
                 try {
@@ -61,15 +64,6 @@ export function Dashboard() {
   }, [projects]);
 
 
-  useEffect(() => {
-    // Check if this is the first time the  useEffect(() => {
-    if (user) {
-      const hasSeenWelcome = localStorage.getItem(`welcome_seen_${user.id}`);
-      if (!hasSeenWelcome) {
-        setShowWelcome(true);
-      }
-    }
-  }, [user]);
 
   const handleCloseWelcome = () => {
     setShowWelcome(false);

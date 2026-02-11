@@ -285,16 +285,14 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         await api.put(`/bands/${projectId}`, bandData);
         // Optimize: just update local state instead of refetching or use response
         
-        setProjects(projects.map(p => {
+        setProjects(prev => prev.map(p => {
             if (p.id === projectId) {
               return { ...p, ...data };
             }
             return p;
           }));
       
-          if (currentProject?.id === projectId) {
-            setCurrentProject({ ...currentProject, ...data });
-          }
+          setCurrentProject(prev => prev?.id === projectId ? { ...prev, ...data } : prev);
     } catch (error) {
         console.error("Error updating project", error);
         throw error;
@@ -727,15 +725,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   // Helper to update local state
   const updateLocalProject = (projectId: string, updater: (p: Project) => Project) => {
-    setProjects(projects.map(p => {
+    setProjects(prev => prev.map(p => {
       if (p.id === projectId) {
         return updater(p);
       }
       return p;
     }));
-    if (currentProject?.id === projectId) {
-      setCurrentProject(updater(currentProject));
-    }
+    setCurrentProject(prev => prev?.id === projectId ? updater(prev) : prev);
   };
 
   return (

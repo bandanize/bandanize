@@ -29,7 +29,6 @@ export function MembersPanel() {
   // Search states
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
-  // const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const searchUsers = async () => {
@@ -37,14 +36,11 @@ export function MembersPanel() {
             setSearchResults([]);
             return;
         }
-        // setLoading(true);
         try {
             const response = await api.get(`/users/search?query=${searchValue}`);
             setSearchResults(response.data);
         } catch (error) {
             console.error("Error searching users", error);
-        } finally {
-            // setLoading(false);
         }
     };
 

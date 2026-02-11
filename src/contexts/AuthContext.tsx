@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import api from '@/services/api';
+import { PUBLIC_ROUTES } from '@/services/api';
 
 interface User {
   id: string; 
@@ -49,8 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           localStorage.removeItem('currentUser');
           localStorage.removeItem('token');
-          const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
-          const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+          const isPublicRoute = PUBLIC_ROUTES.some(route => window.location.pathname.startsWith(route));
           
           if (!isPublicRoute) {
              window.location.href = '/login';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AxiosError } from 'axios';
+import { extractErrorMessage } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -21,13 +21,7 @@ export function Login() {
     try {
       await login(username, password);
     } catch (err: unknown) {
-      const error = err as AxiosError<{ data: string } | string>;
-      if (error.response && error.response.data && typeof error.response.data === 'string') {
-        setError(error.response.data);
-      } else {
-        // Fallback for generic error or object data
-        setError(error.message || 'Error al iniciar sesión');
-      }
+      setError(extractErrorMessage(err, 'Error al iniciar sesión'));
     }
   };
 
@@ -125,8 +119,7 @@ function Register({ onBack }: { onBack: () => void }) {
       await register(email, password, name, username);
       setSuccess(true); // Set success on successful registration
     } catch (err: unknown) {
-      const error = err as Error;
-      setError(error.message || 'Error al registrarse');
+      setError(extractErrorMessage(err, 'Error al registrarse'));
     }
   };
 
@@ -177,7 +170,7 @@ function Register({ onBack }: { onBack: () => void }) {
         <CardContent className="p-0">
           <form onSubmit={handleRegister} className="flex flex-col gap-4">
              <div className="space-y-2">
-              <Label htmlFor="name" className="text-[14px] text-[#EDEDED] font-normal">Nombre</Label>
+              <Label htmlFor="name" className="text-[14px] text-foreground font-normal">Nombre</Label>
               <Input
                 id="name"
                 type="text"
@@ -185,7 +178,7 @@ function Register({ onBack }: { onBack: () => void }) {
                 value={name}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                 required
-                className="bg-[#151518] bg-gradient-to-t from-white/5 to-white/5 border-none text-[#EDEDED] placeholder:text-[#EDEDED]/25 h-[36px] rounded-[8px]"
+                className="bg-input-background bg-gradient-to-t from-white/5 to-white/5 border-none text-foreground placeholder:text-foreground/25 h-[36px] rounded-[8px]"
               />
             </div>
             <div className="space-y-2">

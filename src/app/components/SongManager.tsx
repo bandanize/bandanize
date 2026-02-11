@@ -11,6 +11,7 @@ import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 
 // React DnD
 import { DndProvider, useDrag, useDrop, ConnectDragSource } from 'react-dnd';
@@ -337,15 +338,6 @@ const SortableAccordionItem = ({ list, index, moveList, onDrop, children }: Sort
         </div>
     );
 };
-
-// ... Inline SongListEditor ...
-
-
-
-
-import { useSearchParams } from 'react-router-dom';
-
-// ... (imports)
 
 export function SongManager() {
   const { currentProject, createSongList, updateSongList, deleteSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong } = useProjects();

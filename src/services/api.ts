@@ -1,4 +1,27 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+
+/** Routes that don't require authentication */
+export const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
+
+/**
+ * Extract a user-friendly error message from an API error.
+ * Handles the backend ErrorResponse JSON format { timestamp, message, details }
+ * as well as plain string responses and generic errors.
+ */
+export function extractErrorMessage(err: unknown, fallback = 'Ha ocurrido un error'): string {
+    if (axios.isAxiosError(err)) {
+        const data = (err as AxiosError).response?.data;
+        if (data && typeof data === 'object' && 'message' in data) {
+            return (data as { message: string }).message;
+        }
+        if (typeof data === 'string' && data.length > 0) {
+            return data;
+        }
+        return err.message || fallback;
+    }
+    if (err instanceof Error) return err.message || fallback;
+    return fallback;
+}
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '/api', // Use env var or fallback to proxy
@@ -29,8 +52,7 @@ api.interceptors.response.use(
         // Handle 401 Unauthorized or 403 Forbidden (Expired/Invalid Token)
         if (_res?.status === 401 || _res?.status === 403) {
             // Don't redirect if it's a login attempt failure (invalid credentials)
-            const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
-            const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+            const isPublicRoute = PUBLIC_ROUTES.some(route => window.location.pathname.startsWith(route));
 
             if (!error.config.url.includes('/auth/login') && !isPublicRoute) {
                 localStorage.removeItem('token');
@@ -38,7 +60,6 @@ api.interceptors.response.use(
                 window.location.href = '/login';
             }
         }
-        return Promise.reject(error);
         return Promise.reject(error);
     }
 );
