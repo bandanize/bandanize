@@ -1,16 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { 
   Guitar, Music2, Music, Save, Download, FileText, Upload, 
-  FileAudio, Image as ImageIcon, File, Trash2, Eye, Play, ExternalLink 
+  FileAudio, Image as ImageIcon, File, Trash2, Eye, Play, ExternalLink,
+  Maximize, Minimize, ZoomIn, ZoomOut
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Tablature } from '@/contexts/ProjectContext';
 import { getMediaUrl } from '@/services/api';
 import { INSTRUMENTS } from './constants';
+import { cn } from '@/app/components/ui/utils';
 
 function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
   const { t } = useTranslation();
@@ -108,9 +110,46 @@ export function TabEditor({
 }: TabEditorProps) {
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
+  const fontSizes = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl'];
+  const [fontSizeIndex, setFontSizeIndex] = useState(1); // Default to text-sm
+
   const hasChanges = editingContent !== (tab.content || '');
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const increaseFontSize = () => {
+    setFontSizeIndex((prev) => Math.min(prev + 1, fontSizes.length - 1));
+  };
+
+  const decreaseFontSize = () => {
+    setFontSizeIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+      toast.error(t('fullscreen_error', 'Error al cambiar a pantalla completa'));
+    }
+  };
 
   const handleInsertText = (text: string) => {
     if (!textareaRef.current) return;
@@ -141,8 +180,15 @@ export function TabEditor({
   };
 
   return (
-    <div className="space-y-4">
+    <div 
+        ref={containerRef} 
+        className={cn(
+            "space-y-4 transition-all duration-300",
+            isFullscreen && "fixed inset-0 z-50 bg-background p-6 overflow-y-auto"
+        )}
+    >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* ... (Start of header remains same) */}
         <div className="flex flex-wrap items-center gap-2">
             {getInstrumentIcon(tab.instrumentIcon || 'guitar')}
             <h3 className="font-medium text-foreground text-lg truncate max-w-[200px] sm:max-w-none">{tab.name}</h3>
@@ -152,6 +198,41 @@ export function TabEditor({
         </div>
 
         <div className="flex items-center gap-2">
+            <div className="flex items-center bg-card border border-border rounded-md mr-2">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-none hover:bg-accent"
+                    onClick={decreaseFontSize}
+                    disabled={fontSizeIndex === 0}
+                    title={t('decrease_font_size', 'Disminuir tamaño de letra')}
+                >
+                    <ZoomOut className="size-4" />
+                </Button>
+                <div className="w-px h-4 bg-border mx-1"></div>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-none hover:bg-accent"
+                    onClick={increaseFontSize}
+                    disabled={fontSizeIndex === fontSizes.length - 1}
+                    title={t('increase_font_size', 'Aumentar tamaño de letra')}
+                >
+                    <ZoomIn className="size-4" />
+                </Button>
+            </div>
+
+            <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 sm:flex-none bg-card border-border text-foreground hover:bg-accent"
+                onClick={toggleFullscreen}
+                title={isFullscreen ? t('exit_fullscreen', 'Salir de pantalla completa') : t('fullscreen', 'Pantalla completa')}
+            >
+                {isFullscreen ? <Minimize className="size-4 mr-2" /> : <Maximize className="size-4 mr-2" />}
+                <span className="hidden sm:inline">{isFullscreen ? t('exit_fullscreen', 'Salir') : t('fullscreen', 'Fullscreen')}</span>
+            </Button>
+
             {hasChanges && (
                 <Button 
                     size="sm" 
@@ -183,7 +264,7 @@ export function TabEditor({
         </div>
       </div>
 
-      <div className="relative">
+      <div className={cn("relative", isFullscreen && "flex-1")}>
           <div className="absolute top-2 right-2 flex gap-1 z-10">
               <Button
                   variant="ghost"
@@ -202,7 +283,11 @@ export function TabEditor({
             ref={textareaRef}
             value={editingContent}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingContent(e.target.value)}
-            className="font-mono text-sm min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4"
+            className={cn(
+                "font-mono min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4",
+                fontSizes[fontSizeIndex],
+                isFullscreen && "min-h-[calc(100vh-250px)]"
+            )}
             placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
             spellCheck={false}
           />
@@ -286,6 +371,18 @@ export function TabEditor({
               <p className="text-sm text-muted-foreground/60 italic">{t('no_files_tab', 'No hay archivos en esta tablatura')}</p>
           )}
       </div>
+
+      {isFullscreen && (
+        <Button
+          variant="secondary"
+          size="icon"
+          className="fixed bottom-6 right-6 z-50 rounded-full shadow-lg opacity-80 hover:opacity-100 transition-opacity md:hidden"
+          onClick={toggleFullscreen}
+          title={t('exit_fullscreen', 'Salir de pantalla completa')}
+        >
+          <Minimize className="size-6" />
+        </Button>
+      )}
     </div>
   );
 }
