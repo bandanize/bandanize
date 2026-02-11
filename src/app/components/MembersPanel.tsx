@@ -106,21 +106,23 @@ export function MembersPanel() {
                           </CommandEmpty>
                           <CommandGroup>
                             {searchResults
-                              .filter((u: SearchUser) => u.email !== user?.email && !currentProject.members.some((m: Member) => m.id === u.id))
+                              .filter((u: SearchUser) => u.email !== user?.email && !currentProject.members.some((m: Member) => m.id.toString() === u.id.toString()))
                               .map((u: SearchUser) => (
                               <CommandItem
                                 key={u.id}
-                                value={u.id} 
-                                onSelect={(currentValue: string) => {
-                                  setSelectedUserId(currentValue === selectedUserId ? "" : currentValue);
-                                  setSearchValue(u.name); // Auto-fill search with selected name for clarity
+                                value={u.id.toString()} 
+                                onSelect={() => {
+                                  const idStr = u.id.toString();
+                                  setSelectedUserId(idStr === selectedUserId ? "" : idStr);
+                                  // Don't set searchValue here if we want to keep the current search view
+                                  // or set it and then clear it if needed.
                                 }}
                                 className="data-[selected=true]:bg-accent text-foreground cursor-pointer"
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    selectedUserId === u.id ? "opacity-100" : "opacity-0"
+                                    selectedUserId === u.id.toString() ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                                 <div className="flex flex-col">
