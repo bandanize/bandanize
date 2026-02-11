@@ -236,7 +236,7 @@ export function ProjectHub() {
               <>
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={openEditDialog} className="bg-card border border-border text-foreground hover:bg-accent font-sans text-[14px] font-normal flex h-[36px] w-9 sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
+                  <Button onClick={openEditDialog} className="bg-card border border-border text-foreground hover:bg-accent font-sans text-[14px] font-normal flex h-[36px] w-9 sm:min-w-[148px] sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
                     <PenLine className="size-4 sm:mr-2" />
                     <span className="hidden sm:inline">{t('edit_project', 'Editar proyecto')}</span>
                   </Button>
@@ -313,7 +313,7 @@ export function ProjectHub() {
               
               </>
             ) : (
-                <Button variant="destructive" onClick={handleLeaveProject} className="w-9 sm:w-auto px-0 sm:px-4 bg-red-900/20 text-red-500 hover:bg-red-900/40">
+                <Button variant="destructive" onClick={handleLeaveProject} className="h-[36px] w-9 sm:min-w-[148px] sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center bg-red-900/20 text-red-500 hover:bg-red-900/40 border border-red-900/50">
                     <LogOut className="size-4 sm:mr-2" />
                     <span className="hidden sm:inline">{t('leave_project', 'Abandonar')}</span>
                 </Button>

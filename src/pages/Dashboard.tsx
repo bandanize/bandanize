@@ -136,7 +136,7 @@ export function Dashboard() {
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="w-9 sm:w-[148px] h-[36px] bg-card border-border rounded-[8px] text-foreground text-[14px] font-normal font-sans hover:bg-accent hover:text-white px-0 sm:px-4"
+                      className="w-9 sm:min-w-[148px] sm:w-auto h-[36px] bg-card border-border rounded-[8px] text-foreground text-[14px] font-normal font-sans hover:bg-accent hover:text-white px-0 sm:px-4"
                     >
                       <User className="size-4 sm:mr-2" />
                       <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
@@ -192,7 +192,7 @@ export function Dashboard() {
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="w-9 sm:w-[148px] bg-primary hover:bg-primary/90 text-primary-foreground px-0 sm:px-4">
+              <Button className="w-9 sm:min-w-[148px] sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-0 sm:px-4">
                 <Plus className="size-4 sm:mr-2 text-primary-foreground" />
                 <span className="hidden sm:inline">{t('new_project')}</span>
               </Button>
@@ -284,7 +284,7 @@ export function Dashboard() {
             </div>
             <Button 
                 onClick={() => setOpen(true)}
-                className="w-auto sm:w-[148px] h-[36px] bg-card border border-border rounded-[8px] text-foreground font-sans text-[14px] font-normal hover:bg-accent px-4"
+                className="w-auto sm:min-w-[148px] h-[36px] bg-card border border-border rounded-[8px] text-foreground font-sans text-[14px] font-normal hover:bg-accent px-4"
             >
                  <Plus className="size-4 mr-2 stroke-[1.33px] text-foreground" />
                  {t('new_project')}
