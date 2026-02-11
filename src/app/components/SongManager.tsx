@@ -217,7 +217,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
     }, [items, listId, onReorder, songs]);
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
             {items.map((song, index) => (
                 <SortableSongRow
                     key={song.id}
