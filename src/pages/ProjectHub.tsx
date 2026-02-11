@@ -197,7 +197,7 @@ export function ProjectHub() {
     <PageLayout
       headerContent={
         <div className="max-w-[1280px] w-full mx-auto px-4 sm:px-6">
-            <div className="max-w-[1216px] w-full mx-auto flex flex-wrap items-center gap-4">
+            <div className="max-w-[1216px] w-full mx-auto flex items-center gap-4">
             <Button 
                 variant="ghost" 
                 onClick={() => navigate('/dashboard')} 
@@ -313,8 +313,8 @@ export function ProjectHub() {
               
               </>
             ) : (
-                <Button variant="destructive" onClick={handleLeaveProject} className="bg-red-900/20 text-red-500 hover:bg-red-900/40">
-                    <LogOut className="size-4 mr-2" />
+                <Button variant="destructive" onClick={handleLeaveProject} className="w-9 sm:w-auto px-0 sm:px-4 bg-red-900/20 text-red-500 hover:bg-red-900/40">
+                    <LogOut className="size-4 sm:mr-2" />
                     <span className="hidden sm:inline">{t('leave_project', 'Abandonar')}</span>
                 </Button>
             )}

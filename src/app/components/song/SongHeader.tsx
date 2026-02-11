@@ -21,7 +21,7 @@ export function SongHeader({ song, onBack, onDelete, onEdit }: SongHeaderProps) 
 
   return (
       <Card className="bg-card border-border">
-        <CardHeader className="pb-8">
+        <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-start gap-4">
               <Button variant="ghost" onClick={onBack} className="text-foreground hover:bg-accent">
