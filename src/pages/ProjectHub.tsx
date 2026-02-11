@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
@@ -30,15 +30,25 @@ export function ProjectHub() {
   const { currentProject, projects, updateProject, leaveProject, deleteProject, selectProject, isLoading } = useProjects();
   const { user } = useAuth();
   const onlineCount = usePresence(currentProject?.id);
-  const [activeTab, setActiveTab] = useState('songs');
+  const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize activeTab from URL or default to 'songs'
+  const activeTab = searchParams.get('tab') || 'songs';
+
+  const setActiveTab = (tab: string) => {
+    setSearchParams((prev: URLSearchParams) => {
+      prev.set('tab', tab);
+      return prev;
+    }, { replace: true });
+  };
+
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editData, setEditData] = useState({
     name: currentProject?.name || '',
     description: currentProject?.description || '',
     imageUrl: currentProject?.imageUrl || '',
   });
-
-  const { t } = useTranslation();
 
   const [, setCookie] = useCookies(['lastProjectId']);
 

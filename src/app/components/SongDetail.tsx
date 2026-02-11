@@ -1,13 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useProjects, Song } from '@/contexts/ProjectContext';
-// Tabs imports removed
-// Actually, I should remove unused imports.
-
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { uploadFileWithRetry } from '@/services/api';
 
-// Sub-components
 // Sub-components
 import { SongHeader } from './song/SongHeader';
 import { SongEditDialog } from './song/SongEditDialog';
@@ -38,8 +35,22 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     deleteTablatureFile
   } = useProjects();
 
-  const [selectedTabId, setSelectedTabId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Tab ID from URL
+  const selectedTabId = searchParams.get('tabId');
   const selectedTab = song.tablatures.find(t => t.id === selectedTabId) || null;
+
+  const setSelectedTabId = (id: string | null) => {
+      setSearchParams(prev => {
+          if (id) {
+              prev.set('tabId', id);
+          } else {
+              prev.delete('tabId');
+          }
+          return prev;
+      }, { replace: true });
+  };
 
   // File Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);

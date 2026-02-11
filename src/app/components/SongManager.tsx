@@ -343,13 +343,58 @@ const SortableAccordionItem = ({ list, index, moveList, onDrop, children }: Sort
 
 
 
+import { useSearchParams } from 'react-router-dom';
+
+// ... (imports)
+
 export function SongManager() {
   const { currentProject, createSongList, updateSongList, deleteSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong } = useProjects();
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [openListDialog, setOpenListDialog] = useState(false);
   const [openSongDialog, setOpenSongDialog] = useState(false);
-  const [selectedListId, setSelectedListId] = useState<string | null>(null);
-  const [selectedSongRef, setSelectedSongRef] = useState<{ listId: string; songId: string } | null>(null);
+  
+  // State derived from URL
+  const selectedListId = searchParams.get('listId');
+  const selectedSongId = searchParams.get('songId');
+  
+  const [accordionValue, setAccordionValue] = useState<string | undefined>(selectedListId || undefined);
+
+  // Sync URL with local state
+  useEffect(() => {
+      const listId = searchParams.get('listId');
+      if (listId) setAccordionValue(listId);
+  }, [searchParams]);
+
+  const handleAccordionChange = (value: string) => {
+      setAccordionValue(value);
+      setSearchParams(prev => {
+          if (value) {
+              prev.set('listId', value);
+          } else {
+              prev.delete('listId');
+          }
+          return prev;
+      }, { replace: true });
+  };
+
+  const handleSelectSong = (listId: string, song: Song) => {
+      setSearchParams(prev => {
+          prev.set('listId', listId);
+          prev.set('songId', song.id);
+          return prev;
+      });
+  };
+
+  const handleBackToManager = () => {
+      setSearchParams(prev => {
+          prev.delete('songId');
+          // Start: Keep listId? Yes, usually user wants to go back to the list
+          return prev;
+      });
+  };
+
   const [listName, setListName] = useState('');
   const [songData, setSongData] = useState<{
     name: string;
@@ -445,15 +490,18 @@ export function SongManager() {
       }
   };
 
+  // State for "Add Song" dialog
+  const [songCreationListId, setSongCreationListId] = useState<string | null>(null);
+  
   const handleCreateSong = async () => {
-    if (!currentProject || !selectedListId || !songData.name.trim()) return;
-    await createSong(currentProject.id, selectedListId, {
+    if (!currentProject || !songCreationListId || !songData.name.trim()) return;
+    await createSong(currentProject.id, songCreationListId, {
       ...songData,
       bpm: songData.bpm ?? undefined // Handle null to undefined
     });
     setSongData({ name: '', originalBand: '', bpm: null, key: '' });
     setOpenSongDialog(false);
-    setSelectedListId(null);
+    setSongCreationListId(null);
     toast.success(t('song_created', 'Canción creada'));
   };
 
@@ -500,19 +548,19 @@ export function SongManager() {
 
   if (!currentProject) return null;
 
-  const activeSong = selectedSongRef
+  const activeSong = selectedListId && selectedSongId
     ? currentProject.songLists
-        .find((l: SongList) => l.id === selectedSongRef.listId)
-        ?.songs.find((s: Song) => s.id === selectedSongRef.songId)
+        .find((l: SongList) => l.id === selectedListId)
+        ?.songs.find((s: Song) => s.id === selectedSongId)
     : null;
 
-  if (activeSong && selectedSongRef) {
+  if (activeSong && selectedListId && selectedSongId) {
     return (
       <SongDetail
         key={activeSong.id}
-        listId={selectedSongRef.listId}
+        listId={selectedListId}
         song={activeSong}
-        onBack={() => setSelectedSongRef(null)}
+        onBack={handleBackToManager}
       />
     );
   };
@@ -567,7 +615,13 @@ export function SongManager() {
                 <p className="text-sm">{t('create_first_list', 'Crea tu primera lista de canciones')}</p>
               </div>
             ) : (
-              <Accordion type="single" collapsible className="w-full space-y-4">
+              <Accordion 
+                type="single" 
+                collapsible 
+                className="w-full space-y-4"
+                value={accordionValue}
+                onValueChange={handleAccordionChange}
+              >
                 {localLists.map((list, index) => (
                   <SortableAccordionItem 
                     key={list.id} 
@@ -634,7 +688,7 @@ export function SongManager() {
                             size="sm"
                             className="w-full h-10 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-2"
                             onClick={() => {
-                                setSelectedListId(list.id);
+                                setSongCreationListId(list.id);
                                 setOpenSongDialog(true);
                             }}
                             >
@@ -648,7 +702,7 @@ export function SongManager() {
                                     listId={list.id}
                                     songs={list.songs}
                                     onReorder={handleReorder}
-                                    onSelectSong={(lId: string, s: Song) => setSelectedSongRef({ listId: lId, songId: s.id })}
+                                    onSelectSong={handleSelectSong}
                                     onDeleteSong={handleDeleteSong}
                                     onEditSong={handleEditSongClick}
                                 />
