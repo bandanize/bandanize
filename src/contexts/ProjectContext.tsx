@@ -127,6 +127,7 @@ interface ProjectContextType {
   createSongList: (projectId: string, name: string) => void;
   updateSongList: (projectId: string, listId: string, name: string) => void;
   deleteSongList: (projectId: string, listId: string) => void;
+  reorderSongLists: (projectId: string, listIds: string[]) => void;
   reorderSongs: (projectId: string, listId: string, songIds: string[]) => void;
   createSong: (projectId: string, listId: string, song: Omit<Song, 'id' | 'tablatures' | 'files' | 'bandName'>) => void;
   updateSong: (projectId: string, listId: string, songId: string, data: Partial<Song>) => void;
@@ -437,6 +438,26 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const reorderSongLists = async (projectId: string, listIds: string[]) => {
+      // Optimistic update
+      updateLocalProject(projectId, (p) => {
+          const listMap = new Map(p.songLists.map(l => [l.id, l]));
+          const newLists = listIds.map(id => listMap.get(id)).filter((l): l is SongList => !!l);
+          
+          return {
+              ...p,
+              songLists: newLists
+          };
+      });
+
+      try {
+          await api.put(`/bands/${projectId}/songlists/reorder`, listIds);
+      } catch (error) {
+          console.error("Error reordering song lists", error);
+          throw error;
+      }
+  };
+
   const reorderSongs = async (projectId: string, listId: string, songIds: string[]) => {
       // Optimistic update
       updateLocalProject(projectId, (p) => {
@@ -737,6 +758,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       createSongList,
       updateSongList,
       deleteSongList,
+      reorderSongLists,
       reorderSongs,
       createSong,
       updateSong,

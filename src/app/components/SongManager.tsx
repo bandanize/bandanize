@@ -13,7 +13,7 @@ import SongListImage from '@/assets/song-list.svg';
 import { useTranslation } from 'react-i18next';
 
 // React DnD
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { DndProvider, useDrag, useDrop, ConnectDragSource } from 'react-dnd';
 import { TouchBackend } from 'react-dnd-touch-backend';
 
 type Identifier = string | symbol;
@@ -21,7 +21,11 @@ type Identifier = string | symbol;
 // --- Sortable Components ---
 
 // ItemType for DnD
-const ItemType = 'SONG_ROW';
+// ItemType for DnD
+const ItemType = {
+    SONG_ROW: 'SONG_ROW',
+    SONG_LIST: 'SONG_LIST'
+};
 
 
 interface DragItem {
@@ -45,7 +49,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
   const ref = useRef<HTMLDivElement>(null);
 
   const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
-    accept: ItemType,
+    accept: ItemType.SONG_ROW,
     collect(monitor) {
       return {
         handlerId: monitor.getHandlerId(),
@@ -102,8 +106,8 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
     },
   });
 
-  const [{ isDragging }, drag] = useDrag({
-    type: ItemType,
+  const [{ isDragging }, drag, preview] = useDrag({
+    type: ItemType.SONG_ROW,
     item: () => {
       return { id: song.id, index };
     },
@@ -120,15 +124,16 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
   return (
     <div
       ref={(node) => {
-          drag(drop(node));
+          drop(node);
+          preview(node);
           ref.current = node;
       }}
       style={{ opacity }}
-      className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all cursor-move select-none"
+      className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all select-none"
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
-      <div className="cursor-grab">
+      <div ref={(node) => { drag(node); }} className="cursor-grab p-1 -ml-1 touch-none">
            <GripVertical className="size-5 text-muted-foreground group-hover:text-muted-foreground/60" />
       </div>
      
@@ -230,13 +235,116 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
     );
 };
 
+// --- Sortable Accordion Item ---
+
+interface SortableAccordionItemProps {
+    list: SongList;
+    index: number;
+    moveList: (dragIndex: number, hoverIndex: number) => void;
+    onDrop: () => void;
+    children: (dragRef: ConnectDragSource) => React.ReactNode;
+}
+
+const SortableAccordionItem = ({ list, index, moveList, onDrop, children }: SortableAccordionItemProps) => {
+    const ref = useRef<HTMLDivElement>(null);
+
+    const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
+        accept: ItemType.SONG_LIST,
+        collect(monitor) {
+            return {
+                handlerId: monitor.getHandlerId(),
+            };
+        },
+        hover(item: DragItem, monitor) {
+            if (!ref.current) {
+                return;
+            }
+            const dragIndex = item.index;
+            const hoverIndex = index;
+
+            // Don't replace items with themselves
+            if (dragIndex === hoverIndex) {
+                return;
+            }
+
+            // Determine rectangle on screen
+            const hoverBoundingRect = ref.current?.getBoundingClientRect();
+
+            // Get vertical middle
+            const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+            // Determine mouse position
+            const clientOffset = monitor.getClientOffset();
+
+            if (!clientOffset) return;
+
+            // Get pixels to the top
+            const hoverClientY = (clientOffset).y - hoverBoundingRect.top;
+
+            // Only perform the move when the mouse has crossed half of the items height
+            // When dragging downwards, only move when the cursor is below 50%
+            // When dragging upwards, only move when the cursor is above 50%
+
+            // Dragging downwards
+            if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+                return;
+            }
+
+            // Dragging upwards
+            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+                return;
+            }
+
+            // Time to actually perform the action
+            moveList(dragIndex, hoverIndex);
+
+            // Note: we're mutating the monitor item here!
+            item.index = hoverIndex;
+        },
+    });
+
+    const [{ isDragging }, drag, preview] = useDrag({
+        type: ItemType.SONG_LIST,
+        item: () => {
+            return { id: list.id, index };
+        },
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+        end: () => {
+            onDrop();
+        }
+    });
+
+    const opacity = isDragging ? 0 : 1;
+
+    // Connect refs
+    // drop(ref); 
+    // preview(ref);
+
+    return (
+        <div 
+            ref={(node) => { 
+                drop(node); 
+                preview(node); 
+                ref.current = node; 
+            }} 
+            style={{ opacity }} 
+            data-handler-id={handlerId} 
+            className="mb-4"
+        >
+            {children(drag)}
+        </div>
+    );
+};
+
 // ... Inline SongListEditor ...
 
 
 
 
 export function SongManager() {
-  const { currentProject, createSongList, updateSongList, deleteSongList, createSong, reorderSongs, deleteSong, updateSong } = useProjects();
+  const { currentProject, createSongList, updateSongList, deleteSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong } = useProjects();
   const { t } = useTranslation();
   const [openListDialog, setOpenListDialog] = useState(false);
   const [openSongDialog, setOpenSongDialog] = useState(false);
@@ -254,6 +362,33 @@ export function SongManager() {
     bpm: null,
     key: '',
   });
+
+  // Local state for list reordering
+  const [localLists, setLocalLists] = useState<SongList[]>([]);
+
+  useEffect(() => {
+      if (currentProject) {
+          setLocalLists(currentProject.songLists);
+      }
+  }, [currentProject]);
+
+  const moveList = useCallback((dragIndex: number, hoverIndex: number) => {
+    setLocalLists((prevLists) => {
+        const newLists = [...prevLists];
+        const [movedList] = newLists.splice(dragIndex, 1);
+        newLists.splice(hoverIndex, 0, movedList);
+        return newLists;
+    });
+  }, []);
+
+  const handleListDrop = useCallback(() => {
+    if (!currentProject) return;
+    const ids = localLists.map(l => l.id);
+    const currentIds = currentProject.songLists.map((l: SongList) => l.id);
+    if (JSON.stringify(ids) !== JSON.stringify(currentIds)) {
+         reorderSongLists(currentProject.id, ids);
+    }
+  }, [localLists, currentProject, reorderSongLists]);
 
   const handleCreateList = async () => {
     if (!currentProject || !listName.trim()) return;
@@ -367,8 +502,8 @@ export function SongManager() {
 
   const activeSong = selectedSongRef
     ? currentProject.songLists
-        .find((l) => l.id === selectedSongRef.listId)
-        ?.songs.find((s) => s.id === selectedSongRef.songId)
+        .find((l: SongList) => l.id === selectedSongRef.listId)
+        ?.songs.find((s: Song) => s.id === selectedSongRef.songId)
     : null;
 
   if (activeSong && selectedSongRef) {
@@ -412,7 +547,7 @@ export function SongManager() {
                         id="list-name"
                         placeholder="Ej: Álbum 2024"
                         value={listName}
-                        onChange={(e) => setListName(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setListName(e.target.value)}
                         className="bg-background border-border text-foreground"
                       />
                     </div>
@@ -433,81 +568,97 @@ export function SongManager() {
               </div>
             ) : (
               <Accordion type="single" collapsible className="w-full space-y-4">
-                {currentProject.songLists.map((list) => (
-                  <AccordionItem key={list.id} value={list.id} className="border border-border rounded-lg bg-card overflow-hidden last:border-b-border last:border-b">
-                  <AccordionTrigger className="hover:no-underline text-foreground hover:text-foreground/80 group [&>svg]:hidden">
-                    <div className="flex items-center justify-between w-full px-4">
-                      <span className="font-medium text-lg">{list.name}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground mr-2">
-                          {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
-                        </span>
-                        <div className="flex items-center gap-1">
-                           {/* Edit List Button */}
-                           <div
-                                role="button"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                onClick={(e: React.MouseEvent) => {
-                                    e.stopPropagation();
-                                    setListToEdit(list);
-                                    setEditListName(list.name);
-                                    setEditListDialog(true);
-                                }}
-                            >
-                                <Edit className="size-4" />
+                {localLists.map((list, index) => (
+                  <SortableAccordionItem 
+                    key={list.id} 
+                    index={index} 
+                    list={list} 
+                    moveList={moveList} 
+                    onDrop={handleListDrop}
+                  >
+                    {(dragRef) => (
+                    <AccordionItem value={list.id} className="border border-border rounded-lg bg-card overflow-hidden last:border-b">
+                    <AccordionTrigger className="hover:no-underline text-foreground hover:text-foreground/80 group [&>svg]:hidden">
+                        <div className="flex items-center justify-between w-full px-4">
+                        <div className="flex items-center gap-3">
+                             {/* Drag Handle for List */}
+                            <div ref={(node) => { dragRef(node); }} className="cursor-grab p-1 -ml-1 touch-none" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                <GripVertical className="size-5 text-muted-foreground hover:text-foreground" />
                             </div>
-                            {/* Delete List Button */}
+                            <span className="font-medium text-lg">{list.name}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-muted-foreground mr-2">
+                            {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
+                            </span>
+                            <div className="flex items-center gap-1">
+                            {/* Edit List Button */}
                             <div
-                                role="button"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                onClick={(e: React.MouseEvent) => {
-                                    e.stopPropagation();
-                                    handleDeleteList(list.id);
-                                }}
-                            >
-                                <Trash2 className="size-4" />
-                            </div>
-                            {/* Chevron Button (Dropdown) - Visual only, triggers parent accordion */}
-                            <div
-                                role="button"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                            >
-                                <ChevronDown className="size-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                                    role="button"
+                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                    onClick={(e: React.MouseEvent) => {
+                                        e.stopPropagation();
+                                        setListToEdit(list);
+                                        setEditListName(list.name);
+                                        setEditListDialog(true);
+                                    }}
+                                >
+                                    <Edit className="size-4" />
+                                </div>
+                                {/* Delete List Button */}
+                                <div
+                                    role="button"
+                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                    onClick={(e: React.MouseEvent) => {
+                                        e.stopPropagation();
+                                        handleDeleteList(list.id);
+                                    }}
+                                >
+                                    <Trash2 className="size-4" />
+                                </div>
+                                {/* Chevron Button (Dropdown) - Visual only, triggers parent accordion */}
+                                <div
+                                    role="button"
+                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                >
+                                    <ChevronDown className="size-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                                </div>
                             </div>
                         </div>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="px-4 pt-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full h-10 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-4"
-                          onClick={() => {
-                            setSelectedListId(list.id);
-                            setOpenSongDialog(true);
-                          }}
-                        >
-                          <Plus className="size-4 md:mr-2" />
-                          <span className="hidden md:inline">{t('add_song', 'Añadir canción')}</span>
-                        </Button>
-  
-                        {list.songs.length > 0 && (
-                           <div className="flex flex-col">
-                              <SortableSongList 
-                                  listId={list.id}
-                                  songs={list.songs}
-                                  onReorder={handleReorder}
-                                  onSelectSong={(lId, s) => setSelectedSongRef({ listId: lId, songId: s.id })}
-                                  onDeleteSong={handleDeleteSong}
-                                  onEditSong={handleEditSongClick}
-                              />
-                          </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                        </div>
+                    </AccordionTrigger>
+                        <AccordionContent>
+                        <div className="px-4 pt-0">
+                            <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-10 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-2"
+                            onClick={() => {
+                                setSelectedListId(list.id);
+                                setOpenSongDialog(true);
+                            }}
+                            >
+                            <Plus className="size-4 md:mr-2" />
+                            <span className="hidden md:inline">{t('add_song', 'Añadir canción')}</span>
+                            </Button>
+    
+                            {list.songs.length > 0 && (
+                            <div className="flex flex-col">
+                                <SortableSongList 
+                                    listId={list.id}
+                                    songs={list.songs}
+                                    onReorder={handleReorder}
+                                    onSelectSong={(lId: string, s: Song) => setSelectedSongRef({ listId: lId, songId: s.id })}
+                                    onDeleteSong={handleDeleteSong}
+                                    onEditSong={handleEditSongClick}
+                                />
+                            </div>
+                            )}
+                        </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                    )}
+                  </SortableAccordionItem>
                 ))}
               </Accordion>
             )}
@@ -529,7 +680,7 @@ export function SongManager() {
                   id="song-name"
                   placeholder="Ej: Wonderwall"
                   value={songData.name}
-                  onChange={(e) => setSongData({ ...songData, name: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, name: e.target.value })}
                   className="bg-background border-border text-foreground"
                 />
               </div>
@@ -539,7 +690,7 @@ export function SongManager() {
                   id="band-name"
                   placeholder="Ej: Oasis"
                   value={songData.originalBand}
-                  onChange={(e) => setSongData({ ...songData, originalBand: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, originalBand: e.target.value })}
                   className="bg-background border-border text-foreground"
                 />
               </div>
@@ -551,7 +702,7 @@ export function SongManager() {
                     type="number"
                     placeholder="Opcional"
                     value={songData.bpm === null ? '' : songData.bpm}
-                    onChange={(e) => {
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                          const val = e.target.value;
                          setSongData({ ...songData, bpm: val === '' ? null : parseInt(val) })
                     }}
@@ -564,7 +715,7 @@ export function SongManager() {
                     id="key"
                     placeholder="Opcional (Ej: C)"
                     value={songData.key}
-                    onChange={(e) => setSongData({ ...songData, key: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, key: e.target.value })}
                     className="bg-background border-border text-foreground"
                   />
                 </div>
@@ -588,7 +739,7 @@ export function SongManager() {
                       <Input 
                           id="edit-list-name"
                           value={editListName}
-                          onChange={(e) => setEditListName(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditListName(e.target.value)}
                           className="bg-background border-border text-foreground"
                       />
                   </div>
@@ -611,7 +762,7 @@ export function SongManager() {
                         <Label className="text-foreground">{t('name', 'Nombre')}</Label>
                         <Input
                             value={editSongForm.name}
-                            onChange={(e) => setEditSongForm({ ...editSongForm, name: e.target.value })}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, name: e.target.value })}
                             className="bg-background border-border text-foreground"
                         />
                     </div>
@@ -619,7 +770,7 @@ export function SongManager() {
                         <Label className="text-foreground">{t('band', 'Banda')}</Label>
                         <Input
                             value={editSongForm.originalBand}
-                            onChange={(e) => setEditSongForm({ ...editSongForm, originalBand: e.target.value })}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, originalBand: e.target.value })}
                             className="bg-background border-border text-foreground"
                         />
                     </div>
@@ -628,7 +779,7 @@ export function SongManager() {
                         <Input
                             type="number"
                             value={editSongForm.bpm === null ? '' : editSongForm.bpm}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const val = e.target.value;
                                 setEditSongForm({ ...editSongForm, bpm: val === '' ? null : parseInt(val) })
                             }}
@@ -639,7 +790,7 @@ export function SongManager() {
                         <Label className="text-foreground">{t('key', 'Tonalidad')}</Label>
                         <Input
                             value={editSongForm.key}
-                            onChange={(e) => setEditSongForm({ ...editSongForm, key: e.target.value })}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, key: e.target.value })}
                             className="bg-background border-border text-foreground"
                         />
                     </div>
