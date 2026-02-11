@@ -27,3 +27,17 @@ export interface Notification {
     message: string;
     isRead: boolean;
 }
+
+export type EventType = 'CONCIERTO' | 'ENSAYO' | 'OTRO';
+
+export interface CalendarEvent {
+    id: number;
+    name: string;
+    description: string;
+    date: string;
+    type: EventType;
+    location: string;
+    creatorId: number;
+    creatorName: string;
+    createdAt: string;
+}

@@ -9,11 +9,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { ArrowLeft, MessageSquare, Music, Users, LogOut, PenLine, Bell } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Music, Users, LogOut, PenLine, Bell, Calendar } from 'lucide-react';
 import { ProjectChat } from '@/app/components/ProjectChat';
 import { SongManager } from '@/app/components/SongManager';
 import { MembersPanel } from '@/app/components/MembersPanel';
 import { NotificationFeed } from '@/app/components/NotificationFeed';
+import { ProjectCalendar } from '@/app/components/ProjectCalendar';
 import { toast } from 'sonner';
 
 import { uploadFile, getMediaUrl } from '@/services/api';
@@ -352,6 +353,13 @@ export function ProjectHub() {
               <span className="hidden sm:inline">{t('members', 'Miembros')}</span>
             </TabsTrigger>
             <TabsTrigger 
+                value="calendar"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
+            >
+              <Calendar className="size-4 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('calendar', 'Calendario')}</span>
+            </TabsTrigger>
+            <TabsTrigger 
                 value="notifications"
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
             >
@@ -377,6 +385,14 @@ export function ProjectHub() {
 
             <TabsContent value="members" className="m-0">
                 <MembersPanel />
+            </TabsContent>
+
+            <TabsContent value="calendar" className="m-0">
+                {currentProject && (
+                    <ProjectCalendar 
+                        projectId={currentProject.id.toString()} 
+                    />
+                )}
             </TabsContent>
 
             <TabsContent value="notifications" className="m-0">

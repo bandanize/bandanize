@@ -135,4 +135,25 @@ export const markChatAsRead = async (projectId: string) => {
     return response.data;
 };
 
+// Calendar Events
+export const getProjectEvents = async (projectId: string) => {
+    const response = await api.get(`/bands/${projectId}/events`);
+    return response.data;
+};
+
+export const createProjectEvent = async (projectId: string, event: { name: string; description?: string; date: string; type: string; location?: string }) => {
+    const response = await api.post(`/bands/${projectId}/events`, event);
+    return response.data;
+};
+
+export const updateProjectEvent = async (eventId: number, event: { name?: string; description?: string; date?: string; type?: string; location?: string }) => {
+    const response = await api.put(`/events/${eventId}`, event);
+    return response.data;
+};
+
+export const deleteProjectEvent = async (eventId: number) => {
+    const response = await api.delete(`/events/${eventId}`);
+    return response.data;
+};
+
 export default api;
