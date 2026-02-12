@@ -12,7 +12,16 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
 
   return (
     <Dialog open={!!file} onOpenChange={onClose}>
-        <DialogContent className="bg-card border-border text-foreground w-[95vw] max-w-4xl rounded-xl p-4 sm:p-6">
+        <DialogContent
+          className="bg-card border-border text-foreground w-[95vw] max-w-4xl rounded-xl p-4 sm:p-6"
+          onPointerDownOutside={(e) => {
+            // Prevent dialog from closing when interacting with media controls
+            const target = e.target as HTMLElement;
+            if (target.closest('audio, video')) {
+              e.preventDefault();
+            }
+          }}
+        >
             <DialogHeader>
                 <DialogTitle className="truncate pr-8">{file.name}</DialogTitle>
             </DialogHeader>
@@ -28,6 +37,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                         controls 
                         preload="metadata"
                         className="max-h-[60vh] sm:max-h-[70vh] w-full rounded-md"
+                        style={{ touchAction: 'auto' }}
                         src={getMediaUrl(file.url)}
                     >
                         Your browser does not support the video element.
@@ -44,6 +54,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                             controls 
                             preload="metadata"
                             className="w-full max-w-md h-12"
+                            style={{ touchAction: 'auto' }}
                             src={getMediaUrl(file.url)}
                         >
                             Your browser does not support the audio element.
