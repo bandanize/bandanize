@@ -149,6 +149,30 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     });
   };
 
+  /**
+   * Builds a contextual display name for an uploaded file.
+   * Song files:  "SongName.ext", "SongName_2.ext", ...
+   * Tab files:   "SongName - TabName.ext", "SongName - TabName_2.ext", ...
+   */
+  const buildDisplayName = (originalName: string, tabId?: string): string => {
+    const ext = originalName.includes('.') ? '.' + originalName.split('.').pop() : '';
+    let baseName: string;
+    let existingCount: number;
+
+    if (tabId) {
+      const tab = song.tablatures.find(t => t.id === tabId);
+      const tabLabel = tab?.name || 'Tab';
+      baseName = `${song.name} - ${tabLabel}`;
+      existingCount = tab?.files?.length ?? 0;
+    } else {
+      baseName = song.name;
+      existingCount = song.files?.length ?? 0;
+    }
+
+    const suffix = existingCount > 0 ? `_${existingCount + 1}` : '';
+    return `${baseName}${suffix}${ext}`;
+  };
+
   const handleFileUploadTrigger = (type: 'song' | 'tab', tabId?: string) => {
       setUploadTarget({ type, tabId });
       if (fileInputRef.current) {
@@ -224,7 +248,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
           if (endpointCategory === 'video') folderName = 'videos';
           
           const mediaFile = {
-              name: file.name,
+              name: buildDisplayName(file.name, uploadTarget.tabId),
               type: file.type,
               url: `/api/uploads/${folderName}/${finalFilename}`
           };
