@@ -119,14 +119,23 @@ export function TabEditor({
 
   const hasChanges = editingContent !== (tab.content || '');
 
+  // Check if native Fullscreen API is available (it's NOT on iPhone Safari)
+  const supportsFullscreen = typeof document.documentElement.requestFullscreen === 'function';
+
   useEffect(() => {
+    if (!supportsFullscreen) return; // CSS-based fallback handles state directly
+
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, [supportsFullscreen]);
 
   const increaseFontSize = () => {
     setFontSizeIndex((prev) => Math.min(prev + 1, fontSizes.length - 1));
@@ -139,6 +148,12 @@ export function TabEditor({
   const toggleFullscreen = async () => {
     if (!containerRef.current) return;
 
+    if (!supportsFullscreen) {
+      // CSS-based fullscreen for iPhone Safari
+      setIsFullscreen(prev => !prev);
+      return;
+    }
+
     try {
       if (!document.fullscreenElement) {
         await containerRef.current.requestFullscreen();
@@ -146,8 +161,9 @@ export function TabEditor({
         await document.exitFullscreen();
       }
     } catch (err) {
-      console.error('Error toggling fullscreen:', err);
-      toast.error(t('fullscreen_error', 'Error al cambiar a pantalla completa'));
+      // Fallback to CSS-based fullscreen if native API fails
+      console.warn('Native fullscreen failed, using CSS fallback:', err);
+      setIsFullscreen(prev => !prev);
     }
   };
 
