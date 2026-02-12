@@ -6,7 +6,7 @@ import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/app/components/ui/accordion';
-import { Plus, Trash2, Edit, GripVertical, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, ChevronDown, Share } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
@@ -435,6 +435,32 @@ export function SongManager() {
     toast.success(t('list_created', 'Lista creada'));
   };
 
+
+
+  const handleExportList = (list: SongList) => {
+    if (!list.songs.length) {
+      toast.error(t('empty_list_export', 'La lista está vacía'));
+      return;
+    }
+
+    const header = `${list.name}\n${'-'.repeat(list.name.length)}\n`;
+    const body = list.songs.map((song, index) => {
+      let line = `${index + 1}. ${song.name}`;
+      const details = [];
+      if (song.key) details.push(`[Key: ${song.key}]`);
+      if (song.bpm) details.push(`[BPM: ${song.bpm}]`);
+      
+      if (details.length > 0) {
+        line += ` ${details.join(' ')}`;
+      }
+      return line;
+    }).join('\n');
+
+    const content = `${header}\n${body}`;
+    navigator.clipboard.writeText(content);
+    toast.success(t('list_exported', 'Lista copiada al portapapeles'));
+  };
+
   // handleEditList and handleUpdateList removed (replaced by inline editor)
 
   const [editListDialog, setEditListDialog] = useState(false);
@@ -638,6 +664,18 @@ export function SongManager() {
                             {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
                             </span>
                             <div className="flex items-center gap-1">
+                                {/* Export List Button */}
+                                <div
+                                    role="button"
+                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
+                                    onClick={(e: React.MouseEvent) => {
+                                        e.stopPropagation();
+                                        handleExportList(list);
+                                    }}
+                                    title={t('export_list', 'Copiar lista')}
+                                >
+                                    <Share className="size-4" />
+                                </div>
                             {/* Edit List Button */}
                             <div
                                     role="button"
