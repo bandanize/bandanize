@@ -177,4 +177,9 @@ export const deleteProjectEvent = async (eventId: number) => {
     return response.data;
 };
 
+export const getCalendarToken = async (projectId: string) => {
+    const response = await api.get(`/bands/${projectId}/calendar-token`);
+    return response.data;
+};
+
 export default api;

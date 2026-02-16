@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { CalendarEvent, EventType } from '@/types';
-import { getProjectEvents, createProjectEvent, updateProjectEvent, deleteProjectEvent } from '@/services/api';
+import { getProjectEvents, createProjectEvent, updateProjectEvent, deleteProjectEvent, getCalendarToken } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
@@ -75,6 +75,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     const { t, i18n } = useTranslation();
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [calendarToken, setCalendarToken] = useState<string | null>(null);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
@@ -102,9 +103,19 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         }
     }, [projectId]);
 
+    const fetchToken = useCallback(async () => {
+        try {
+            const token = await getCalendarToken(projectId);
+            setCalendarToken(token);
+        } catch (error) {
+            console.error('Failed to load calendar token', error);
+        }
+    }, [projectId]);
+
     useEffect(() => {
         fetchEvents();
-    }, [fetchEvents]);
+        fetchToken();
+    }, [fetchEvents, fetchToken]);
 
     // Calendar grid generation
     const calendarDays = useMemo(() => {
@@ -246,7 +257,11 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     // Copy live subscription URL
     const copySubscriptionUrl = () => {
         const baseUrl = (import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL || window.location.origin + '/api';
-        const subUrl = `${baseUrl}/bands/${projectId}/calendar.ics`;
+        // Use token if available, otherwise fallback to legacy (though legacy is deprecated)
+        const subUrl = calendarToken 
+            ? `${baseUrl}/calendar/${calendarToken}.ics`
+            : `${baseUrl}/bands/${projectId}/calendar.ics`;
+            
         navigator.clipboard.writeText(subUrl).then(() => {
             toast.success(t('subscription_url_copied', 'URL copiada — pégala en tu app de calendario'));
         });
