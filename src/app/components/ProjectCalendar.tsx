@@ -256,13 +256,39 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
 
     // Copy live subscription URL
     const copySubscriptionUrl = () => {
-        const baseUrl = (import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL || window.location.origin + '/api';
-        // Use token if available, otherwise fallback to legacy (though legacy is deprecated)
+        let baseUrl = (import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL || window.location.origin + '/api';
+        
+        // Ensure we are using the correct protocol for subscription (webcal://)
+        // If baseUrl starts with http:// or https://, we replace it with webcal:// or webcals://
+        // Ideally, webcal:// works for both, but secure usually prefers webcals:// or just webcal:// pointing to https.
+        // The robust way for iOS/macOS is webcal://(domain)/path
+        
+        // First, resolve the absolute URL if it is relative
+        if (baseUrl.startsWith('/')) {
+            baseUrl = window.location.origin + baseUrl;
+        }
+
+        // Construct the full URL
         const subUrl = calendarToken 
             ? `${baseUrl}/calendar/${calendarToken}.ics`
             : `${baseUrl}/bands/${projectId}/calendar.ics`;
-            
-        navigator.clipboard.writeText(subUrl).then(() => {
+
+        // Replace protocol with webcal://
+        // If the original was https, webcal:// will typically attempt secure connection. 
+        // Some clients prefer https:// for subscription too, but webcal:// triggers the app open.
+        // The user specifically mentioned http vs https issues.
+        // Let's force proper protocol.
+        
+        let finalUrl = subUrl;
+        if (subUrl.startsWith('https://')) {
+            finalUrl = subUrl.replace('https://', 'webcal://');
+        } else if (subUrl.startsWith('http://')) {
+             // If we are erroneously on http but want secure, we might want to force webcals:// or upgrade to https logic if server supports it.
+             // Given the user wants security ("securizar"), let's try to assume https if possible or just use webcal.
+             finalUrl = subUrl.replace('http://', 'webcal://');
+        }
+        
+        navigator.clipboard.writeText(finalUrl).then(() => {
             toast.success(t('subscription_url_copied', 'URL copiada — pégala en tu app de calendario'));
         });
     };
