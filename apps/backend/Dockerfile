@@ -9,6 +9,8 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine AS runtime
 
+LABEL org.opencontainers.image.source = "https://github.com/bandanize/bandanize"
+
 # Fix security vulnerabilities
 RUN apk add --no-cache \
     'libexpat>=2.7.4-r0' \
