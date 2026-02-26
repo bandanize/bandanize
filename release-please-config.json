@@ -6,7 +6,8 @@
             "tag-separator": "@",
             "include-component-in-tag": true,
             "changelog-path": "CHANGELOG.md",
-            "extra-files": []
+            "extra-files": [],
+            "skip-snapshot": true
         },
         "apps/frontend": {
             "release-type": "node",
