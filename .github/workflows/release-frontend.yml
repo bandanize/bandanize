@@ -46,7 +46,7 @@ jobs:
         id: version
         run: |
           VERSION=$(jq -r .version apps/frontend/package.json)
-          echo "VERSION=frontend-v$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION=web@v$VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if Tag Exists
         id: check_tag

@@ -53,7 +53,7 @@ jobs:
         working-directory: apps/backend
         run: |
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "VERSION=backend-v$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION=api@v$VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if Tag Exists
         id: check_tag
