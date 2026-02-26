@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/bandanize/bandanize/compare/web@v1.2.0...web@v1.3.0) (2026-02-26)
+
+
+### Features
+
+* add new repo label to Dockerfiles ([3fb57a3](https://github.com/bandanize/bandanize/commit/3fb57a3b2ce2c22d3dba73213e29dbc0703d743a))
+
 ## [1.2.0](https://github.com/bandanize/bandanize/compare/web@v1.1.0...web@v1.2.0) (2026-02-26)
 
 
