@@ -56,4 +56,47 @@ class JwtServiceTest {
         UserDetails otherUser = new User("otheruser", "password", new ArrayList<>());
         assertFalse(jwtService.validateToken(token, otherUser));
     }
+
+    @Test
+    void generateResetToken_ReturnsValidToken() {
+        String token = jwtService.generateResetToken("test@example.com");
+        assertNotNull(token);
+        assertTrue(token.length() > 0);
+        // The reset token uses email as subject
+        String subject = jwtService.extractUsername(token);
+        assertEquals("test@example.com", subject);
+    }
+
+    @Test
+    void generateVerificationToken_ReturnsValidToken() {
+        String token = jwtService.generateVerificationToken("test@example.com");
+        assertNotNull(token);
+        assertTrue(token.length() > 0);
+        String subject = jwtService.extractUsername(token);
+        assertEquals("test@example.com", subject);
+    }
+
+    @Test
+    void validateToken_ExpiredToken_ReturnsFalse() {
+        // Create a JwtService with very short expiration
+        JwtService shortLivedService = new JwtService();
+        org.springframework.test.util.ReflectionTestUtils.setField(shortLivedService, "secretString",
+                "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970");
+        org.springframework.test.util.ReflectionTestUtils.setField(shortLivedService, "jwtExpiration", 1L); // 1ms
+        org.springframework.test.util.ReflectionTestUtils.setField(shortLivedService, "resetTokenExpiration", 1L);
+        org.springframework.test.util.ReflectionTestUtils.setField(shortLivedService, "verificationTokenExpiration",
+                1L);
+        shortLivedService.init();
+
+        String token = shortLivedService.generateToken("testuser");
+
+        // Wait for the token to expire
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException ignored) {
+        }
+
+        assertThrows(io.jsonwebtoken.ExpiredJwtException.class,
+                () -> shortLivedService.validateToken(token, userDetails));
+    }
 }
