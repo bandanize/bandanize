@@ -12,6 +12,9 @@ RUN npm run build
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
 
+# Fix security vulnerabilities
+RUN apk add --no-cache 'libpng>=1.6.55-r0'
+
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # Copy custom nginx config template
