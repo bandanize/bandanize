@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 
 // React DnD
-import { DndProvider, useDrag, useDrop, ConnectDragSource } from 'react-dnd';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { TouchBackend } from 'react-dnd-touch-backend';
 
 type Identifier = string | symbol;
@@ -336,13 +336,13 @@ export function SongManager() {
   const selectedListId = searchParams.get('listId');
   const selectedSongId = searchParams.get('songId');
 
-  const handleSelectList = (listId: string) => {
+  const handleSelectList = useCallback((listId: string) => {
       setSearchParams(prev => {
           prev.set('listId', listId);
           prev.delete('songId');
           return prev;
       }, { replace: true });
-  };
+  }, [setSearchParams]);
 
   const handleBackToLists = () => {
       setSearchParams(prev => {
@@ -397,7 +397,7 @@ export function SongManager() {
               handleSelectList(localLists[0].id);
           }
       }
-  }, [localLists, selectedListId]);
+  }, [localLists, selectedListId, handleSelectList]);
 
   const moveList = useCallback((dragIndex: number, hoverIndex: number) => {
     setLocalLists((prevLists) => {
