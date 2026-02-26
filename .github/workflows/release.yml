@@ -71,8 +71,8 @@ jobs:
           context: apps/backend
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/backend:latest
-            ghcr.io/${{ github.repository_owner }}/backend:${{ needs.release-please.outputs.api-version }}
+            ghcr.io/${{ github.repository_owner }}/bandanize/backend:latest
+            ghcr.io/${{ github.repository_owner }}/bandanize/backend:${{ needs.release-please.outputs.api-version }}
 
   docker-frontend:
     needs: release-please
@@ -97,5 +97,5 @@ jobs:
           context: apps/frontend
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/frontend:latest
-            ghcr.io/${{ github.repository_owner }}/frontend:${{ needs.release-please.outputs.web-version }}
+            ghcr.io/${{ github.repository_owner }}/bandanize/frontend:latest
+            ghcr.io/${{ github.repository_owner }}/bandanize/frontend:${{ needs.release-please.outputs.web-version }}
