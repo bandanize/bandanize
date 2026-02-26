@@ -1,11 +1,11 @@
-name: Release
+name: Release Frontend
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'package.json'
+      - 'apps/frontend/package.json'
   workflow_dispatch:
 
 jobs:
@@ -13,22 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npx turbo run lint --filter=@bandanize/frontend
 
       - name: Build
-        run: npm run build
+        run: npx turbo run build --filter=@bandanize/frontend
 
   release:
     needs: ci-check
@@ -46,13 +45,13 @@ jobs:
       - name: Extract Version
         id: version
         run: |
-          VERSION=$(jq -r .version package.json)
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          VERSION=$(jq -r .version apps/frontend/package.json)
+          echo "VERSION=frontend-v$VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if Tag Exists
         id: check_tag
         uses: mukunku/tag-exists-action@v1.7.0
-        with: 
+        with:
           tag: "${{ steps.version.outputs.VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +59,7 @@ jobs:
       - name: Setup Docker Buildx
         if: steps.check_tag.outputs.exists == 'false'
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Login to GHCR
         if: steps.check_tag.outputs.exists == 'false'
         uses: docker/login-action@v3
@@ -73,18 +72,18 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: apps/frontend
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/frontend:latest
+            ghcr.io/${{ github.repository_owner }}/frontend:${{ steps.version.outputs.VERSION }}
 
       - name: Create Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "${{ steps.version.outputs.VERSION }}"
-          name: "${{ steps.version.outputs.VERSION }}"
+          name: "Frontend ${{ steps.version.outputs.VERSION }}"
           generate_release_notes: true
           draft: false
           prerelease: false

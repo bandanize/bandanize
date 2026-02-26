@@ -1,0 +1,10 @@
+{
+    "name": "@bandanize/backend",
+    "private": true,
+    "scripts": {
+        "dev": "chmod +x mvnw && ./mvnw spring-boot:run",
+        "build": "chmod +x mvnw && ./mvnw clean package -DskipTests",
+        "test": "chmod +x mvnw && ./mvnw test",
+        "lint": "echo 'No lint configured for backend'"
+    }
+}

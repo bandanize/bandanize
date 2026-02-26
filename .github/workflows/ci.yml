@@ -8,55 +8,55 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  lint:
+  # ── Backend ──────────────────────────────────────────────
+  backend-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Run Tests
+        working-directory: apps/backend
+        run: |
+          chmod +x mvnw
+          ./mvnw dependency:resolve
+          ./mvnw test
 
-      - name: Lint
-        run: npm run lint
-
-  build-verification:
-    needs: lint
+  backend-build:
+    needs: backend-test
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Build with Maven
+        working-directory: apps/backend
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
 
-      - name: Build Frontend
-        run: npm run build
-
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/backend
           tags: |
             type=ref,event=branch
             type=sha,format=long
@@ -64,17 +64,17 @@ jobs:
       - name: Build Docker image (Trivy Scan)
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: apps/backend
           load: true
           push: false
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/backend:${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          image-ref: '${{ env.REGISTRY }}/${{ github.repository_owner }}/backend:${{ github.sha }}'
           format: 'table'
-          output: 'trivy-results.txt'
+          output: 'trivy-backend.txt'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
@@ -83,9 +83,86 @@ jobs:
       - name: Publish Trivy Output to Summary
         if: always()
         run: |
-          if [ -f trivy-results.txt ]; then
-            echo "### Trivy Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          if [ -f trivy-backend.txt ]; then
+            echo "### Backend - Trivy Security Scan Results" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            cat trivy-results.txt >> $GITHUB_STEP_SUMMARY
+            cat trivy-backend.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ── Frontend ─────────────────────────────────────────────
+  frontend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npx turbo run lint --filter=@bandanize/frontend
+
+  frontend-build:
+    needs: frontend-lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Frontend
+        run: npx turbo run build --filter=@bandanize/frontend
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/frontend
+          tags: |
+            type=ref,event=branch
+            type=sha,format=long
+
+      - name: Build Docker image (Trivy Scan)
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/frontend
+          load: true
+          push: false
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/frontend:${{ github.sha }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.REGISTRY }}/${{ github.repository_owner }}/frontend:${{ github.sha }}'
+          format: 'table'
+          output: 'trivy-frontend.txt'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Publish Trivy Output to Summary
+        if: always()
+        run: |
+          if [ -f trivy-frontend.txt ]; then
+            echo "### Frontend - Trivy Security Scan Results" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat trivy-frontend.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
