@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useProjects, Song, SongList } from '@/contexts/ProjectContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/app/components/ui/accordion';
-import { Plus, Trash2, Edit, GripVertical, ChevronDown, Share } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
@@ -14,26 +13,25 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 
 // React DnD
-import { DndProvider, useDrag, useDrop, ConnectDragSource } from 'react-dnd';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { TouchBackend } from 'react-dnd-touch-backend';
 
 type Identifier = string | symbol;
 
 // --- Sortable Components ---
 
-// ItemType for DnD
-// ItemType for DnD
 const ItemType = {
     SONG_ROW: 'SONG_ROW',
     SONG_LIST: 'SONG_LIST'
 };
-
 
 interface DragItem {
   index: number;
   id: string;
   type: string;
 }
+
+// --- Sortable Song Row ---
 
 interface SortableSongRowProps {
   song: Song;
@@ -57,67 +55,31 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
       };
     },
     hover(item: DragItem, monitor) {
-      if (!ref.current) {
-        return;
-      }
+      if (!ref.current) return;
       const dragIndex = item.index;
       const hoverIndex = index;
 
-      // Don't replace items with themselves
-      if (dragIndex === hoverIndex) {
-        return;
-      }
+      if (dragIndex === hoverIndex) return;
 
-      // Determine rectangle on screen
       const hoverBoundingRect = ref.current?.getBoundingClientRect();
-
-      // Get vertical middle
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      // Determine mouse position
       const clientOffset = monitor.getClientOffset();
-
       if (!clientOffset) return;
-      
-      // Get pixels to the top
-      const hoverClientY = (clientOffset).y - hoverBoundingRect.top;
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top;
 
-      // Only perform the move when the mouse has crossed half of the items height
-      // When dragging downwards, only move when the cursor is below 50%
-      // When dragging upwards, only move when the cursor is above 50%
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
 
-      // Dragging downwards
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-
-      // Dragging upwards
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return;
-      }
-
-      // Time to actually perform the action
       moveSong(dragIndex, hoverIndex);
-
-      // Note: we're mutating the monitor item here!
-      // Generally it's better to avoid mutations,
-      // but it's good here for the sake of performance
-      // to avoid expensive index searches.
       item.index = hoverIndex;
     },
   });
 
   const [{ isDragging }, drag, preview] = useDrag({
     type: ItemType.SONG_ROW,
-    item: () => {
-      return { id: song.id, index };
-    },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    end: () => {
-        onDrop();
-    }
+    item: () => ({ id: song.id, index }),
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    end: () => { onDrop(); }
   });
 
   const opacity = isDragging ? 0.4 : 1;
@@ -130,20 +92,20 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           ref.current = node;
       }}
       style={{ opacity }}
-      className="group flex items-center gap-3 p-4 bg-background border border-border rounded-lg hover:bg-card/50 transition-all select-none"
+      className="group flex items-center gap-3 py-2.5 px-1 hover:bg-card/50 rounded-lg transition-all select-none"
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
-      <div ref={(node) => { drag(node); }} className="cursor-grab p-1 -ml-1 touch-none">
-           <GripVertical className="size-5 text-muted-foreground group-hover:text-muted-foreground/60" />
+      <div ref={(node) => { drag(node); }} className="cursor-grab p-1 touch-none">
+           <GripVertical className="size-5 text-muted-foreground/40 group-hover:text-muted-foreground/60" />
       </div>
      
       <div 
-        className="flex-1 cursor-pointer"
+        className="flex-1 min-w-0 cursor-pointer"
         onClick={() => onSelect(listId, song)}
       >
-        <p className="font-medium text-foreground text-[15px]">{song.name}</p>
-        <p className="text-xs text-muted-foreground font-medium">
+        <p className="font-medium text-foreground text-sm truncate">{song.name}</p>
+        <p className="text-xs text-muted-foreground font-medium truncate">
           {song.originalBand || song.bandName}
           {song.bpm && ` • ${song.bpm} BPM`}
           {song.key && ` • ${song.key}`}
@@ -151,23 +113,23 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
       </div>
       
       {/* Edit Button */}
-        <Button
-            variant="ghost"
-            size="sm"
-            className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
-            onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                onEdit(listId, song);
-            }}
-        >
-            <Edit className="size-4" />
-        </Button>
+      <Button
+          variant="ghost"
+          size="sm"
+          className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0"
+          onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              onEdit(listId, song);
+          }}
+      >
+          <Edit className="size-4" />
+      </Button>
 
-      {/* Visual Delete Button */}
+      {/* Delete Button */}
       <Button
         variant="ghost"
         size="sm"
-        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 transition-all"
+        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 transition-all shrink-0"
         onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             onDelete(listId, song.id);
@@ -179,6 +141,8 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
   );
 };
 
+// --- Sortable Song List (songs within a list) ---
+
 interface SortableSongListProps {
     listId: string;
     songs: Song[];
@@ -189,10 +153,8 @@ interface SortableSongListProps {
 }
 
 const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong }: SortableSongListProps) => {
-    // Keep local state for smooth dragging
     const [items, setItems] = useState<Song[]>(songs);
 
-    // Sync items if external source changes (e.g. adding a song)
     useEffect(() => {
         setItems(songs);
     }, [songs]);
@@ -207,10 +169,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
     }, []);
 
     const handleDrop = useCallback(() => {
-        // When drag ends, we trigger the reorder in context (and API)
         const ids = items.map(s => s.id);
-        // Optimize: verify if order actually changed to avoid API calls? 
-        // We can compare ids vs songs.map(s=>s.id)
         const currentIds = songs.map(s => s.id);
         if (JSON.stringify(ids) !== JSON.stringify(currentIds)) {
              onReorder(listId, ids);
@@ -218,7 +177,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
     }, [items, listId, onReorder, songs]);
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
             {items.map((song, index) => (
                 <SortableSongRow
                     key={song.id}
@@ -236,18 +195,23 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
     );
 };
 
-// --- Sortable Accordion Item ---
+// --- Sortable List Item (compact card for left panel) ---
 
-interface SortableAccordionItemProps {
+interface SortableListItemProps {
     list: SongList;
     index: number;
+    isSelected: boolean;
     moveList: (dragIndex: number, hoverIndex: number) => void;
     onDrop: () => void;
-    children: (dragRef: ConnectDragSource) => React.ReactNode;
+    onSelect: (listId: string) => void;
+    onEdit: (list: SongList) => void;
+    onDelete: (listId: string) => void;
+    onExport: (list: SongList) => void;
 }
 
-const SortableAccordionItem = ({ list, index, moveList, onDrop, children }: SortableAccordionItemProps) => {
+const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect, onEdit, onDelete, onExport }: SortableListItemProps) => {
     const ref = useRef<HTMLDivElement>(null);
+    const { t } = useTranslation();
 
     const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
         accept: ItemType.SONG_LIST,
@@ -257,71 +221,34 @@ const SortableAccordionItem = ({ list, index, moveList, onDrop, children }: Sort
             };
         },
         hover(item: DragItem, monitor) {
-            if (!ref.current) {
-                return;
-            }
+            if (!ref.current) return;
             const dragIndex = item.index;
             const hoverIndex = index;
 
-            // Don't replace items with themselves
-            if (dragIndex === hoverIndex) {
-                return;
-            }
+            if (dragIndex === hoverIndex) return;
 
-            // Determine rectangle on screen
             const hoverBoundingRect = ref.current?.getBoundingClientRect();
-
-            // Get vertical middle
             const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-            // Determine mouse position
             const clientOffset = monitor.getClientOffset();
-
             if (!clientOffset) return;
+            const hoverClientY = clientOffset.y - hoverBoundingRect.top;
 
-            // Get pixels to the top
-            const hoverClientY = (clientOffset).y - hoverBoundingRect.top;
+            if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
 
-            // Only perform the move when the mouse has crossed half of the items height
-            // When dragging downwards, only move when the cursor is below 50%
-            // When dragging upwards, only move when the cursor is above 50%
-
-            // Dragging downwards
-            if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-                return;
-            }
-
-            // Dragging upwards
-            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-                return;
-            }
-
-            // Time to actually perform the action
             moveList(dragIndex, hoverIndex);
-
-            // Note: we're mutating the monitor item here!
             item.index = hoverIndex;
         },
     });
 
     const [{ isDragging }, drag, preview] = useDrag({
         type: ItemType.SONG_LIST,
-        item: () => {
-            return { id: list.id, index };
-        },
-        collect: (monitor) => ({
-            isDragging: monitor.isDragging(),
-        }),
-        end: () => {
-            onDrop();
-        }
+        item: () => ({ id: list.id, index }),
+        collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+        end: () => { onDrop(); }
     });
 
     const opacity = isDragging ? 0 : 1;
-
-    // Connect refs
-    // drop(ref); 
-    // preview(ref);
 
     return (
         <div 
@@ -332,12 +259,70 @@ const SortableAccordionItem = ({ list, index, moveList, onDrop, children }: Sort
             }} 
             style={{ opacity }} 
             data-handler-id={handlerId} 
-            className="mb-4"
+            className={`
+                group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all select-none
+                ${isSelected 
+                    ? 'bg-card border-2 border-primary' 
+                    : 'bg-card border border-border hover:border-border/80'
+                }
+            `}
+            onClick={() => onSelect(list.id)}
         >
-            {children(drag)}
+            <div className="flex items-center gap-2.5 min-w-0">
+                {/* Drag Handle */}
+                <div 
+                    ref={(node) => { drag(node); }} 
+                    className="cursor-grab p-0.5 touch-none" 
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                >
+                    <GripVertical className="size-5 text-muted-foreground/30" />
+                </div>
+                <span className="font-medium text-sm text-foreground truncate">{list.name}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+                <span className="text-sm text-muted-foreground">
+                    {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
+                </span>
+                {/* Export List Button */}
+                <div
+                    role="button"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                    onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onExport(list);
+                    }}
+                    title={t('export_list', 'Copiar lista')}
+                >
+                    <Share className="size-4" />
+                </div>
+                {/* Edit List Button */}
+                <div
+                    role="button"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                    onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onEdit(list);
+                    }}
+                >
+                    <Edit className="size-4" />
+                </div>
+                {/* Delete List Button */}
+                <div
+                    role="button"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                    onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onDelete(list.id);
+                    }}
+                >
+                    <Trash2 className="size-4" />
+                </div>
+            </div>
         </div>
     );
 };
+
+// --- Main SongManager Component ---
 
 export function SongManager() {
   const { currentProject, createSongList, updateSongList, deleteSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong } = useProjects();
@@ -350,23 +335,19 @@ export function SongManager() {
   // State derived from URL
   const selectedListId = searchParams.get('listId');
   const selectedSongId = searchParams.get('songId');
-  
-  const [accordionValue, setAccordionValue] = useState<string | undefined>(selectedListId || undefined);
 
-  // Sync URL with local state
-  useEffect(() => {
-      const listId = searchParams.get('listId');
-      if (listId) setAccordionValue(listId);
-  }, [searchParams]);
-
-  const handleAccordionChange = (value: string) => {
-      setAccordionValue(value);
+  const handleSelectList = useCallback((listId: string) => {
       setSearchParams(prev => {
-          if (value) {
-              prev.set('listId', value);
-          } else {
-              prev.delete('listId');
-          }
+          prev.set('listId', listId);
+          prev.delete('songId');
+          return prev;
+      }, { replace: true });
+  }, [setSearchParams]);
+
+  const handleBackToLists = () => {
+      setSearchParams(prev => {
+          prev.delete('listId');
+          prev.delete('songId');
           return prev;
       }, { replace: true });
   };
@@ -382,7 +363,6 @@ export function SongManager() {
   const handleBackToManager = () => {
       setSearchParams(prev => {
           prev.delete('songId');
-          // Start: Keep listId? Yes, usually user wants to go back to the list
           return prev;
       });
   };
@@ -408,6 +388,16 @@ export function SongManager() {
           setLocalLists(currentProject.songLists);
       }
   }, [currentProject]);
+
+  // Auto-select first list if none selected (desktop only)
+  useEffect(() => {
+      if (!selectedListId && localLists.length > 0) {
+          // Only auto-select on larger screens
+          if (window.innerWidth >= 1024) {
+              handleSelectList(localLists[0].id);
+          }
+      }
+  }, [localLists, selectedListId, handleSelectList]);
 
   const moveList = useCallback((dragIndex: number, hoverIndex: number) => {
     setLocalLists((prevLists) => {
@@ -435,8 +425,6 @@ export function SongManager() {
     toast.success(t('list_created', 'Lista creada'));
   };
 
-
-
   const handleExportList = (list: SongList) => {
     if (!list.songs.length) {
       toast.error(t('empty_list_export', 'La lista está vacía'));
@@ -461,8 +449,6 @@ export function SongManager() {
     toast.success(t('list_exported', 'Lista copiada al portapapeles'));
   };
 
-  // handleEditList and handleUpdateList removed (replaced by inline editor)
-
   const [editListDialog, setEditListDialog] = useState(false);
   const [listToEdit, setListToEdit] = useState<SongList | null>(null);
   const [editListName, setEditListName] = useState('');
@@ -477,9 +463,6 @@ export function SongManager() {
       key: string;
   }>({ name: '', originalBand: '', bpm: null, key: '' });
   const [isSavingSong, setIsSavingSong] = useState(false);
-
-
-
 
   const handleUpdateList = async () => {
     if (!currentProject || !listToEdit || !editListName.trim()) return;
@@ -496,6 +479,10 @@ export function SongManager() {
     if (!currentProject) return;
     if (confirm(t('delete_list_confirmation', '¿Estás seguro de que quieres eliminar esta lista? Se eliminarán todas las canciones.'))) {
       deleteSongList(currentProject.id, listId);
+      // If the deleted list was selected, clear selection
+      if (selectedListId === listId) {
+          handleBackToLists();
+      }
       toast.success(t('list_deleted', 'Lista eliminada'));
     }
   };
@@ -515,15 +502,13 @@ export function SongManager() {
     if (!currentProject || !songCreationListId || !songData.name.trim()) return;
     await createSong(currentProject.id, songCreationListId, {
       ...songData,
-      bpm: songData.bpm ?? undefined // Handle null to undefined
+      bpm: songData.bpm ?? undefined
     });
     setSongData({ name: '', originalBand: '', bpm: null, key: '' });
     setOpenSongDialog(false);
     setSongCreationListId(null);
     toast.success(t('song_created', 'Canción creada'));
   };
-
-
 
   const handleReorder = (listId: string, songIds: string[]) => {
       if (!currentProject) return;
@@ -552,7 +537,6 @@ export function SongManager() {
               bpm: editSongForm.bpm ?? undefined,
               key: editSongForm.key
           });
-          // Also try mapping key -> songKey just in case context expects songKey
            
           setIsEditSongOpen(false);
           setEditingSong(null);
@@ -562,6 +546,12 @@ export function SongManager() {
       } finally {
           setIsSavingSong(false);
       }
+  };
+
+  const handleEditListClick = (list: SongList) => {
+      setListToEdit(list);
+      setEditListName(list.name);
+      setEditListDialog(true);
   };
 
   if (!currentProject) return null;
@@ -581,316 +571,288 @@ export function SongManager() {
         onBack={handleBackToManager}
       />
     );
-  };
+  }
 
+  const selectedList = selectedListId 
+    ? currentProject.songLists.find((l: SongList) => l.id === selectedListId) 
+    : null;
 
-
+  // --- Render ---
   return (
     <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true }}>
-      <div className="space-y-6">
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-foreground select-none">{t('songs_list', 'Listas de canciones')}</CardTitle>
-              <Dialog open={openListDialog} onOpenChange={setOpenListDialog}>
-                <DialogTrigger asChild>
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    <Plus className="size-4 md:mr-2" />
-                    <span className="hidden md:inline">{t('new_list', 'Nueva lista')}</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-card border-border text-foreground">
-                  <DialogHeader>
-                    <DialogTitle>{t('create_list', 'Crear lista de canciones')}</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">
-                      {t('create_list_desc', 'Agrupa tus canciones por álbum, setlist, etc.')}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="list-name" className="text-foreground">{t('list_name', 'Nombre de la lista')}</Label>
-                      <Input
-                        id="list-name"
-                        placeholder="Ej: Álbum 2024"
-                        value={listName}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setListName(e.target.value)}
-                        className="bg-background border-border text-foreground"
-                      />
-                    </div>
-                    <Button onClick={handleCreateList} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                      {t('create_list', 'Crear lista')}
-                    </Button>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left Panel - Song Lists */}
+        <div className={`w-full lg:w-[420px] lg:shrink-0 space-y-4 ${selectedListId ? 'hidden lg:block' : 'block'}`}>
+          {/* Header */}
+          <div className="flex justify-between items-center">
+            <h2 className="text-foreground font-semibold text-base select-none">{t('songs_list', 'Listas de canciones')}</h2>
+            <Dialog open={openListDialog} onOpenChange={setOpenListDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Plus className="size-4 md:mr-2" />
+                  <span className="hidden md:inline">{t('new_list', 'Nueva lista')}</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-border text-foreground">
+                <DialogHeader>
+                  <DialogTitle>{t('create_list', 'Crear lista de canciones')}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    {t('create_list_desc', 'Agrupa tus canciones por álbum, setlist, etc.')}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="list-name" className="text-foreground">{t('list_name', 'Nombre de la lista')}</Label>
+                    <Input
+                      id="list-name"
+                      placeholder="Ej: Álbum 2024"
+                      value={listName}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setListName(e.target.value)}
+                      className="bg-background border-border text-foreground"
+                    />
                   </div>
-                </DialogContent>
-              </Dialog>
+                  <Button onClick={handleCreateList} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                    {t('create_list', 'Crear lista')}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Song Lists */}
+          {currentProject.songLists.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <img src={SongListImage} alt="Song list" className="size-12 mx-auto mb-2" />
+              <p>{t('no_lists', 'No hay listas aún')}</p>
+              <p className="text-sm">{t('create_first_list', 'Crea tu primera lista de canciones')}</p>
             </div>
-          </CardHeader>
-          <CardContent>
-            {currentProject.songLists.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <img src={SongListImage} alt="Song list" className="size-12 mx-auto mb-2" />
-                <p>{t('no_lists', 'No hay listas aún')}</p>
-                <p className="text-sm">{t('create_first_list', 'Crea tu primera lista de canciones')}</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {localLists.map((list, index) => (
+                <SortableListItem
+                  key={list.id}
+                  list={list}
+                  index={index}
+                  isSelected={selectedListId === list.id}
+                  moveList={moveList}
+                  onDrop={handleListDrop}
+                  onSelect={handleSelectList}
+                  onEdit={handleEditListClick}
+                  onDelete={handleDeleteList}
+                  onExport={handleExportList}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right Panel - Song Content */}
+        <div className={`flex-1 min-w-0 ${!selectedListId ? 'hidden lg:block' : 'block'}`}>
+          {selectedList ? (
+            <Card className="bg-card border-border rounded-xl">
+              <CardContent className="p-6">
+                {/* Back button (mobile only) */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+                  onClick={handleBackToLists}
+                >
+                  <ArrowLeft className="size-4 mr-1" />
+                  {t('back_to_lists', 'Listas')}
+                </Button>
+
+                {/* List Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-foreground font-semibold text-base">{selectedList.name}</h3>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedList.songs.length} {selectedList.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
+                  </span>
+                </div>
+
+                {/* Add Song Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-4"
+                  onClick={() => {
+                    setSongCreationListId(selectedList.id);
+                    setOpenSongDialog(true);
+                  }}
+                >
+                  <Plus className="size-4 mr-2" />
+                  {t('add_song', 'Añadir canción')}
+                </Button>
+
+                {/* Song List */}
+                {selectedList.songs.length > 0 && (
+                  <SortableSongList 
+                      listId={selectedList.id}
+                      songs={selectedList.songs}
+                      onReorder={handleReorder}
+                      onSelectSong={handleSelectSong}
+                      onDeleteSong={handleDeleteSong}
+                      onEditSong={handleEditSongClick}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="hidden lg:flex items-center justify-center h-64 text-muted-foreground">
+              <div className="text-center">
+                <img src={SongListImage} alt="Song list" className="size-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">{t('select_list_hint', 'Selecciona una lista para ver sus canciones')}</p>
               </div>
-            ) : (
-              <Accordion 
-                type="single" 
-                collapsible 
-                className="w-full space-y-4"
-                value={accordionValue}
-                onValueChange={handleAccordionChange}
-              >
-                {localLists.map((list, index) => (
-                  <SortableAccordionItem 
-                    key={list.id} 
-                    index={index} 
-                    list={list} 
-                    moveList={moveList} 
-                    onDrop={handleListDrop}
-                  >
-                    {(dragRef) => (
-                    <AccordionItem value={list.id} className="border border-border rounded-lg bg-card overflow-hidden last:border-b">
-                    <AccordionTrigger className="hover:no-underline text-foreground hover:text-foreground/80 group [&>svg]:hidden">
-                        <div className="flex items-center justify-between w-full px-4">
-                        <div className="flex items-center gap-3">
-                             {/* Drag Handle for List */}
-                            <div ref={(node) => { dragRef(node); }} className="cursor-grab p-1 -ml-1 touch-none" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                                <GripVertical className="size-5 text-muted-foreground hover:text-foreground" />
-                            </div>
-                            <span className="font-medium text-lg">{list.name}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-muted-foreground mr-2">
-                            {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
-                            </span>
-                            <div className="flex items-center gap-1">
-                                {/* Export List Button */}
-                                <div
-                                    role="button"
-                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                    onClick={(e: React.MouseEvent) => {
-                                        e.stopPropagation();
-                                        handleExportList(list);
-                                    }}
-                                    title={t('export_list', 'Copiar lista')}
-                                >
-                                    <Share className="size-4" />
-                                </div>
-                            {/* Edit List Button */}
-                            <div
-                                    role="button"
-                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                    onClick={(e: React.MouseEvent) => {
-                                        e.stopPropagation();
-                                        setListToEdit(list);
-                                        setEditListName(list.name);
-                                        setEditListDialog(true);
-                                    }}
-                                >
-                                    <Edit className="size-4" />
-                                </div>
-                                {/* Delete List Button */}
-                                <div
-                                    role="button"
-                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                    onClick={(e: React.MouseEvent) => {
-                                        e.stopPropagation();
-                                        handleDeleteList(list.id);
-                                    }}
-                                >
-                                    <Trash2 className="size-4" />
-                                </div>
-                                {/* Chevron Button (Dropdown) - Visual only, triggers parent accordion */}
-                                <div
-                                    role="button"
-                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-center rounded-md cursor-pointer transition-colors"
-                                >
-                                    <ChevronDown className="size-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                    </AccordionTrigger>
-                        <AccordionContent>
-                        <div className="px-4 pt-0">
-                            <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full h-10 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-2"
-                            onClick={() => {
-                                setSongCreationListId(list.id);
-                                setOpenSongDialog(true);
-                            }}
-                            >
-                            <Plus className="size-4 md:mr-2" />
-                            <span className="hidden md:inline">{t('add_song', 'Añadir canción')}</span>
-                            </Button>
-    
-                            {list.songs.length > 0 && (
-                            <div className="flex flex-col">
-                                <SortableSongList 
-                                    listId={list.id}
-                                    songs={list.songs}
-                                    onReorder={handleReorder}
-                                    onSelectSong={handleSelectSong}
-                                    onDeleteSong={handleDeleteSong}
-                                    onEditSong={handleEditSongClick}
-                                />
-                            </div>
-                            )}
-                        </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                    )}
-                  </SortableAccordionItem>
-                ))}
-              </Accordion>
-            )}
-          </CardContent>
-        </Card>
-  
-        <Dialog open={openSongDialog} onOpenChange={setOpenSongDialog}>
-          <DialogContent className="bg-card border-border text-foreground">
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* --- Dialogs --- */}
+
+      {/* Add Song Dialog */}
+      <Dialog open={openSongDialog} onOpenChange={setOpenSongDialog}>
+        <DialogContent className="bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle>{t('add_song', 'Añadir canción')}</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {t('add_song_desc', 'Completa la información de la canción')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="song-name" className="text-foreground">{t('song_name', 'Nombre de la canción')} <span className="text-destructive">*</span></Label>
+              <Input
+                id="song-name"
+                placeholder="Ej: Wonderwall"
+                value={songData.name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, name: e.target.value })}
+                className="bg-background border-border text-foreground"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="band-name" className="text-foreground">{t('original_band', 'Banda Original (Artista)')}</Label>
+              <Input
+                id="band-name"
+                placeholder="Ej: Oasis"
+                value={songData.originalBand}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, originalBand: e.target.value })}
+                className="bg-background border-border text-foreground"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bpm" className="text-foreground">{t('bpm', 'BPM')}</Label>
+                <Input
+                  id="bpm"
+                  type="number"
+                  placeholder="Opcional"
+                  value={songData.bpm === null ? '' : songData.bpm}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                       const val = e.target.value;
+                       setSongData({ ...songData, bpm: val === '' ? null : parseInt(val) })
+                  }}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="key" className="text-foreground">{t('key', 'Tonalidad')}</Label>
+                <Input
+                  id="key"
+                  placeholder="Opcional (Ej: C)"
+                  value={songData.key}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, key: e.target.value })}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+            </div>
+            <Button onClick={handleCreateSong} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+              {t('create_song', 'Crear canción')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit List Dialog */}
+      <Dialog open={editListDialog} onOpenChange={setEditListDialog}>
+        <DialogContent className="bg-card border-border text-foreground">
             <DialogHeader>
-              <DialogTitle>{t('add_song', 'Añadir canción')}</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                {t('add_song_desc', 'Completa la información de la canción')}
-              </DialogDescription>
+                <DialogTitle>{t('edit_list', 'Editar lista')}</DialogTitle>
+                <DialogDescription className="text-muted-foreground">{t('edit_list_desc', 'cambia el nombre de la lista')}</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="song-name" className="text-foreground">{t('song_name', 'Nombre de la canción')} <span className="text-destructive">*</span></Label>
-                <Input
-                  id="song-name"
-                  placeholder="Ej: Wonderwall"
-                  value={songData.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, name: e.target.value })}
-                  className="bg-background border-border text-foreground"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="band-name" className="text-foreground">{t('original_band', 'Banda Original (Artista)')}</Label>
-                <Input
-                  id="band-name"
-                  placeholder="Ej: Oasis"
-                  value={songData.originalBand}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, originalBand: e.target.value })}
-                  className="bg-background border-border text-foreground"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bpm" className="text-foreground">{t('bpm', 'BPM')}</Label>
-                  <Input
-                    id="bpm"
-                    type="number"
-                    placeholder="Opcional"
-                    value={songData.bpm === null ? '' : songData.bpm}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                         const val = e.target.value;
-                         setSongData({ ...songData, bpm: val === '' ? null : parseInt(val) })
-                    }}
-                    className="bg-background border-border text-foreground"
-                  />
+                    <Label htmlFor="edit-list-name" className="text-foreground">{t('name', 'Nombre')}</Label>
+                    <Input 
+                        id="edit-list-name"
+                        value={editListName}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditListName(e.target.value)}
+                        className="bg-background border-border text-foreground"
+                    />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="key" className="text-foreground">{t('key', 'Tonalidad')}</Label>
-                  <Input
-                    id="key"
-                    placeholder="Opcional (Ej: C)"
-                    value={songData.key}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSongData({ ...songData, key: e.target.value })}
-                    className="bg-background border-border text-foreground"
-                  />
-                </div>
-              </div>
-              <Button onClick={handleCreateSong} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                {t('create_song', 'Crear canción')}
-              </Button>
+                <Button onClick={handleUpdateList} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                    {t('save_changes', 'Guardar cambios')}
+                </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-  
-        <Dialog open={editListDialog} onOpenChange={setEditListDialog}>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Song Dialog */}
+      <Dialog open={isEditSongOpen} onOpenChange={setIsEditSongOpen}>
           <DialogContent className="bg-card border-border text-foreground">
               <DialogHeader>
-                  <DialogTitle>{t('edit_list', 'Editar lista')}</DialogTitle>
-                  <DialogDescription className="text-muted-foreground">{t('edit_list_desc', 'cambia el nombre de la lista')}</DialogDescription>
+                  <DialogTitle>{t('edit_song', 'Editar canción')}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">{t('edit_song_desc', 'Modifica los detalles de la canción')}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                      <Label htmlFor="edit-list-name" className="text-foreground">{t('name', 'Nombre')}</Label>
-                      <Input 
-                          id="edit-list-name"
-                          value={editListName}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditListName(e.target.value)}
+                      <Label className="text-foreground">{t('name', 'Nombre')}</Label>
+                      <Input
+                          value={editSongForm.name}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, name: e.target.value })}
                           className="bg-background border-border text-foreground"
                       />
                   </div>
-                  <Button onClick={handleUpdateList} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                      {t('save_changes', 'Guardar cambios')}
+                  <div className="space-y-2">
+                      <Label className="text-foreground">{t('band', 'Banda')}</Label>
+                      <Input
+                          value={editSongForm.originalBand}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, originalBand: e.target.value })}
+                          className="bg-background border-border text-foreground"
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label className="text-foreground">{t('bpm', 'BPM')}</Label>
+                      <Input
+                          type="number"
+                          value={editSongForm.bpm === null ? '' : editSongForm.bpm}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              const val = e.target.value;
+                              setEditSongForm({ ...editSongForm, bpm: val === '' ? null : parseInt(val) })
+                          }}
+                          className="bg-background border-border text-foreground"
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label className="text-foreground">{t('key', 'Tonalidad')}</Label>
+                      <Input
+                          value={editSongForm.key}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, key: e.target.value })}
+                          className="bg-background border-border text-foreground"
+                      />
+                  </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                  <Button
+                      onClick={handleUpdateSong}
+                      disabled={isSavingSong}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                      {isSavingSong ? t('saving', 'Guardando...') : t('save_changes', 'Guardar cambios')}
                   </Button>
               </div>
           </DialogContent>
-        </Dialog>
-        
-      {/* Edit Song Dialog */}
-       <Dialog open={isEditSongOpen} onOpenChange={setIsEditSongOpen}>
-            <DialogContent className="bg-card border-border text-foreground">
-                <DialogHeader>
-                    <DialogTitle>{t('edit_song', 'Editar canción')}</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">{t('edit_song_desc', 'Modifica los detalles de la canción')}</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label className="text-foreground">{t('name', 'Nombre')}</Label>
-                        <Input
-                            value={editSongForm.name}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, name: e.target.value })}
-                            className="bg-background border-border text-foreground"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-foreground">{t('band', 'Banda')}</Label>
-                        <Input
-                            value={editSongForm.originalBand}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, originalBand: e.target.value })}
-                            className="bg-background border-border text-foreground"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-foreground">{t('bpm', 'BPM')}</Label>
-                        <Input
-                            type="number"
-                            value={editSongForm.bpm === null ? '' : editSongForm.bpm}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                const val = e.target.value;
-                                setEditSongForm({ ...editSongForm, bpm: val === '' ? null : parseInt(val) })
-                            }}
-                            className="bg-background border-border text-foreground"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-foreground">{t('key', 'Tonalidad')}</Label>
-                        <Input
-                            value={editSongForm.key}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditSongForm({ ...editSongForm, key: e.target.value })}
-                            className="bg-background border-border text-foreground"
-                        />
-                    </div>
-                </div>
-                <div className="flex justify-end gap-2">
-                    <Button
-                        onClick={handleUpdateSong}
-                        disabled={isSavingSong}
-                        className="bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                        {isSavingSong ? t('saving', 'Guardando...') : t('save_changes', 'Guardar cambios')}
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
-    </div>
-  </DndProvider>
-);
+      </Dialog>
+    </DndProvider>
+  );
 }
