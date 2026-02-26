@@ -1,0 +1,20 @@
+{
+    "packages": {
+        "apps/backend": {
+            "release-type": "maven",
+            "component": "api",
+            "tag-separator": "@",
+            "include-component-in-tag": true,
+            "changelog-path": "CHANGELOG.md",
+            "extra-files": []
+        },
+        "apps/frontend": {
+            "release-type": "node",
+            "component": "web",
+            "tag-separator": "@",
+            "include-component-in-tag": true,
+            "changelog-path": "CHANGELOG.md"
+        }
+    },
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}

@@ -10,8 +10,29 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  # ── Detect changes ───────────────────────────────────────
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'apps/backend/**'
+            frontend:
+              - 'apps/frontend/**'
+              - 'package.json'
+              - 'package-lock.json'
+
   # ── Backend ──────────────────────────────────────────────
   backend-test:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -31,7 +52,8 @@ jobs:
           ./mvnw test
 
   backend-build:
-    needs: backend-test
+    needs: [changes, backend-test]
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -92,6 +114,8 @@ jobs:
 
   # ── Frontend ─────────────────────────────────────────────
   frontend-lint:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -109,7 +133,8 @@ jobs:
         run: npx turbo run lint --filter=@bandanize/frontend
 
   frontend-build:
-    needs: frontend-lint
+    needs: [changes, frontend-lint]
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

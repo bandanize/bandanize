@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      api-release-created: ${{ steps.release.outputs['apps/backend--release_created'] }}
+      api-tag: ${{ steps.release.outputs['apps/backend--tag_name'] }}
+      api-version: ${{ steps.release.outputs['apps/backend--version'] }}
+      web-release-created: ${{ steps.release.outputs['apps/frontend--release_created'] }}
+      web-tag: ${{ steps.release.outputs['apps/frontend--tag_name'] }}
+      web-version: ${{ steps.release.outputs['apps/frontend--version'] }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  docker-backend:
+    needs: release-please
+    if: needs.release-please.outputs.api-release-created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        working-directory: apps/backend
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/backend:latest
+            ghcr.io/${{ github.repository_owner }}/backend:${{ needs.release-please.outputs.api-version }}
+
+  docker-frontend:
+    needs: release-please
+    if: needs.release-please.outputs.web-release-created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/frontend:latest
+            ghcr.io/${{ github.repository_owner }}/frontend:${{ needs.release-please.outputs.web-version }}
