@@ -13,7 +13,6 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    if: "${{ github.actor != 'bandanize-release-bot[bot]' && !contains(github.event.head_commit.message, 'chore(main): release') }}"
     outputs:
       api-release-created: ${{ steps.release.outputs['apps/backend--release_created'] }}
       api-tag: ${{ steps.release.outputs['apps/backend--tag_name'] }}
