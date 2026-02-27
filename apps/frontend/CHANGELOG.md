@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/bandanize/bandanize/compare/web@v1.6.0...web@v1.6.1) (2026-02-27)
+
+
+### Bug Fixes
+
+* update 'today' button font weight to semibold ([#59](https://github.com/bandanize/bandanize/issues/59)) ([f407484](https://github.com/bandanize/bandanize/commit/f40748441c961fde1c1c519f6e3dae3e7ed8c6ee))
+
 ## [1.6.0](https://github.com/bandanize/bandanize/compare/web@v1.5.0...web@v1.6.0) (2026-02-27)
 
 
