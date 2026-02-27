@@ -320,7 +320,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                         <Button
                             size="sm"
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[8px] h-8 px-2 sm:px-3 text-[13px] sm:text-[14px] font-normal"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[8px] h-8 px-2 sm:px-3 text-[13px] sm:text-[14px] font-semibold"
                             onClick={() => { setCurrentMonth(new Date()); setHighlightedDay(null); }}
                         >
                             {t('today')}
