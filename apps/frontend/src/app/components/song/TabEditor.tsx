@@ -112,7 +112,7 @@ export function TabEditor({
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [viewMode, setViewMode] = useState<'edit' | 'view'>('edit');
+  const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
