@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/bandanize/bandanize/compare/web@v1.5.0...web@v1.6.0) (2026-02-27)
+
+
+### Features
+
+* add calendar day highlighting and navigation to event dates. ([#57](https://github.com/bandanize/bandanize/issues/57)) ([88ec016](https://github.com/bandanize/bandanize/commit/88ec016b5abadb436e23e163e88ec9ae5ff0885c))
+
 ## [1.5.0](https://github.com/bandanize/bandanize/compare/web@v1.4.0...web@v1.5.0) (2026-02-27)
 
 
