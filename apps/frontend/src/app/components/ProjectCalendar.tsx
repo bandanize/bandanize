@@ -77,6 +77,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     const [loading, setLoading] = useState(true);
     const [calendarToken, setCalendarToken] = useState<string | null>(null);
     const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [highlightedDay, setHighlightedDay] = useState<Date | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
     const [formData, setFormData] = useState({
@@ -151,6 +152,12 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
             .slice(0, 5);
     }, [events]);
+
+    const navigateToEvent = (event: CalendarEvent) => {
+        const eventDate = parseISO(event.date);
+        setCurrentMonth(startOfMonth(eventDate));
+        setHighlightedDay(eventDate);
+    };
 
     const openCreateDialog = (day?: Date) => {
         setEditingEvent(null);
@@ -314,7 +321,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                         <Button
                             size="sm"
                             className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[8px] h-8 px-2 sm:px-3 text-[13px] sm:text-[14px] font-normal"
-                            onClick={() => setCurrentMonth(new Date())}
+                            onClick={() => { setCurrentMonth(new Date()); setHighlightedDay(null); }}
                         >
                             {t('today')}
                         </Button>
@@ -322,7 +329,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 rounded-[8px] hover:bg-white/5"
-                            onClick={() => setCurrentMonth(prev => subMonths(prev, 1))}
+                            onClick={() => { setCurrentMonth(prev => subMonths(prev, 1)); setHighlightedDay(null); }}
                         >
                             <ChevronLeft className="size-4 text-foreground" />
                         </Button>
@@ -335,7 +342,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 rounded-[8px] hover:bg-white/5"
-                            onClick={() => setCurrentMonth(prev => addMonths(prev, 1))}
+                            onClick={() => { setCurrentMonth(prev => addMonths(prev, 1)); setHighlightedDay(null); }}
                         >
                             <ChevronRight className="size-4 text-foreground" />
                         </Button>
@@ -408,6 +415,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                                 const dayEvents = eventsByDay[dayKey] || [];
                                 const isCurrentMonth = isSameMonth(day, currentMonth);
                                 const todayDay = isToday(day);
+                                const isHighlighted = highlightedDay && isSameDay(day, highlightedDay);
 
                                 return (
                                     <div
@@ -424,12 +432,14 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                                             flex flex-col rounded-[8px] sm:rounded-[10px]
                                             p-1 sm:p-2
                                             min-h-[44px] sm:min-h-[80px]
-                                            ${todayDay
-                                                ? 'bg-[rgba(163,230,53,0.15)] border-2 sm:border-[3px] border-primary'
-                                                : 'border border-border'
+                                            ${isHighlighted
+                                                ? 'bg-[rgba(250,204,21,0.10)] border-2 sm:border-[3px] border-[#FACC15] ring-1 ring-[#FACC15]/40'
+                                                : todayDay
+                                                    ? 'bg-[rgba(163,230,53,0.15)] border-2 sm:border-[3px] border-primary'
+                                                    : 'border border-border'
                                             }
                                             ${!isCurrentMonth ? 'opacity-30' : ''}
-                                            transition-colors cursor-pointer sm:cursor-default
+                                            transition-all duration-300 cursor-pointer sm:cursor-default
                                         `}
                                     >
                                         {/* Day header */}
@@ -543,7 +553,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                             return (
                                 <div
                                     key={event.id}
-                                    className={`${colors.bg} border ${colors.border} rounded-[10px] p-3 sm:p-4`}
+                                    className={`${colors.bg} border ${colors.border} rounded-[10px] p-3 sm:p-4 cursor-pointer hover:opacity-90 transition-opacity`}
+                                    onClick={() => navigateToEvent(event)}
                                 >
                                     <div className="flex items-start justify-between gap-2 sm:gap-3">
                                         <div className="flex-1 flex flex-col gap-1 min-w-0">
