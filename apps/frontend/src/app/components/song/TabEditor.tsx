@@ -4,9 +4,10 @@ import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { 
   Guitar, Music2, Music, Save, Download, FileText, Upload, 
-  FileAudio, Image as ImageIcon, File, Trash2, Eye, Play, ExternalLink,
+  FileAudio, Image as ImageIcon, File, Trash2, Eye, Pencil, Play, ExternalLink,
   Maximize, Minimize, ZoomIn, ZoomOut
 } from 'lucide-react';
+import { TabRenderer } from './TabRenderer';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Tablature } from '@/contexts/ProjectContext';
@@ -111,6 +112,7 @@ export function TabEditor({
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -241,6 +243,22 @@ export function TabEditor({
             <Button
                 variant="outline"
                 size="sm"
+                className={cn(
+                    "flex-1 sm:flex-none border-border hover:bg-accent",
+                    viewMode === 'view'
+                        ? 'bg-primary/15 text-primary border-primary/30'
+                        : 'bg-card text-foreground'
+                )}
+                onClick={() => setViewMode(prev => prev === 'edit' ? 'view' : 'edit')}
+                title={viewMode === 'edit' ? t('view_chords', 'Ver acordes') : t('edit_tab', 'Editar tablatura')}
+            >
+                {viewMode === 'edit' ? <Eye className="size-4 mr-2" /> : <Pencil className="size-4 mr-2" />}
+                <span className="hidden sm:inline">{viewMode === 'edit' ? t('view', 'Ver') : t('edit', 'Editar')}</span>
+            </Button>
+
+            <Button
+                variant="outline"
+                size="sm"
                 className="flex-1 sm:flex-none bg-card border-border text-foreground hover:bg-accent"
                 onClick={toggleFullscreen}
                 title={isFullscreen ? t('exit_fullscreen', 'Salir de pantalla completa') : t('fullscreen', 'Pantalla completa')}
@@ -295,18 +313,29 @@ export function TabEditor({
                   <FileText className="size-4" />
               </Button>
           </div>
-          <Textarea
-            ref={textareaRef}
-            value={editingContent}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingContent(e.target.value)}
-            className={cn(
-                "font-mono min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4",
+          {viewMode === 'view' ? (
+            <TabRenderer
+              content={editingContent}
+              className={cn(
+                "min-h-[400px]",
                 fontSizes[fontSizeIndex],
                 isFullscreen && "min-h-[calc(100vh-250px)]"
-            )}
-            placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
-            spellCheck={false}
-          />
+              )}
+            />
+          ) : (
+            <Textarea
+              ref={textareaRef}
+              value={editingContent}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingContent(e.target.value)}
+              className={cn(
+                  "font-mono min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4",
+                  fontSizes[fontSizeIndex],
+                  isFullscreen && "min-h-[calc(100vh-250px)]"
+              )}
+              placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
+              spellCheck={false}
+            />
+          )}
       </div>
 
       <TablatureControls onInsert={handleInsertText} />
