@@ -42,7 +42,7 @@ export function TabRenderer({ content, className }: TabRendererProps) {
  * We skip chord detection on tab lines to avoid false positives.
  */
 function isTabLine(line: string): boolean {
-  return /^[A-Ga-g#b]?\|[\-0-9hpbx\/\\~|.\s]*\|?\s*$/.test(line.trim());
+  return /^[A-Ga-g#b]?\|[0-9hpbx/\\~|.\s-]*\|?\s*$/.test(line.trim());
 }
 
 /**
