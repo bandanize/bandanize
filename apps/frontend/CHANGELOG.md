@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/bandanize/bandanize/compare/web@v1.6.1...web@v1.7.0) (2026-02-27)
+
+
+### Features
+
+* implement a tab renderer with hoverable chord diagrams and chor… ([#61](https://github.com/bandanize/bandanize/issues/61)) ([c54c8e3](https://github.com/bandanize/bandanize/commit/c54c8e309122d912ee0e10e3f7669585f1394e4a))
+
 ## [1.6.1](https://github.com/bandanize/bandanize/compare/web@v1.6.0...web@v1.6.1) (2026-02-27)
 
 
