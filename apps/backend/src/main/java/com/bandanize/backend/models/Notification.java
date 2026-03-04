@@ -57,7 +57,8 @@ public class Notification {
         EVENT_CREATED,
         EVENT_MODIFIED,
         FILE_ADDED,
-        TAB_CREATED
+        TAB_CREATED,
+        TAB_COMMENT_MENTION
     }
 
     // Getters and Setters

@@ -107,6 +107,22 @@ public class NotificationService {
                 actor.getName() + " added tab " + tab.getName() + " to " + tab.getSong().getName());
     }
 
+    public void createTabCommentMentionNotification(BandModel band, UserModel actor, UserModel mentionedUser,
+            TablatureModel tab) {
+        Notification notification = new Notification();
+        notification.setBand(band);
+        notification.setActor(actor);
+        notification.setRecipient(mentionedUser);
+        notification.setType(Notification.NotificationType.TAB_COMMENT_MENTION);
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("targetUserName", mentionedUser.getName());
+        metadata.put("tabName", tab.getName());
+        notification.setMetadata(metadata);
+        notification.setTitle("New Mention");
+        notification.setMessage(actor.getName() + " te mencionó en " + tab.getName());
+        notificationRepository.save(notification);
+    }
+
     private void createNotification(BandModel band, UserModel actor, Notification.NotificationType type,
             Map<String, String> metadata, String title, String message) {
 
