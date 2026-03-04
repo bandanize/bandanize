@@ -11,6 +11,7 @@ import { SongEditDialog } from './song/SongEditDialog';
 import { FileList } from './song/FileList';
 import { TabList } from './song/TabList';
 import { TabEditor } from './song/TabEditor';
+import { TabComments } from './song/TabComments';
 import { MediaPreviewDialog } from './song/MediaPreviewDialog';
 import { INSTRUMENTS } from './song/constants';
 
@@ -340,6 +341,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
                     onDeleteFile={(tabId, url) => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, tabId, url)}
                     onPreview={setPreviewFile}
                 />
+                <TabComments key={`comments-${selectedTab.id}`} tabId={selectedTab.id} />
             </div>
         )}
       </div>

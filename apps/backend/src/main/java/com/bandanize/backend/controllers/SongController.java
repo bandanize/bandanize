@@ -2,6 +2,7 @@ package com.bandanize.backend.controllers;
 
 import com.bandanize.backend.models.*;
 import com.bandanize.backend.services.SongService;
+import com.bandanize.backend.services.TabCommentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class SongController {
 
     @Autowired
     private SongService songService;
+
+    @Autowired
+    private TabCommentService tabCommentService;
 
     @Autowired
     private UserRepository userRepository;
@@ -124,5 +128,26 @@ public class SongController {
     @DeleteMapping("/tabs/{tabId}/files")
     public ResponseEntity<TablatureModel> deleteTablatureFile(@PathVariable Long tabId, @RequestParam String url) {
         return ResponseEntity.ok(songService.removeFileFromTablature(tabId, url));
+    }
+
+    // --- Tab Comments ---
+    @GetMapping("/tabs/{tabId}/comments")
+    public ResponseEntity<List<TabCommentModel>> getTabComments(@PathVariable Long tabId) {
+        return ResponseEntity.ok(tabCommentService.getComments(tabId));
+    }
+
+    @PostMapping("/tabs/{tabId}/comments")
+    public ResponseEntity<TabCommentModel> addTabComment(@PathVariable Long tabId,
+            @RequestBody java.util.Map<String, String> request, Principal principal) {
+        Long userId = getCurrentUserId(principal);
+        String message = request.get("message");
+        return ResponseEntity.ok(tabCommentService.addComment(tabId, userId, message));
+    }
+
+    @DeleteMapping("/tabs/{tabId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteTabComment(@PathVariable Long tabId, @PathVariable Long commentId,
+            Principal principal) {
+        tabCommentService.deleteComment(commentId, getCurrentUserId(principal));
+        return ResponseEntity.ok().build();
     }
 }
