@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/bandanize/bandanize/compare/api@v1.2.0...api@v1.3.0) (2026-03-04)
+
+
+### Features
+
+* Add tab commenting functionality with mention support to both backend and frontend. ([#63](https://github.com/bandanize/bandanize/issues/63)) ([3adf567](https://github.com/bandanize/bandanize/commit/3adf5673fb0c681ea77f601ef7840069e01f2299))
+
+
+### Bug Fixes
+
+* Add Jackson 2 and Jackson 3 BOM version properties. ([#65](https://github.com/bandanize/bandanize/issues/65)) ([cfc827c](https://github.com/bandanize/bandanize/commit/cfc827c617b852b44cc76c4299f8e6fa57673a86))
+
 ## [1.2.0](https://github.com/bandanize/bandanize/compare/api@v1.1.0...api@v1.2.0) (2026-02-27)
 
 
