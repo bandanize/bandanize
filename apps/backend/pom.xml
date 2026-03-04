@@ -30,6 +30,8 @@
 		<!-- Override versions to fix vulnerabilities -->
 		<tomcat.version>10.1.45</tomcat.version>
 		<postgresql.version>42.7.10</postgresql.version>
+		<jackson-2-bom.version>2.21.1</jackson-2-bom.version>
+		<jackson-bom.version>3.1.0</jackson-bom.version>
 	</properties>
 	<dependencies>
 		<dependency>
