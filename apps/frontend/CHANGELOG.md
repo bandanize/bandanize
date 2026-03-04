@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/bandanize/bandanize/compare/web@v1.7.0...web@v1.8.0) (2026-03-04)
+
+
+### Features
+
+* Add tab commenting functionality with mention support to both backend and frontend. ([#63](https://github.com/bandanize/bandanize/issues/63)) ([3adf567](https://github.com/bandanize/bandanize/commit/3adf5673fb0c681ea77f601ef7840069e01f2299))
+
 ## [1.7.0](https://github.com/bandanize/bandanize/compare/web@v1.6.1...web@v1.7.0) (2026-02-27)
 
 
