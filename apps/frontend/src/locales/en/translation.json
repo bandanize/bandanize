@@ -150,5 +150,9 @@
     "social_links_desc": "Add your social links so other members can find you",
     "no_social_links": "You haven't added any social links yet",
     "social_url_placeholder": "Your profile URL",
-    "add": "Add"
+    "add": "Add",
+    "click_to_change_photo": "Click to change your photo",
+    "photo_updated": "Profile photo updated",
+    "photo_upload_error": "Error uploading photo",
+    "invalid_image": "Please select an image file"
 }

@@ -150,5 +150,9 @@
     "social_links_desc": "Añade tus redes sociales para que otros miembros puedan encontrarte",
     "no_social_links": "No has añadido ninguna red social todavía",
     "social_url_placeholder": "URL de tu perfil",
-    "add": "Añadir"
+    "add": "Añadir",
+    "click_to_change_photo": "Haz clic para cambiar tu foto",
+    "photo_updated": "Foto de perfil actualizada",
+    "photo_upload_error": "Error al subir la foto",
+    "invalid_image": "Por favor selecciona un archivo de imagen"
 }
