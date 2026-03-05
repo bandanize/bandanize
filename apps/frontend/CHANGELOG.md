@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/bandanize/bandanize/compare/web@v1.9.0...web@v1.10.0) (2026-03-05)
+
+
+### Features
+
+* Make song list action buttons always visible on small screens and hover-only on large screens. ([#79](https://github.com/bandanize/bandanize/issues/79)) ([5596a4e](https://github.com/bandanize/bandanize/commit/5596a4ea6fda6e5cd2adc4120c80c42bf685e7e5))
+
 ## [1.9.0](https://github.com/bandanize/bandanize/compare/web@v1.8.0...web@v1.9.0) (2026-03-05)
 
 
