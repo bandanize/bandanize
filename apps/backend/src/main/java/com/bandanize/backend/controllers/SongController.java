@@ -89,6 +89,16 @@ public class SongController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/songs/{songId}/move")
+    public ResponseEntity<SongModel> moveSong(@PathVariable Long songId, @RequestParam Long targetListId) {
+        return ResponseEntity.ok(songService.moveSong(songId, targetListId));
+    }
+
+    @PostMapping("/songs/{songId}/copy")
+    public ResponseEntity<SongModel> copySong(@PathVariable Long songId, @RequestParam Long targetListId) {
+        return ResponseEntity.ok(songService.copySong(songId, targetListId));
+    }
+
     // --- Tablatures ---
     @PostMapping("/songs/{songId}/tabs")
     public ResponseEntity<TablatureModel> addTablature(@PathVariable Long songId, @RequestBody TablatureModel tab) {

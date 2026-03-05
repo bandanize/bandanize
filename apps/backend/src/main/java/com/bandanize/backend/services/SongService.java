@@ -138,6 +138,81 @@ public class SongService {
         songRepository.delete(song);
     }
 
+    public SongModel moveSong(Long songId, Long targetListId) {
+        SongModel song = songRepository.findById(songId)
+                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        SongListModel targetList = songListRepository.findById(targetListId)
+                .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
+
+        song.setSongList(targetList);
+        song.setOrderIndex(targetList.getSongs().size());
+
+        return songRepository.saveAndFlush(song);
+    }
+
+    public SongModel copySong(Long songId, Long targetListId) {
+        SongModel originalSong = songRepository.findById(songId)
+                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        SongListModel targetList = songListRepository.findById(targetListId)
+                .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
+
+        SongModel copiedSong = new SongModel();
+        copiedSong.setName(originalSong.getName());
+        copiedSong.setBpm(originalSong.getBpm());
+        copiedSong.setSongKey(originalSong.getSongKey());
+        copiedSong.setOriginalBand(originalSong.getOriginalBand());
+        copiedSong.setSongList(targetList);
+        copiedSong.setOrderIndex(targetList.getSongs().size());
+
+        // Copy files
+        for (MediaFile file : originalSong.getFiles()) {
+            MediaFile copiedFile = duplicateMediaFile(file);
+            copiedSong.getFiles().add(copiedFile);
+        }
+
+        // Save copied song first to attach to tabs
+        SongModel savedCopiedSong = songRepository.save(copiedSong);
+
+        // Copy tablatures
+        for (TablatureModel tab : originalSong.getTablatures()) {
+            TablatureModel copiedTab = new TablatureModel();
+            copiedTab.setName(tab.getName());
+            copiedTab.setInstrument(tab.getInstrument());
+            copiedTab.setInstrumentIcon(tab.getInstrumentIcon());
+            copiedTab.setTuning(tab.getTuning());
+            copiedTab.setContent(tab.getContent());
+            copiedTab.setSong(savedCopiedSong);
+
+            for (MediaFile file : tab.getFiles()) {
+                MediaFile copiedFile = duplicateMediaFile(file);
+                copiedTab.getFiles().add(copiedFile);
+            }
+
+            savedCopiedSong.getTablatures().add(tablatureRepository.save(copiedTab));
+        }
+
+        return songRepository.saveAndFlush(savedCopiedSong);
+    }
+
+    private MediaFile duplicateMediaFile(MediaFile original) {
+        String url = original.getUrl();
+        String copiedUrl = url;
+        try {
+            String[] parts = url.split("/");
+            if (parts.length >= 2) {
+                String filename = parts[parts.length - 1];
+                String folder = parts[parts.length - 2];
+                String newFilename = storageService.copyFile(filename, folder);
+                // Reconstruct URL
+                copiedUrl = url.replace(filename, newFilename);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to copy file in storage: {}", url, e);
+            // We still proceed, but the new file URL might be broken if the copy failed.
+        }
+        return new MediaFile(original.getName(), original.getType(), copiedUrl);
+    }
+
     public void reorderSongs(Long listId, List<Long> songIds) {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
