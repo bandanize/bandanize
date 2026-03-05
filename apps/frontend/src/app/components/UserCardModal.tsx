@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
-import { User, MapPin, Globe, Loader2, Music } from 'lucide-react';
+import { User, MapPin, Loader2, Music } from 'lucide-react';
 import { getMediaUrl } from '@/services/api';
 import api from '@/services/api';
 import { useTranslation } from 'react-i18next';
@@ -34,14 +34,24 @@ export function UserCardModal({ member, open, onOpenChange }: UserCardModalProps
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open && member) {
-      setLoading(true);
-      setProfile(null);
-      api.get<UserProfile>(`/users/${member.id}`)
-        .then((res) => setProfile(res.data))
-        .catch(() => console.error('Error fetching user profile'))
-        .finally(() => setLoading(false));
-    }
+    if (!open || !member) return;
+
+    let cancelled = false;
+    setLoading(true);
+    setProfile(null);
+
+    api.get<UserProfile>(`/users/${member.id}`)
+      .then((res) => {
+        if (!cancelled) setProfile(res.data);
+      })
+      .catch(() => {
+        if (!cancelled) console.error('Error fetching user profile');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, [open, member]);
 
   const initials = member?.name
