@@ -11,6 +11,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/app/components/ui/utils";
 import api from '@/services/api';
 import { useTranslation } from 'react-i18next';
+import { UserCardModal } from './UserCardModal';
 
 export function MembersPanel() {
   const { currentProject, inviteMember, kickMember } = useProjects();
@@ -18,6 +19,8 @@ export function MembersPanel() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [cardMember, setCardMember] = useState<Member | null>(null);
+  const [cardOpen, setCardOpen] = useState(false);
   
   interface SearchUser {
     id: string;
@@ -145,7 +148,8 @@ export function MembersPanel() {
             {currentProject.members.map((member: Member) => (
               <div
                 key={member.id}
-                className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group"
+                className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group cursor-pointer hover:bg-secondary/20 transition-colors"
+                onClick={() => { setCardMember(member); setCardOpen(true); }}
               >
                 <div className="size-10 bg-secondary rounded-full flex items-center justify-center">
                   <User className="size-5 text-foreground" />
@@ -166,7 +170,8 @@ export function MembersPanel() {
                         variant="ghost" 
                         size="icon"
                         className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/20 data-[state=open]:opacity-100"
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation();
                             if (confirm(t('kick_confirm', `¿Estás seguro de que quieres expulsar a ${member.name}?`).replace('${name}', member.name))) {
                                 kickMember(currentProject.id, member.id);
                             }
@@ -180,6 +185,12 @@ export function MembersPanel() {
           </div>
         </CardContent>
       </Card>
+
+      <UserCardModal
+        member={cardMember}
+        open={cardOpen}
+        onOpenChange={setCardOpen}
+      />
     </div>
   );
 }

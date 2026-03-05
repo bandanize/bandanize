@@ -27,6 +27,10 @@ public class UserModel implements UserDetails {
     private String hashedPassword = "";
     private boolean disabled = true;
     private String photo = "";
+    private String instrument = "";
+
+    @Column(columnDefinition = "TEXT")
+    private String bio = "";
 
     @ElementCollection
     @CollectionTable(name = "user_rrss", joinColumns = @JoinColumn(name = "user_id"))
@@ -101,6 +105,22 @@ public class UserModel implements UserDetails {
 
     public void setPhoto(String photo) {
         this.photo = photo;
+    }
+
+    public String getInstrument() {
+        return instrument;
+    }
+
+    public void setInstrument(String instrument) {
+        this.instrument = instrument;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     public Map<String, String> getRrss() {
