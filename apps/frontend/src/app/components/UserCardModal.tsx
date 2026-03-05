@@ -55,6 +55,7 @@ export function UserCardModal({ member, open, onOpenChange }: UserCardModalProps
 
   useEffect(() => {
     if (open && member) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- legitimate data fetch on dialog open
       fetchProfile(member.id);
     }
   }, [open, member, fetchProfile]);
