@@ -6,6 +6,7 @@ import { getMediaUrl } from '@/services/api';
 import api from '@/services/api';
 import { useTranslation } from 'react-i18next';
 import type { Member } from '@/contexts/ProjectContext';
+import { SocialIcon, SOCIAL_LABELS } from '@/app/components/SocialIcons';
 
 interface UserProfile {
   id: number;
@@ -26,16 +27,6 @@ interface UserCardModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const RRSS_LABELS: Record<string, { label: string; icon?: string }> = {
-  instagram: { label: 'Instagram' },
-  twitter: { label: 'X / Twitter' },
-  youtube: { label: 'YouTube' },
-  spotify: { label: 'Spotify' },
-  soundcloud: { label: 'SoundCloud' },
-  bandcamp: { label: 'Bandcamp' },
-  tiktok: { label: 'TikTok' },
-  facebook: { label: 'Facebook' },
-};
 
 export function UserCardModal({ member, open, onOpenChange }: UserCardModalProps) {
   const { t } = useTranslation();
@@ -121,7 +112,7 @@ export function UserCardModal({ member, open, onOpenChange }: UserCardModalProps
                     {t('social_links', 'Redes sociales')}
                   </p>
                   {socialLinks.map(([platform, url]) => {
-                    const info = RRSS_LABELS[platform.toLowerCase()] || { label: platform };
+                    const label = SOCIAL_LABELS[platform.toLowerCase()] || platform;
                     return (
                       <a
                         key={platform}
@@ -130,8 +121,8 @@ export function UserCardModal({ member, open, onOpenChange }: UserCardModalProps
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group"
                       >
-                        <Globe className="size-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
-                        <span className="truncate">{info.label}</span>
+                        <SocialIcon platform={platform} className="size-4 text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
+                        <span className="truncate">{label}</span>
                       </a>
                     );
                   })}

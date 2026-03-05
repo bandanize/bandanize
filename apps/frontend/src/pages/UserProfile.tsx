@@ -14,6 +14,7 @@ import { Separator } from '@/app/components/ui/separator';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { PageLayout } from '@/app/components/PageLayout';
+import { SocialIcon } from '@/app/components/SocialIcons';
 
 const RRSS_OPTIONS = [
   { value: 'instagram', label: 'Instagram' },
@@ -338,15 +339,18 @@ export function UserProfile() {
             )}
             {usedPlatforms.map((platform) => (
               <div key={platform} className="flex items-center gap-2">
-                <select
-                  value={platform}
-                  onChange={(e) => handleChangeRrssPlatform(platform, e.target.value)}
-                  className="bg-input-background border border-border text-foreground rounded-md px-3 py-2 text-sm min-w-[140px]"
-                >
-                  {RRSS_OPTIONS.filter((o) => o.value === platform || !usedPlatforms.includes(o.value)).map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2 min-w-[160px]">
+                  <SocialIcon platform={platform} className="size-5 text-muted-foreground shrink-0" />
+                  <select
+                    value={platform}
+                    onChange={(e) => handleChangeRrssPlatform(platform, e.target.value)}
+                    className="bg-input-background border border-border text-foreground rounded-md px-2 py-2 text-sm flex-1"
+                  >
+                    {RRSS_OPTIONS.filter((o) => o.value === platform || !usedPlatforms.includes(o.value)).map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
                 <Input
                   value={rrss[platform] || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRrss({ ...rrss, [platform]: e.target.value })}
