@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/bandanize/bandanize/compare/api@v1.5.0...api@v1.6.0) (2026-03-05)
+
+
+### Features
+
+* move songs ([1d85abd](https://github.com/bandanize/bandanize/commit/1d85abd694d3d4c77370daa701bb620e28ae3bcc))
+
 ## [1.5.0](https://github.com/bandanize/bandanize/compare/api@v1.4.0...api@v1.5.0) (2026-03-05)
 
 
