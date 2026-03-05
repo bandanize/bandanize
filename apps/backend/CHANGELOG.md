@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/bandanize/bandanize/compare/api@v1.3.0...api@v1.4.0) (2026-03-05)
+
+
+### Features
+
+* user modals ([3ff050d](https://github.com/bandanize/bandanize/commit/3ff050dbfab8917e5d39ab635be5977f06b5d319))
+
 ## [1.3.0](https://github.com/bandanize/bandanize/compare/api@v1.2.0...api@v1.3.0) (2026-03-04)
 
 
