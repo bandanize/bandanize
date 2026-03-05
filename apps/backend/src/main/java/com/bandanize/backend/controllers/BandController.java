@@ -174,6 +174,23 @@ public class BandController {
     }
 
     /**
+     * Transfers the ownership of the band to another member.
+     * Only the owner can transfer ownership.
+     * 
+     * @param bandId      The ID of the band.
+     * @param newOwnerId  The ID of the new owner.
+     * @param userDetails The authenticated user (requester).
+     * @return ResponseEntity with success message.
+     */
+    @PutMapping("/{bandId}/transfer-ownership/{newOwnerId}")
+    public ResponseEntity<String> transferOwnership(@PathVariable Long bandId, @PathVariable Long newOwnerId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        com.bandanize.backend.dtos.UserDTO requester = userService.getUserByUsername(userDetails.getUsername());
+        bandService.transferOwnership(bandId, newOwnerId, requester.getId());
+        return ResponseEntity.ok("Ownership transferred successfully");
+    }
+
+    /**
      * Deletes a band.
      * Only the owner can delete a band.
      *

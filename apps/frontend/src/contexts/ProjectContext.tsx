@@ -140,6 +140,7 @@ interface ProjectContextType {
   addTablatureFile: (projectId: string, listId: string, songId: string, tabId: string, file: Omit<MediaFile, 'id'>) => void;
   deleteTablatureFile: (projectId: string, listId: string, songId: string, tabId: string, fileUrl: string) => void;
   kickMember: (projectId: string, memberId: string) => Promise<void>;
+  transferOwnership: (projectId: string, newOwnerId: string) => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -358,6 +359,20 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           toast.success('Miembro eliminado del proyecto');
       } catch (error) {
           console.error("Error kicking member", error);
+          throw error;
+      }
+  };
+
+  const transferOwnership = async (projectId: string, newOwnerId: string) => {
+      try {
+          await api.put(`/bands/${projectId}/transfer-ownership/${newOwnerId}`);
+          updateLocalProject(projectId, (p) => ({
+              ...p,
+              ownerId: newOwnerId
+          }));
+          toast.success('Propiedad del proyecto transferida exitosamente');
+      } catch (error) {
+          console.error("Error transferring ownership", error);
           throw error;
       }
   };
@@ -766,6 +781,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       deleteTablature,
       addTablatureFile,
       deleteTablatureFile,
+      transferOwnership,
     }}>
       {children}
     </ProjectContext.Provider>
