@@ -286,7 +286,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                 {/* Export List Button */}
                 <div
                     role="button"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                     onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         onExport(list);
@@ -298,7 +298,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                 {/* Edit List Button */}
                 <div
                     role="button"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                     onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         onEdit(list);
@@ -309,7 +309,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                 {/* Delete List Button */}
                 <div
                     role="button"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                     onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         onDelete(list.id);
