@@ -238,7 +238,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
 
     const [{ handlerId, isOver }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null, isOver: boolean }>({
         accept: [ItemType.SONG_LIST, ItemType.SONG_ROW],
-        drop(item: any, monitor) {
+        drop(item: DragItem, monitor) {
             if (monitor.getItemType() === ItemType.SONG_ROW) {
                 if (item.sourceListId && item.sourceListId !== list.id) {
                     onSongDropOnList(item.sourceListId, item.id, list.id);
@@ -530,6 +530,7 @@ export function SongManager() {
               toast.success(t('song_copied', 'Canción copiada'));
           }
       } catch (error) {
+          console.error(error);
           toast.error(t('action_error', 'Ocurrió un error al realizar la acción.'));
       } finally {
           setMoveCopyDialogProps(prev => ({ ...prev, isOpen: false }));
