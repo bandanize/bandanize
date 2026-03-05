@@ -7,6 +7,9 @@ interface User {
   email: string;
   name: string;
   username: string;
+  city?: string;
+  instrument?: string;
+  bio?: string;
 }
 
 interface AuthContextType {
@@ -64,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (username: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { username, password });
-      const { token, id, email, name } = response.data;
+      const { token, id, email, name, city } = response.data;
       
       localStorage.setItem('token', token);
       
@@ -72,7 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: String(id), // Ensure it's a string for frontend consistency
         username: response.data.username || username,
         email,
-        name
+        name,
+        city: city || '',
       };
       
       setUser(user);

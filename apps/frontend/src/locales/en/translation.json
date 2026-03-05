@@ -134,5 +134,21 @@
     "confirm_delete_event": "Are you sure you want to delete this event?",
     "subscribe_calendar": "Subscribe to calendar",
     "subscription_url_copied": "URL copied — paste it in your calendar app",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "user_card": "User Card",
+    "social_links": "Social links",
+    "user_not_found": "Could not load profile",
+    "city": "City",
+    "city_placeholder": "E.g. London, New York...",
+    "saving": "Saving...",
+    "profile_updated": "Profile updated successfully",
+    "profile_update_error": "Error updating profile",
+    "instrument": "Instrument",
+    "instrument_placeholder": "E.g. Guitar, Drums, Vocals...",
+    "bio": "Bio",
+    "bio_placeholder": "Tell us something about yourself...",
+    "social_links_desc": "Add your social links so other members can find you",
+    "no_social_links": "You haven't added any social links yet",
+    "social_url_placeholder": "Your profile URL",
+    "add": "Add"
 }

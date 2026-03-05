@@ -134,5 +134,21 @@
     "confirm_delete_event": "¿Estás seguro de que quieres eliminar este evento?",
     "subscribe_calendar": "Suscribirse al calendario",
     "subscription_url_copied": "URL copiada — pégala en tu app de calendario",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "user_card": "Tarjeta de usuario",
+    "social_links": "Redes sociales",
+    "user_not_found": "No se pudo cargar el perfil",
+    "city": "Ciudad",
+    "city_placeholder": "Ej: Madrid, Barcelona...",
+    "saving": "Guardando...",
+    "profile_updated": "Perfil actualizado correctamente",
+    "profile_update_error": "Error al actualizar el perfil",
+    "instrument": "Instrumento",
+    "instrument_placeholder": "Ej: Guitarra, Batería, Voz...",
+    "bio": "Biografía",
+    "bio_placeholder": "Cuéntanos algo sobre ti...",
+    "social_links_desc": "Añade tus redes sociales para que otros miembros puedan encontrarte",
+    "no_social_links": "No has añadido ninguna red social todavía",
+    "social_url_placeholder": "URL de tu perfil",
+    "add": "Añadir"
 }

@@ -10,6 +10,8 @@ public class UserDTO {
     private String name;
     private String city;
     private String photo;
+    private String instrument;
+    private String bio;
     private Map<String, String> rrss;
     private List<Long> bandIds;
 
@@ -60,6 +62,22 @@ public class UserDTO {
 
     public void setPhoto(String photo) {
         this.photo = photo;
+    }
+
+    public String getInstrument() {
+        return instrument;
+    }
+
+    public void setInstrument(String instrument) {
+        this.instrument = instrument;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     public Map<String, String> getRrss() {

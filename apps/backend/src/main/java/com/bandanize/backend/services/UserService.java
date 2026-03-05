@@ -133,6 +133,10 @@ public class UserService {
             user.setCity(userDetails.getCity());
         if (userDetails.getPhoto() != null)
             user.setPhoto(userDetails.getPhoto());
+        if (userDetails.getInstrument() != null)
+            user.setInstrument(userDetails.getInstrument());
+        if (userDetails.getBio() != null)
+            user.setBio(userDetails.getBio());
         if (userDetails.getRrss() != null && !userDetails.getRrss().isEmpty()) {
             user.setRrss(userDetails.getRrss());
         }
@@ -292,6 +296,8 @@ public class UserService {
         userDTO.setEmail(user.getEmail());
         userDTO.setName(user.getName());
         userDTO.setCity(user.getCity());
+        userDTO.setInstrument(user.getInstrument());
+        userDTO.setBio(user.getBio());
         userDTO.setRrss(user.getRrss());
         userDTO.setPhoto(user.getPhoto());
         userDTO.setBandIds(user.getBands().stream()
