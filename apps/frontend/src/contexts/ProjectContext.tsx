@@ -132,6 +132,8 @@ interface ProjectContextType {
   createSong: (projectId: string, listId: string, song: Omit<Song, 'id' | 'tablatures' | 'files' | 'bandName'>) => void;
   updateSong: (projectId: string, listId: string, songId: string, data: Partial<Song>) => void;
   deleteSong: (projectId: string, listId: string, songId: string) => void;
+  moveSongToList: (projectId: string, listId: string, songId: string, targetListId: string) => Promise<void>;
+  copySongToList: (projectId: string, listId: string, songId: string, targetListId: string) => Promise<void>;
   addSongFile: (projectId: string, listId: string, songId: string, file: Omit<MediaFile, 'id'>) => void;
   deleteSongFile: (projectId: string, listId: string, songId: string, fileUrl: string) => void;
   createTablature: (projectId: string, listId: string, songId: string, tablature: Omit<Tablature, 'id' | 'files'>) => void;
@@ -567,6 +569,77 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         throw error; 
     }
   };
+
+  const moveSongToList = async (projectId: string, listId: string, songId: string, targetListId: string) => {
+      try {
+          const response = await api.put(`/songs/${songId}/move`, null, { params: { targetListId } });
+          const updatedSong = response.data;
+          
+          updateLocalProject(projectId, (p) => {
+              const sourceList = p.songLists.find(l => l.id === listId);
+              const song = sourceList?.songs.find(s => s.id === songId);
+              if (!song) return p;
+              
+              const newSong: Song = {
+                  ...song,
+                  id: String(updatedSong.id) // Should be same, but just in case backend resets
+              };
+              
+              return {
+                  ...p,
+                  songLists: p.songLists.map(l => {
+                      if (l.id === listId) {
+                          return { ...l, songs: l.songs.filter(s => s.id !== songId) };
+                      }
+                      if (l.id === targetListId) {
+                          return { ...l, songs: [...l.songs, newSong] };
+                      }
+                      return l;
+                  })
+              };
+          });
+      } catch (error) {
+          console.error("Error moving song", error);
+          throw error;
+      }
+  };
+
+  const copySongToList = async (projectId: string, listId: string, songId: string, targetListId: string) => {
+      try {
+          const response = await api.post(`/songs/${songId}/copy`, null, { params: { targetListId } });
+          const copiedSongData = response.data;
+          
+          const sourceList = projects.find(p => p.id === projectId)?.songLists.find(l => l.id === listId);
+          const originalSong = sourceList?.songs.find(s => s.id === songId);
+          
+          const newSong: Song = {
+              id: String(copiedSongData.id),
+              name: copiedSongData.name,
+              bandName: originalSong?.bandName || '',
+              originalBand: copiedSongData.originalBand,
+              bpm: copiedSongData.bpm,
+              key: copiedSongData.songKey,
+              files: copiedSongData.files || [],
+              tablatures: copiedSongData.tablatures ? copiedSongData.tablatures.map((tab: any) => ({
+                  id: String(tab.id),
+                  name: tab.name,
+                  instrument: tab.instrument,
+                  instrumentIcon: tab.instrumentIcon,
+                  tuning: tab.tuning,
+                  content: tab.content,
+                  files: tab.files || []
+              })) : []
+          };
+          
+          updateLocalProject(projectId, (p) => ({
+              ...p,
+              songLists: p.songLists.map(l => l.id === targetListId ? { ...l, songs: [...l.songs, newSong] } : l)
+          }));
+      } catch (error) {
+          console.error("Error copying song", error);
+          throw error;
+      }
+  };
   
   const addSongFile = async (projectId: string, listId: string, songId: string, file: Omit<MediaFile, 'id'>) => {
     // 1. We assume the file is already uploaded OR this function handles the whole process.
@@ -774,6 +847,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       createSong,
       updateSong,
       deleteSong,
+      moveSongToList,
+      copySongToList,
       addSongFile,
       deleteSongFile,
       createTablature,
