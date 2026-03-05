@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { UserPlus, User, Check, Trash2 } from 'lucide-react';
+import { UserPlus, User, Check, Trash2, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/components/ui/command";
 import { cn } from "@/app/components/ui/utils";
@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { UserCardModal } from './UserCardModal';
 
 export function MembersPanel() {
-  const { currentProject, inviteMember, kickMember } = useProjects();
+  const { currentProject, inviteMember, kickMember, transferOwnership } = useProjects();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -164,13 +164,31 @@ export function MembersPanel() {
                   </div>
                 </div>
                 
+                {/* Transfer Ownership Button: Only for owner, and cannot transfer to self */}
+                {currentProject.ownerId === user?.id && currentProject.ownerId !== member.id && (
+                    <Button
+                        variant="ghost" 
+                        size="icon"
+                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-primary hover:bg-primary/20 data-[state=open]:opacity-100 mr-1"
+                        title={t('transfer_ownership', 'Transferir propiedad')}
+                        onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            if (confirm(t('transfer_confirm', `¿Seguro que quieres ceder la propiedad de este proyecto a ${member.name}?`).replace('${name}', member.name))) {
+                                transferOwnership(currentProject.id, member.id);
+                            }
+                        }}
+                    >
+                        <Crown className="size-4" />
+                    </Button>
+                )}
+
                 {/* Kick Button: Only for owner, and cannot kick self */}
                 {currentProject.ownerId === user?.id && currentProject.ownerId !== member.id && (
                     <Button
                         variant="ghost" 
                         size="icon"
-                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/20 data-[state=open]:opacity-100"
-                        onClick={(e) => {
+                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/20 data-[state=open]:opacity-100"
+                        onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             if (confirm(t('kick_confirm', `¿Estás seguro de que quieres expulsar a ${member.name}?`).replace('${name}', member.name))) {
                                 kickMember(currentProject.id, member.id);

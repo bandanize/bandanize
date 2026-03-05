@@ -306,6 +306,40 @@ public class BandService {
         userRepository.save(member);
     }
 
+    @org.springframework.transaction.annotation.Transactional
+    public void transferOwnership(Long bandId, Long newOwnerId, Long requesterId) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Band not found"));
+
+        // Determine effective owner
+        Long ownerId = null;
+        if (band.getOwner() != null) {
+            ownerId = band.getOwner().getId();
+        } else if (!band.getUsers().isEmpty()) {
+            // Fallback for legacy data: first user is owner
+            ownerId = band.getUsers().get(0).getId();
+        }
+
+        // Verify requester is owner
+        if (ownerId == null || !ownerId.equals(requesterId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Only the current owner can transfer ownership");
+        }
+
+        UserModel newOwner = userRepository.findById(newOwnerId)
+                .orElseThrow(() -> new ResourceNotFoundException("New owner not found"));
+
+        boolean isMember = band.getUsers().stream()
+                .anyMatch(u -> u.getId().equals(newOwner.getId()));
+
+        if (!isMember) {
+            throw new IllegalArgumentException("New owner must be an existing member of the band");
+        }
+
+        band.setOwner(newOwner);
+        bandRepository.save(band);
+    }
+
     // Method addChatMessage was moved to ChatService and BandController to handle
     // mentions correctly
 
