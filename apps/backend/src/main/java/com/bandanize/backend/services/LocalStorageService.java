@@ -116,6 +116,35 @@ public class LocalStorageService implements FileStorageService {
     }
 
     @Override
+    public String copy(String filename, String folder) {
+        try {
+            Path sourceFile = rootLocation.resolve(folder).resolve(filename);
+            if (!Files.exists(sourceFile)) {
+                throw new RuntimeException("Source file not found: " + filename);
+            }
+
+            // Generate a new unique filename. Assuming the original filename had a UUID
+            // prefix, we can try to extract the original name,
+            // or just append a new UUID to the existing name to be safe and simple.
+            // Let's extract the original name by finding the first underscore if the UUID
+            // format is UUID_filename.
+            String originalName = filename;
+            int underscoreIndex = filename.indexOf('_');
+            if (underscoreIndex != -1 && underscoreIndex < 37) { // 36 chars is UUID length
+                originalName = filename.substring(underscoreIndex + 1);
+            }
+
+            String newFilename = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(originalName);
+            Path targetFile = rootLocation.resolve(folder).resolve(newFilename);
+
+            Files.copy(sourceFile, targetFile, StandardCopyOption.REPLACE_EXISTING);
+            return newFilename;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to copy file " + filename, e);
+        }
+    }
+
+    @Override
     public String storeChunk(MultipartFile file, String uploadId, int chunkIndex, int totalChunks,
             String originalFilename, String folder) {
         try {

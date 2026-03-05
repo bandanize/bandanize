@@ -11,6 +11,8 @@ public interface FileStorageService {
 
     void delete(String filename, String folder);
 
+    String copy(String filename, String folder);
+
     String storeChunk(MultipartFile file, String uploadId, int chunkIndex, int totalChunks, String originalFilename,
             String folder);
 }

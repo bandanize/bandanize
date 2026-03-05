@@ -5,12 +5,13 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 
 // React DnD
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -29,6 +30,7 @@ interface DragItem {
   index: number;
   id: string;
   type: string;
+  sourceListId?: string;
 }
 
 // --- Sortable Song Row ---
@@ -42,10 +44,12 @@ interface SortableSongRowProps {
   onSelect: (listId: string, song: Song) => void;
   onDelete: (listId: string, songId: string) => void;
   onEdit: (listId: string, song: Song) => void;
+  onMoveCopy: (listId: string, song: Song) => void;
 }
 
-const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete, onEdit }: SortableSongRowProps) => {
+const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete, onEdit, onMoveCopy }: SortableSongRowProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
     accept: ItemType.SONG_ROW,
@@ -77,7 +81,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
 
   const [{ isDragging }, drag, preview] = useDrag({
     type: ItemType.SONG_ROW,
-    item: () => ({ id: song.id, index }),
+    item: () => ({ id: song.id, index, type: ItemType.SONG_ROW, sourceListId: listId }),
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     end: () => { onDrop(); }
   });
@@ -112,15 +116,30 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
         </p>
       </div>
       
+      {/* Move/Copy Button */}
+      <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/20 transition-all shrink-0"
+          onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              onMoveCopy(listId, song);
+          }}
+          title={t('move_copy', 'Mover o Copiar')}
+      >
+          <ArrowRightLeft className="size-4" />
+      </Button>
+
       {/* Edit Button */}
       <Button
           variant="ghost"
           size="sm"
-          className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0"
           onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
               onEdit(listId, song);
           }}
+          title={t('edit', 'Editar')}
       >
           <Edit className="size-4" />
       </Button>
@@ -129,11 +148,12 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
       <Button
         variant="ghost"
         size="sm"
-        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 transition-all shrink-0"
+        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 transition-all shrink-0"
         onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             onDelete(listId, song.id);
         }}
+        title={t('delete', 'Eliminar')}
       >
         <Trash2 className="size-4" />
       </Button>
@@ -150,9 +170,10 @@ interface SortableSongListProps {
     onSelectSong: (listId: string, song: Song) => void;
     onDeleteSong: (listId: string, songId: string) => void;
     onEditSong: (listId: string, song: Song) => void;
+    onMoveCopySong: (listId: string, song: Song) => void;
 }
 
-const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong }: SortableSongListProps) => {
+const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong, onMoveCopySong }: SortableSongListProps) => {
     const [items, setItems] = useState<Song[]>(songs);
 
     useEffect(() => {
@@ -189,6 +210,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
                     onSelect={onSelectSong}
                     onDelete={onDeleteSong} 
                     onEdit={onEditSong}
+                    onMoveCopy={onMoveCopySong}
                 />
             ))}
         </div>
@@ -207,20 +229,30 @@ interface SortableListItemProps {
     onEdit: (list: SongList) => void;
     onDelete: (listId: string) => void;
     onExport: (list: SongList) => void;
+    onSongDropOnList: (sourceListId: string, songId: string, targetListId: string) => void;
 }
 
-const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect, onEdit, onDelete, onExport }: SortableListItemProps) => {
+const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect, onEdit, onDelete, onExport, onSongDropOnList }: SortableListItemProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
 
-    const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
-        accept: ItemType.SONG_LIST,
+    const [{ handlerId, isOver }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null, isOver: boolean }>({
+        accept: [ItemType.SONG_LIST, ItemType.SONG_ROW],
+        drop(item: DragItem, monitor) {
+            if (monitor.getItemType() === ItemType.SONG_ROW) {
+                if (item.sourceListId && item.sourceListId !== list.id) {
+                    onSongDropOnList(item.sourceListId, item.id, list.id);
+                }
+            }
+        },
         collect(monitor) {
             return {
                 handlerId: monitor.getHandlerId(),
+                isOver: monitor.isOver() && monitor.getItemType() === ItemType.SONG_ROW,
             };
         },
         hover(item: DragItem, monitor) {
+            if (monitor.getItemType() !== ItemType.SONG_LIST) return;
             if (!ref.current) return;
             const dragIndex = item.index;
             const hoverIndex = index;
@@ -265,6 +297,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                     ? 'bg-card border-2 border-primary' 
                     : 'bg-card border border-border hover:border-border/80'
                 }
+                ${isOver ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}
             `}
             onClick={() => onSelect(list.id)}
         >
@@ -325,7 +358,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
 // --- Main SongManager Component ---
 
 export function SongManager() {
-  const { currentProject, createSongList, updateSongList, deleteSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong } = useProjects();
+  const { currentProject, createSongList, updateSongList, deleteSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong, moveSongToList, copySongToList } = useProjects();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -432,7 +465,7 @@ export function SongManager() {
     }
 
     const header = `${list.name}\n${'-'.repeat(list.name.length)}\n`;
-    const body = list.songs.map((song, index) => {
+    const body = list.songs.map((song: Song, index: number) => {
       let line = `${index + 1}. ${song.name}`;
       const details = [];
       if (song.key) details.push(`[Key: ${song.key}]`);
@@ -452,6 +485,57 @@ export function SongManager() {
   const [editListDialog, setEditListDialog] = useState(false);
   const [listToEdit, setListToEdit] = useState<SongList | null>(null);
   const [editListName, setEditListName] = useState('');
+
+  // --- Move/Copy Dialog State ---
+  const [moveCopyDialogProps, setMoveCopyDialogProps] = useState<{
+      isOpen: boolean;
+      sourceListId: string;
+      songId: string;
+      targetListId: string | null;
+  }>({ isOpen: false, sourceListId: '', songId: '', targetListId: '' });
+
+  const handleSongDropOnList = useCallback((sourceListId: string, songId: string, targetListId: string) => {
+      setMoveCopyDialogProps({
+          isOpen: true,
+          sourceListId,
+          songId,
+          targetListId
+      });
+  }, []);
+
+  const handleManualMoveCopyClick = (listId: string, song: Song) => {
+      setMoveCopyDialogProps({
+          isOpen: true,
+          sourceListId: listId,
+          songId: song.id,
+          targetListId: null // User will select
+      });
+  };
+
+  const executeMoveCopy = async (action: 'move' | 'copy') => {
+      if (!currentProject) return;
+      const { sourceListId, songId, targetListId } = moveCopyDialogProps;
+      if (!targetListId) return; // Prevent if not selected
+      
+      try {
+          if (action === 'move') {
+              await moveSongToList(currentProject.id, sourceListId, songId, targetListId);
+              toast.success(t('song_moved', 'Canción movida'));
+              // If moving currently selected song, redirect to target list
+              if (selectedSongId === songId && selectedListId === sourceListId) {
+                  handleSelectList(targetListId);
+              }
+          } else {
+              await copySongToList(currentProject.id, sourceListId, songId, targetListId);
+              toast.success(t('song_copied', 'Canción copiada'));
+          }
+      } catch (error) {
+          console.error(error);
+          toast.error(t('action_error', 'Ocurrió un error al realizar la acción.'));
+      } finally {
+          setMoveCopyDialogProps(prev => ({ ...prev, isOpen: false }));
+      }
+  };
 
   // --- Song Editing State ---
   const [isEditSongOpen, setIsEditSongOpen] = useState(false);
@@ -640,6 +724,7 @@ export function SongManager() {
                   onEdit={handleEditListClick}
                   onDelete={handleDeleteList}
                   onExport={handleExportList}
+                  onSongDropOnList={handleSongDropOnList}
                 />
               ))}
             </div>
@@ -693,6 +778,7 @@ export function SongManager() {
                       onSelectSong={handleSelectSong}
                       onDeleteSong={handleDeleteSong}
                       onEditSong={handleEditSongClick}
+                      onMoveCopySong={handleManualMoveCopyClick}
                   />
                 )}
               </CardContent>
@@ -795,6 +881,44 @@ export function SongManager() {
                 </Button>
             </div>
         </DialogContent>
+      </Dialog>
+      
+      {/* Move/Copy Dialog */}
+      <Dialog open={moveCopyDialogProps.isOpen} onOpenChange={(isOpen: boolean) => !isOpen && setMoveCopyDialogProps(prev => ({ ...prev, isOpen }))}>
+          <DialogContent className="bg-card border-border text-foreground">
+              <DialogHeader>
+                  <DialogTitle>{t('move_or_copy', 'Mover o Copiar Canción')}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                      {t('move_or_copy_desc', '¿Deseas mover la canción a la nueva lista o crear una copia?')}
+                  </DialogDescription>
+              </DialogHeader>
+              <div className="mt-4 space-y-4">
+                  {moveCopyDialogProps.targetListId === null && (
+                      <div className="space-y-2">
+                          <Label className="text-foreground">{t('destination_list', 'Lista destino')} <span className="text-destructive">*</span></Label>
+                          <Select onValueChange={(val: string) => setMoveCopyDialogProps(prev => ({...prev, targetListId: val}))}>
+                              <SelectTrigger className="bg-background border-border text-foreground">
+                                  <SelectValue placeholder={t('select_list_placeholder', 'Selecciona la lista destino')} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  {currentProject.songLists.filter((l: SongList) => l.id !== moveCopyDialogProps.sourceListId).map((l: SongList) => (
+                                      <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                                  ))}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-2">
+                      <Button variant="outline" onClick={() => executeMoveCopy('copy')} disabled={!moveCopyDialogProps.targetListId} className="text-foreground border-border hover:bg-accent hover:text-foreground">
+                          {t('copy', 'Copiar')}
+                      </Button>
+                      <Button onClick={() => executeMoveCopy('move')} disabled={!moveCopyDialogProps.targetListId} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                          {t('move', 'Mover')}
+                      </Button>
+                  </div>
+              </div>
+          </DialogContent>
       </Dialog>
       
       {/* Edit Song Dialog */}
