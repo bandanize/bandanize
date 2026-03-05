@@ -31,28 +31,35 @@ interface UserCardModalProps {
 export function UserCardModal({ member, open, onOpenChange }: UserCardModalProps) {
   const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [fetchState, setFetchState] = useState<'idle' | 'loading' | 'error'>('idle');
+  const fetchIdRef = React.useRef(0);
 
-  useEffect(() => {
-    if (!open || !member) return;
-
-    let cancelled = false;
-    setLoading(true);
+  const fetchProfile = React.useCallback((memberId: number) => {
+    const id = ++fetchIdRef.current;
+    setFetchState('loading');
     setProfile(null);
 
-    api.get<UserProfile>(`/users/${member.id}`)
+    api.get<UserProfile>(`/users/${memberId}`)
       .then((res) => {
-        if (!cancelled) setProfile(res.data);
+        if (fetchIdRef.current === id) {
+          setProfile(res.data);
+          setFetchState('idle');
+        }
       })
       .catch(() => {
-        if (!cancelled) console.error('Error fetching user profile');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (fetchIdRef.current === id) {
+          setFetchState('error');
+        }
       });
+  }, []);
 
-    return () => { cancelled = true; };
-  }, [open, member]);
+  useEffect(() => {
+    if (open && member) {
+      fetchProfile(member.id);
+    }
+  }, [open, member, fetchProfile]);
+
+  const loading = fetchState === 'loading';
 
   const initials = member?.name
     ? member.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
