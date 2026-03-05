@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/bandanize/bandanize/compare/api@v1.4.0...api@v1.5.0) (2026-03-05)
+
+
+### Features
+
+* implement project ownership transfer functionality with UI, API, and backend service logic. ([#81](https://github.com/bandanize/bandanize/issues/81)) ([041b37c](https://github.com/bandanize/bandanize/commit/041b37cf8447b860e5abb0d662e38c6f4e41aa18))
+
 ## [1.4.0](https://github.com/bandanize/bandanize/compare/api@v1.3.0...api@v1.4.0) (2026-03-05)
 
 
