@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/bandanize/bandanize/compare/web@v1.12.0...web@v1.12.1) (2026-03-06)
+
+
+### Bug Fixes
+
+* update song-list-band relationships to use ManyToMany for song l… ([#86](https://github.com/bandanize/bandanize/issues/86)) ([ce260a9](https://github.com/bandanize/bandanize/commit/ce260a9105066225af04ad77e41406203ef79521))
+
 ## [1.12.0](https://github.com/bandanize/bandanize/compare/web@v1.11.0...web@v1.12.0) (2026-03-05)
 
 
