@@ -448,14 +448,39 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         const newList: SongList = {
             id: String(duplicatedList.id),
             name: duplicatedList.name,
-            songs: duplicatedList.songs ? duplicatedList.songs.map((s: any) => ({
-              id: String(s.id),
-              name: s.name,
-              originalBand: s.originalBand,
-              songKey: s.songKey,
-              bpm: s.bpm,
-              files: s.files || [],
-              tablatures: s.tablatures || []
+            songs: duplicatedList.songs ? duplicatedList.songs.map((song: {
+              id: number;
+              name: string;
+              originalBand?: string;
+              bpm?: number;
+              songKey?: string;
+              files?: MediaFile[];
+              tablatures?: {
+                id: number;
+                name: string;
+                instrument: string;
+                instrumentIcon: string;
+                tuning: string;
+                content: string;
+                files?: MediaFile[];
+              }[];
+            }) => ({
+              id: String(song.id),
+              name: song.name,
+              bandName: currentProject?.name || '',
+              originalBand: song.originalBand,
+              bpm: song.bpm || 0,
+              key: song.songKey || '',
+              files: song.files || [],
+              tablatures: song.tablatures ? song.tablatures.map((tab) => ({
+                id: String(tab.id),
+                name: tab.name,
+                instrument: tab.instrument,
+                instrumentIcon: tab.instrumentIcon,
+                tuning: tab.tuning,
+                content: tab.content,
+                files: tab.files || []
+              })) : []
             })) : []
         };
         updateLocalProject(projectId, (p) => {
