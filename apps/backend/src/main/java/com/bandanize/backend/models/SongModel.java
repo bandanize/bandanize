@@ -17,13 +17,10 @@ public class SongModel {
     private String songKey; // 'key' is a reserved keyword in some DBs
     private String originalBand;
 
-    @Column(name = "order_index")
-    private Integer orderIndex;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "song_list_id")
+    @JoinColumn(name = "band_id")
     @JsonBackReference
-    private SongListModel songList;
+    private BandModel band;
 
     @OneToMany(mappedBy = "song", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
@@ -73,20 +70,12 @@ public class SongModel {
         this.originalBand = originalBand;
     }
 
-    public Integer getOrderIndex() {
-        return orderIndex;
+    public BandModel getBand() {
+        return band;
     }
 
-    public void setOrderIndex(Integer orderIndex) {
-        this.orderIndex = orderIndex;
-    }
-
-    public SongListModel getSongList() {
-        return songList;
-    }
-
-    public void setSongList(SongListModel songList) {
-        this.songList = songList;
+    public void setBand(BandModel band) {
+        this.band = band;
     }
 
     public List<TablatureModel> getTablatures() {

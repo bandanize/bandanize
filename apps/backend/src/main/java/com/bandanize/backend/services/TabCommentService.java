@@ -48,10 +48,10 @@ public class TabCommentService {
 
         // Detect @mentions and send notifications
         if (message.contains("@")) {
-            // Navigate up: tablature -> song -> songList -> band
+            // Navigate up: tablature -> song -> band
             SongModel song = tablature.getSong();
-            if (song != null && song.getSongList() != null) {
-                BandModel band = song.getSongList().getBand();
+            if (song != null && song.getBand() != null) {
+                BandModel band = song.getBand();
                 if (band != null) {
                     for (UserModel member : band.getUsers()) {
                         if (member.getId().equals(sender.getId()))

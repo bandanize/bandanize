@@ -43,6 +43,10 @@ public class BandModel {
     private List<SongListModel> songLists = new ArrayList<>();
 
     @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
+    private List<SongModel> songs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<ChatMessageModel> chatMessages = new ArrayList<>();
 
@@ -136,6 +140,14 @@ public class BandModel {
 
     public void setSongLists(List<SongListModel> songLists) {
         this.songLists = songLists;
+    }
+
+    public List<SongModel> getSongs() {
+        return songs;
+    }
+
+    public void setSongs(List<SongModel> songs) {
+        this.songs = songs;
     }
 
     public List<ChatMessageModel> getChatMessages() {

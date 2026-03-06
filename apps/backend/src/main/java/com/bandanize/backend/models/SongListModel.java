@@ -20,9 +20,9 @@ public class SongListModel {
     @JsonBackReference
     private BandModel band;
 
-    @OneToMany(mappedBy = "songList", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("orderIndex ASC")
-    @JsonManagedReference
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(name = "songlist_songs", joinColumns = @JoinColumn(name = "song_list_id"), inverseJoinColumns = @JoinColumn(name = "song_id"))
+    @OrderColumn(name = "order_index")
     private List<SongModel> songs = new ArrayList<>();
 
     public Long getId() {
