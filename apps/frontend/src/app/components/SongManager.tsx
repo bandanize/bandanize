@@ -5,13 +5,14 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu';
 
 // React DnD
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -116,47 +117,50 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
         </p>
       </div>
       
-      {/* Move/Copy Button */}
-      <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/20 transition-all shrink-0"
-          onClick={(e: React.MouseEvent) => {
+      {/* Actions Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-all shrink-0 data-[state=open]:text-foreground"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            <MoreVertical className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+          <DropdownMenuItem
+            onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
               onMoveCopy(listId, song);
-          }}
-          title={t('move_copy', 'Mover o Copiar')}
-      >
-          <ArrowRightLeft className="size-4" />
-      </Button>
-
-      {/* Edit Button */}
-      <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0"
-          onClick={(e: React.MouseEvent) => {
+            }}
+          >
+            <ArrowRightLeft className="mr-2 size-4" />
+            {t('move_copy', 'Mover o Copiar')}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
               onEdit(listId, song);
-          }}
-          title={t('edit', 'Editar')}
-      >
-          <Edit className="size-4" />
-      </Button>
-
-      {/* Delete Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 transition-all shrink-0"
-        onClick={(e: React.MouseEvent) => {
-            e.stopPropagation();
-            onDelete(listId, song.id);
-        }}
-        title={t('delete', 'Eliminar')}
-      >
-        <Trash2 className="size-4" />
-      </Button>
+            }}
+          >
+            <Edit className="mr-2 size-4" />
+            {t('edit', 'Editar')}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              onDelete(listId, song.id);
+            }}
+          >
+            <Trash2 className="mr-2 size-4" />
+            {t('delete', 'Eliminar')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };
@@ -317,52 +321,37 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                 <span className="text-sm text-muted-foreground">
                     {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
                 </span>
-                {/* Export List Button */}
-                <div
-                    role="button"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                    onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation();
-                        onExport(list);
-                    }}
-                    title={t('export_list', 'Copiar lista')}
-                >
-                    <Share className="size-4" />
-                </div>
-                {/* Duplicate List Button */}
-                <div
-                    role="button"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-green-500 hover:bg-green-500/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                    onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation();
-                        onDuplicate(list);
-                    }}
-                    title={t('duplicate', 'Duplicar')}
-                >
-                    <Copy className="size-4" />
-                </div>
-                {/* Edit List Button */}
-                <div
-                    role="button"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                    onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation();
-                        onEdit(list);
-                    }}
-                >
-                    <Edit className="size-4" />
-                </div>
-                {/* Delete List Button */}
-                <div
-                    role="button"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/20 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
-                    onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation();
-                        onDelete(list.id);
-                    }}
-                >
-                    <Trash2 className="size-4" />
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground opacity-100 lg:opacity-0 lg:group-hover:opacity-100 data-[state=open]:opacity-100"
+                            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                        >
+                            <MoreVertical className="size-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={(e: React.MouseEvent) => { e.stopPropagation(); onExport(list); }}>
+                            <Share className="mr-2 size-4" />
+                            {t('export_list', 'Copiar lista')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDuplicate(list); }}>
+                            <Copy className="mr-2 size-4" />
+                            {t('duplicate', 'Duplicar')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e: React.MouseEvent) => { e.stopPropagation(); onEdit(list); }}>
+                            <Edit className="mr-2 size-4" />
+                            {t('edit', 'Editar')}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem variant="destructive" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(list.id); }}>
+                            <Trash2 className="mr-2 size-4" />
+                            {t('delete', 'Eliminar')}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
     );
