@@ -83,14 +83,13 @@ public class SongService {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        song.setSongList(list);
-
-        // Set default order index to current size (append to end)
-        if (song.getOrderIndex() == null) {
-            song.setOrderIndex(list.getSongs().size());
-        }
+        song.setBand(list.getBand());
 
         SongModel savedSong = songRepository.save(song);
+
+        list.getSongs().add(savedSong);
+        songListRepository.save(list);
+
         notificationService.createSongNotification(list.getBand(), user, savedSong);
         return savedSong;
     }
@@ -138,102 +137,54 @@ public class SongService {
         songRepository.delete(song);
     }
 
-    public SongModel moveSong(Long songId, Long targetListId) {
+    public SongModel moveSong(Long songId, Long sourceListId, Long targetListId) {
+        SongModel song = songRepository.findById(songId)
+                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        SongListModel sourceList = songListRepository.findById(sourceListId)
+                .orElseThrow(() -> new ResourceNotFoundException("Source SongList not found"));
+        SongListModel targetList = songListRepository.findById(targetListId)
+                .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
+
+        sourceList.getSongs().remove(song);
+        targetList.getSongs().add(song);
+
+        songListRepository.save(sourceList);
+        songListRepository.save(targetList);
+
+        return song;
+    }
+
+    public SongModel copySong(Long songId, Long sourceListId, Long targetListId) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
         SongListModel targetList = songListRepository.findById(targetListId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
 
-        song.setSongList(targetList);
-        song.setOrderIndex(targetList.getSongs().size());
-
-        return songRepository.saveAndFlush(song);
-    }
-
-    public SongModel copySong(Long songId, Long targetListId) {
-        SongModel originalSong = songRepository.findById(songId)
-                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
-        SongListModel targetList = songListRepository.findById(targetListId)
-                .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
-
-        SongModel copiedSong = new SongModel();
-        copiedSong.setName(originalSong.getName());
-        copiedSong.setBpm(originalSong.getBpm());
-        copiedSong.setSongKey(originalSong.getSongKey());
-        copiedSong.setOriginalBand(originalSong.getOriginalBand());
-        copiedSong.setSongList(targetList);
-        copiedSong.setOrderIndex(targetList.getSongs().size());
-
-        // Copy files
-        for (MediaFile file : originalSong.getFiles()) {
-            MediaFile copiedFile = duplicateMediaFile(file);
-            copiedSong.getFiles().add(copiedFile);
+        if (!targetList.getSongs().contains(song)) {
+            targetList.getSongs().add(song);
+            songListRepository.save(targetList);
         }
 
-        // Save copied song first to attach to tabs
-        SongModel savedCopiedSong = songRepository.save(copiedSong);
-
-        // Copy tablatures
-        for (TablatureModel tab : originalSong.getTablatures()) {
-            TablatureModel copiedTab = new TablatureModel();
-            copiedTab.setName(tab.getName());
-            copiedTab.setInstrument(tab.getInstrument());
-            copiedTab.setInstrumentIcon(tab.getInstrumentIcon());
-            copiedTab.setTuning(tab.getTuning());
-            copiedTab.setContent(tab.getContent());
-            copiedTab.setSong(savedCopiedSong);
-
-            for (MediaFile file : tab.getFiles()) {
-                MediaFile copiedFile = duplicateMediaFile(file);
-                copiedTab.getFiles().add(copiedFile);
-            }
-
-            savedCopiedSong.getTablatures().add(tablatureRepository.save(copiedTab));
-        }
-
-        return songRepository.saveAndFlush(savedCopiedSong);
-    }
-
-    private MediaFile duplicateMediaFile(MediaFile original) {
-        String url = original.getUrl();
-        String copiedUrl = url;
-        try {
-            String[] parts = url.split("/");
-            if (parts.length >= 2) {
-                String filename = parts[parts.length - 1];
-                String folder = parts[parts.length - 2];
-                String newFilename = storageService.copyFile(filename, folder);
-                // Reconstruct URL
-                copiedUrl = url.replace(filename, newFilename);
-            }
-        } catch (Exception e) {
-            logger.warn("Failed to copy file in storage: {}", url, e);
-            // We still proceed, but the new file URL might be broken if the copy failed.
-        }
-        return new MediaFile(original.getName(), original.getType(), copiedUrl);
+        return song;
     }
 
     public void reorderSongs(Long listId, List<Long> songIds) {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
 
-        // Setup a map for faster lookup or just iterate if list is small.
-        // Lists are usually small (< 100 songs), so iterating is fine but let's be
-        // safe.
-        // Actually we need to update the entities.
+        List<SongModel> currentSongs = list.getSongs();
+        java.util.Map<Long, SongModel> songMap = currentSongs.stream()
+                .collect(java.util.stream.Collectors.toMap(SongModel::getId, s -> s));
 
-        List<SongModel> songs = list.getSongs();
-        for (int i = 0; i < songIds.size(); i++) {
-            Long songId = songIds.get(i);
-            // find the song in the list
-            for (SongModel s : songs) {
-                if (s.getId().equals(songId)) {
-                    s.setOrderIndex(i);
-                    break;
-                }
+        java.util.List<SongModel> reordered = new java.util.ArrayList<>();
+        for (Long id : songIds) {
+            if (songMap.containsKey(id)) {
+                reordered.add(songMap.get(id));
             }
         }
 
+        list.getSongs().clear();
+        list.getSongs().addAll(reordered);
         songListRepository.save(list);
     }
 

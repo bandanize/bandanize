@@ -543,10 +543,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       
       updateLocalProject(projectId, (p) => ({
           ...p,
-          songLists: p.songLists.map(l => l.id === listId ? {
+          songLists: p.songLists.map(l => ({
             ...l,
             songs: l.songs.map(s => s.id === songId ? { ...s, ...data } : s)
-          } : l)
+          }))
         }));
     } catch (error) { 
         console.error("Error updating song", error); 
@@ -559,10 +559,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         await api.delete(`/songs/${songId}`);
         updateLocalProject(projectId, (p) => ({
           ...p,
-          songLists: p.songLists.map(l => l.id === listId ? {
+          songLists: p.songLists.map(l => ({
             ...l,
             songs: l.songs.filter(s => s.id !== songId)
-          } : l)
+          }))
         }));
     } catch (error) { 
         console.error("Error deleting song", error); 
@@ -572,7 +572,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const moveSongToList = async (projectId: string, listId: string, songId: string, targetListId: string) => {
       try {
-          const response = await api.put(`/songs/${songId}/move`, null, { params: { targetListId } });
+          const response = await api.put(`/songs/${songId}/move`, null, { params: { sourceListId: listId, targetListId } });
           const updatedSong = response.data;
           
           updateLocalProject(projectId, (p) => {
@@ -606,7 +606,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const copySongToList = async (projectId: string, listId: string, songId: string, targetListId: string) => {
       try {
-          const response = await api.post(`/songs/${songId}/copy`, null, { params: { targetListId } });
+          const response = await api.post(`/songs/${songId}/copy`, null, { params: { sourceListId: listId, targetListId } });
           const copiedSongData = response.data;
           
           const sourceList = projects.find(p => p.id === projectId)?.songLists.find(l => l.id === listId);
@@ -657,13 +657,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         // Update local state
          updateLocalProject(projectId, (p) => ({
           ...p,
-          songLists: p.songLists.map(l => l.id === listId ? {
+          songLists: p.songLists.map(l => ({
             ...l,
             songs: l.songs.map(s => s.id === songId ? { 
                 ...s, 
                 files: updatedSong.files || []
             } : s)
-          } : l)
+          }))
         }));
     } catch (error) { 
         console.error("Error adding song file", error); 
@@ -687,13 +687,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         
          updateLocalProject(projectId, (p) => ({
           ...p,
-          songLists: p.songLists.map(l => l.id === listId ? {
+          songLists: p.songLists.map(l => ({
             ...l,
             songs: l.songs.map(s => s.id === songId ? { 
                 ...s, 
                 tablatures: [...s.tablatures, newTab]
             } : s)
-          } : l)
+          }))
         }));
     } catch (error) { 
         console.error("Error creating tablature", error); 
@@ -706,13 +706,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           await api.put(`/tabs/${tabId}`, data);
            updateLocalProject(projectId, (p) => ({
             ...p,
-            songLists: p.songLists.map(l => l.id === listId ? {
+            songLists: p.songLists.map(l => ({
                 ...l,
                 songs: l.songs.map(s => s.id === songId ? { 
                     ...s, 
                     tablatures: s.tablatures.map(t => t.id === tabId ? { ...t, ...data } : t)
                 } : s)
-            } : l)
+            }))
             }));
       } catch (error) { 
           console.error("Error updating tablature", error); 
@@ -725,13 +725,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           await api.delete(`/tabs/${tabId}`);
            updateLocalProject(projectId, (p) => ({
             ...p,
-            songLists: p.songLists.map(l => l.id === listId ? {
+            songLists: p.songLists.map(l => ({
                 ...l,
                 songs: l.songs.map(s => s.id === songId ? { 
                     ...s, 
                     tablatures: s.tablatures.filter(t => t.id !== tabId)
                 } : s)
-            } : l)
+            }))
             }));
       } catch (error) { 
           console.error("Error deleting tablature", error); 
@@ -746,7 +746,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         
          updateLocalProject(projectId, (p) => ({
             ...p,
-            songLists: p.songLists.map(l => l.id === listId ? {
+            songLists: p.songLists.map(l => ({
                 ...l,
                 songs: l.songs.map(s => s.id === songId ? { 
                     ...s, 
@@ -755,7 +755,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                         files: updatedTab.files || []
                     } : t)
                 } : s)
-            } : l)
+            }))
         }));
     } catch (error) { 
         console.error("Error adding tablature file", error); 
@@ -773,13 +773,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           
            updateLocalProject(projectId, (p) => ({
               ...p,
-              songLists: p.songLists.map(l => l.id === listId ? {
+              songLists: p.songLists.map(l => ({
                 ...l,
                 songs: l.songs.map(s => s.id === songId ? { 
                     ...s, 
                     files: updatedSong.files || []
                 } : s)
-              } : l)
+              }))
             }));
       } catch (error) { 
           console.error("Error deleting song file", error); 
@@ -794,7 +794,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           
            updateLocalProject(projectId, (p) => ({
               ...p,
-              songLists: p.songLists.map(l => l.id === listId ? {
+              songLists: p.songLists.map(l => ({
                   ...l,
                   songs: l.songs.map(s => s.id === songId ? { 
                       ...s, 
@@ -803,7 +803,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                           files: updatedTab.files || []
                       } : t)
                   } : s)
-              } : l)
+              }))
           }));
       } catch (error) { 
           console.error("Error deleting tablature file", error); 

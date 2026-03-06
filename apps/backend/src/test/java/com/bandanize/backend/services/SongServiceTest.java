@@ -77,7 +77,7 @@ class SongServiceTest {
         song.setBpm(120);
         song.setSongKey("Am");
         song.setOriginalBand("Original Band");
-        song.setSongList(songList);
+        song.setBand(band);
         song.setTablatures(new ArrayList<>());
         song.setFiles(new ArrayList<>());
 
@@ -204,8 +204,7 @@ class SongServiceTest {
         SongModel result = songService.addSong(100L, 1L, details);
 
         assertEquals("New Song", result.getName());
-        assertEquals(songList, result.getSongList());
-        assertEquals(0, result.getOrderIndex()); // default
+        assertEquals(band, result.getBand());
         verify(notificationService).createSongNotification(eq(band), eq(user), any());
     }
 
@@ -294,13 +293,10 @@ class SongServiceTest {
     void reorderSongs_UpdatesOrderIndexes() {
         SongModel song1 = new SongModel();
         song1.setId(1L);
-        song1.setOrderIndex(0);
         SongModel song2 = new SongModel();
         song2.setId(2L);
-        song2.setOrderIndex(1);
         SongModel song3 = new SongModel();
         song3.setId(3L);
-        song3.setOrderIndex(2);
 
         songList.setSongs(new ArrayList<>(List.of(song1, song2, song3)));
 
@@ -309,9 +305,9 @@ class SongServiceTest {
         // Reverse the order
         songService.reorderSongs(100L, List.of(3L, 2L, 1L));
 
-        assertEquals(2, song1.getOrderIndex());
-        assertEquals(1, song2.getOrderIndex());
-        assertEquals(0, song3.getOrderIndex());
+        assertEquals(3L, songList.getSongs().get(0).getId());
+        assertEquals(2L, songList.getSongs().get(1).getId());
+        assertEquals(1L, songList.getSongs().get(2).getId());
         verify(songListRepository).save(songList);
     }
 

@@ -90,13 +90,15 @@ public class SongController {
     }
 
     @PutMapping("/songs/{songId}/move")
-    public ResponseEntity<SongModel> moveSong(@PathVariable Long songId, @RequestParam Long targetListId) {
-        return ResponseEntity.ok(songService.moveSong(songId, targetListId));
+    public ResponseEntity<SongModel> moveSong(@PathVariable Long songId, @RequestParam Long sourceListId,
+            @RequestParam Long targetListId) {
+        return ResponseEntity.ok(songService.moveSong(songId, sourceListId, targetListId));
     }
 
     @PostMapping("/songs/{songId}/copy")
-    public ResponseEntity<SongModel> copySong(@PathVariable Long songId, @RequestParam Long targetListId) {
-        return ResponseEntity.ok(songService.copySong(songId, targetListId));
+    public ResponseEntity<SongModel> copySong(@PathVariable Long songId, @RequestParam Long sourceListId,
+            @RequestParam Long targetListId) {
+        return ResponseEntity.ok(songService.copySong(songId, sourceListId, targetListId));
     }
 
     // --- Tablatures ---
