@@ -84,9 +84,9 @@ public class SongController {
     }
 
     @DeleteMapping("/songs/{songId}")
-    public ResponseEntity<Void> deleteSong(@PathVariable Long songId) {
-        songService.deleteSong(songId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> deleteSong(@PathVariable Long songId, @RequestParam Long listId) {
+        songService.removeSongFromList(songId, listId);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/songs/{songId}/move")

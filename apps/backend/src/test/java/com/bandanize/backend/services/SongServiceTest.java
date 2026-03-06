@@ -270,7 +270,7 @@ class SongServiceTest {
     }
 
     @Test
-    void deleteSong_CleansUpFilesAndDeletes() {
+    void removeSongFromList_CleansUpFilesAndDeletesIfOrphaned() {
         MediaFile sf = new MediaFile("song.mp3", "audio/mpeg", "/uploads/songs/song.mp3");
         song.getFiles().add(sf);
 
@@ -278,13 +278,20 @@ class SongServiceTest {
         tablature.getFiles().add(tf);
         song.getTablatures().add(tablature);
 
-        when(songRepository.findById(200L)).thenReturn(Optional.of(song));
+        songList.getSongs().add(song);
+        band.getSongLists().add(songList);
+        song.setBand(band);
 
-        songService.deleteSong(200L);
+        when(songRepository.findById(200L)).thenReturn(Optional.of(song));
+        when(songListRepository.findById(100L)).thenReturn(Optional.of(songList));
+
+        songService.removeSongFromList(200L, 100L);
 
         verify(storageService).deleteFile("song.mp3", "songs");
         verify(storageService).deleteFile("tab.pdf", "tabs");
         verify(songRepository).delete(song);
+        verify(songListRepository).save(songList);
+        assertFalse(songList.getSongs().contains(song));
     }
 
     // ── Reorder ─────────────────────────────────────────────────────

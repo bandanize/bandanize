@@ -24,6 +24,9 @@ public class TablatureModel {
     @JsonBackReference
     private SongModel song;
 
+    @OneToMany(mappedBy = "tablature", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TabCommentModel> comments = new ArrayList<>();
+
     @ElementCollection
     @CollectionTable(name = "tablature_files", joinColumns = @JoinColumn(name = "tablature_id"))
     private List<MediaFile> files = new ArrayList<>();

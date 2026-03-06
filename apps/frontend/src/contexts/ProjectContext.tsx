@@ -556,13 +556,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const deleteSong = async (projectId: string, listId: string, songId: string) => {
     try {
-        await api.delete(`/songs/${songId}`);
+        await api.delete(`/songs/${songId}`, { params: { listId } });
         updateLocalProject(projectId, (p) => ({
           ...p,
-          songLists: p.songLists.map(l => ({
+          songLists: p.songLists.map(l => l.id === listId ? {
             ...l,
             songs: l.songs.filter(s => s.id !== songId)
-          }))
+          } : l)
         }));
     } catch (error) { 
         console.error("Error deleting song", error); 

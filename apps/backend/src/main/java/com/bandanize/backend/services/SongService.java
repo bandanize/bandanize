@@ -128,13 +128,28 @@ public class SongService {
         return songRepository.saveAndFlush(song);
     }
 
-    public void deleteSong(Long songId) {
+    @org.springframework.transaction.annotation.Transactional
+    public void removeSongFromList(Long songId, Long listId) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        SongListModel targetList = songListRepository.findById(listId)
+                .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
 
-        cleanupSongFiles(song);
+        targetList.getSongs().remove(song);
+        songListRepository.save(targetList);
 
-        songRepository.delete(song);
+        boolean isOrphaned = true;
+        for (SongListModel sl : song.getBand().getSongLists()) {
+            if (sl.getSongs().contains(song)) {
+                isOrphaned = false;
+                break;
+            }
+        }
+
+        if (isOrphaned) {
+            cleanupSongFiles(song);
+            songRepository.delete(song);
+        }
     }
 
     public SongModel moveSong(Long songId, Long sourceListId, Long targetListId) {
