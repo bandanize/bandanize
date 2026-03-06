@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/bandanize/bandanize/compare/api@v1.6.1...api@v1.7.0) (2026-03-06)
+
+
+### Features
+
+* implement song list duplication functionality across frontend a… ([#89](https://github.com/bandanize/bandanize/issues/89)) ([5951ee2](https://github.com/bandanize/bandanize/commit/5951ee287b142f572c4d4a1658e7686adfd892a6))
+
 ## [1.6.1](https://github.com/bandanize/bandanize/compare/api@v1.6.0...api@v1.6.1) (2026-03-06)
 
 

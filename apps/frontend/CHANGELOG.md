@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/bandanize/bandanize/compare/web@v1.12.1...web@v1.13.0) (2026-03-06)
+
+
+### Features
+
+* implement song list duplication functionality across frontend a… ([#89](https://github.com/bandanize/bandanize/issues/89)) ([5951ee2](https://github.com/bandanize/bandanize/commit/5951ee287b142f572c4d4a1658e7686adfd892a6))
+
 ## [1.12.1](https://github.com/bandanize/bandanize/compare/web@v1.12.0...web@v1.12.1) (2026-03-06)
 
 
