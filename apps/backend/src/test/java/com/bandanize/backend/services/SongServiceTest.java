@@ -186,6 +186,24 @@ class SongServiceTest {
         verify(songListRepository).delete(songList);
     }
 
+    @Test
+    void duplicateSongList_Success() {
+        songList.setBand(band);
+        songList.getSongs().add(song);
+
+        when(songListRepository.findById(100L)).thenReturn(Optional.of(songList));
+        when(songListRepository.findMaxOrderIndexByBandId(10L)).thenReturn(2);
+        when(songListRepository.save(any(SongListModel.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        SongListModel result = songService.duplicateSongList(100L);
+
+        assertEquals("Setlist 1 (Copy)", result.getName());
+        assertEquals(3, result.getOrderIndex());
+        assertEquals(band, result.getBand());
+        assertEquals(1, result.getSongs().size());
+        assertTrue(result.getSongs().contains(song));
+    }
+
     // ── Song CRUD ───────────────────────────────────────────────────
 
     @Test

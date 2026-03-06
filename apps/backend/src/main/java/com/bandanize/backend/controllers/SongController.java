@@ -162,4 +162,10 @@ public class SongController {
         tabCommentService.deleteComment(commentId, getCurrentUserId(principal));
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/songlists/{listId}/duplicate")
+    public ResponseEntity<SongListModel> duplicateSongList(@PathVariable Long listId) {
+        SongListModel duplicateList = songService.duplicateSongList(listId);
+        return ResponseEntity.ok(duplicateList);
+    }
 }

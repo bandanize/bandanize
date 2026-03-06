@@ -5,7 +5,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
@@ -228,11 +228,12 @@ interface SortableListItemProps {
     onSelect: (listId: string) => void;
     onEdit: (list: SongList) => void;
     onDelete: (listId: string) => void;
+    onDuplicate: (list: SongList) => void;
     onExport: (list: SongList) => void;
     onSongDropOnList: (sourceListId: string, songId: string, targetListId: string) => void;
 }
 
-const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect, onEdit, onDelete, onExport, onSongDropOnList }: SortableListItemProps) => {
+const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect, onEdit, onDelete, onDuplicate, onExport, onSongDropOnList }: SortableListItemProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
 
@@ -328,6 +329,18 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                 >
                     <Share className="size-4" />
                 </div>
+                {/* Duplicate List Button */}
+                <div
+                    role="button"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-green-500 hover:bg-green-500/10 flex items-center justify-center rounded-md cursor-pointer transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                    onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onDuplicate(list);
+                    }}
+                    title={t('duplicate', 'Duplicar')}
+                >
+                    <Copy className="size-4" />
+                </div>
                 {/* Edit List Button */}
                 <div
                     role="button"
@@ -358,7 +371,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
 // --- Main SongManager Component ---
 
 export function SongManager() {
-  const { currentProject, createSongList, updateSongList, deleteSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong, moveSongToList, copySongToList } = useProjects();
+  const { currentProject, createSongList, updateSongList, deleteSongList, duplicateSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong, moveSongToList, copySongToList } = useProjects();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -559,6 +572,16 @@ export function SongManager() {
     }
   };
 
+  const handleDuplicateList = async (list: SongList) => {
+      if (!currentProject) return;
+      try {
+          await duplicateSongList(currentProject.id, list.id);
+          toast.success(t('songlist_duplicated', 'Lista duplicada correctamente.'));
+      } catch {
+          toast.error(t('error_duplicating_list', 'Error al duplicar la lista'));
+      }
+  };
+
   const handleDeleteList = (listId: string) => {
     if (!currentProject) return;
     if (confirm(t('delete_list_confirmation', '¿Estás seguro de que quieres eliminar esta lista? Se eliminarán todas las canciones.'))) {
@@ -723,6 +746,7 @@ export function SongManager() {
                   onSelect={handleSelectList}
                   onEdit={handleEditListClick}
                   onDelete={handleDeleteList}
+                  onDuplicate={handleDuplicateList}
                   onExport={handleExportList}
                   onSongDropOnList={handleSongDropOnList}
                 />

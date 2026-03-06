@@ -341,4 +341,23 @@ public class SongService {
             throw new RuntimeException("Failed to delete file from storage: " + e.getMessage());
         }
     }
+
+    @org.springframework.transaction.annotation.Transactional
+    public SongListModel duplicateSongList(Long listId) {
+        SongListModel originalList = songListRepository.findById(listId)
+                .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
+
+        SongListModel newList = new SongListModel();
+        newList.setName(originalList.getName() + " (Copy)");
+        newList.setBand(originalList.getBand());
+
+        // Place the duplicate after the original or at the end
+        Integer maxOrderIndex = songListRepository.findMaxOrderIndexByBandId(originalList.getBand().getId());
+        newList.setOrderIndex(maxOrderIndex != null ? maxOrderIndex + 1 : 0);
+
+        // Copy exactly the same song references
+        newList.getSongs().addAll(originalList.getSongs());
+
+        return songListRepository.save(newList);
+    }
 }

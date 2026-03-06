@@ -127,6 +127,7 @@ interface ProjectContextType {
   createSongList: (projectId: string, name: string) => void;
   updateSongList: (projectId: string, listId: string, name: string) => void;
   deleteSongList: (projectId: string, listId: string) => void;
+  duplicateSongList: (projectId: string, listId: string) => Promise<void>;
   reorderSongLists: (projectId: string, listIds: string[]) => void;
   reorderSongs: (projectId: string, listId: string, songIds: string[]) => void;
   createSong: (projectId: string, listId: string, song: Omit<Song, 'id' | 'tablatures' | 'files' | 'bandName'>) => void;
@@ -440,6 +441,65 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const duplicateSongList = async (projectId: string, listId: string) => {
+    try {
+        const response = await api.post(`/songlists/${listId}/duplicate`);
+        const duplicatedList = response.data;
+        const newList: SongList = {
+            id: String(duplicatedList.id),
+            name: duplicatedList.name,
+            songs: duplicatedList.songs ? duplicatedList.songs.map((song: {
+              id: number;
+              name: string;
+              originalBand?: string;
+              bpm?: number;
+              songKey?: string;
+              files?: MediaFile[];
+              tablatures?: {
+                id: number;
+                name: string;
+                instrument: string;
+                instrumentIcon: string;
+                tuning: string;
+                content: string;
+                files?: MediaFile[];
+              }[];
+            }) => ({
+              id: String(song.id),
+              name: song.name,
+              bandName: currentProject?.name || '',
+              originalBand: song.originalBand,
+              bpm: song.bpm || 0,
+              key: song.songKey || '',
+              files: song.files || [],
+              tablatures: song.tablatures ? song.tablatures.map((tab) => ({
+                id: String(tab.id),
+                name: tab.name,
+                instrument: tab.instrument,
+                instrumentIcon: tab.instrumentIcon,
+                tuning: tab.tuning,
+                content: tab.content,
+                files: tab.files || []
+              })) : []
+            })) : []
+        };
+        updateLocalProject(projectId, (p) => {
+            // Place it after the original one if possible
+            const clonedLists = [...p.songLists];
+            const originalIndex = clonedLists.findIndex(l => l.id === listId);
+            if (originalIndex !== -1) {
+                clonedLists.splice(originalIndex + 1, 0, newList);
+            } else {
+                clonedLists.push(newList);
+            }
+            return { ...p, songLists: clonedLists };
+        });
+    } catch (error) {
+        console.error("Error duplicating song list", error);
+        throw error;
+    }
+  };
+
   const deleteSongList = async (projectId: string, listId: string) => {
     try {
         await api.delete(`/songlists/${listId}`);
@@ -620,7 +680,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               bpm: copiedSongData.bpm,
               key: copiedSongData.songKey,
               files: copiedSongData.files || [],
-              tablatures: copiedSongData.tablatures ? copiedSongData.tablatures.map((tab: any) => ({
+              tablatures: copiedSongData.tablatures ? copiedSongData.tablatures.map((tab: {
+                  id: number;
+                  name: string;
+                  instrument: string;
+                  instrumentIcon: string;
+                  tuning: string;
+                  content: string;
+                  files?: MediaFile[];
+              }) => ({
                   id: String(tab.id),
                   name: tab.name,
                   instrument: tab.instrument,
@@ -842,6 +910,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       createSongList,
       updateSongList,
       deleteSongList,
+      duplicateSongList,
       reorderSongLists,
       reorderSongs,
       createSong,
