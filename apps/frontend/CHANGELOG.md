@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/bandanize/bandanize/compare/web@v1.13.0...web@v1.14.0) (2026-03-06)
+
+
+### Features
+
+* Consolidate song, song list, and member actions into dropdown menus for improved UI. ([#92](https://github.com/bandanize/bandanize/issues/92)) ([b753fda](https://github.com/bandanize/bandanize/commit/b753fda2d85ffdb416dec91dd7b1d4861229dc8a))
+
 ## [1.13.0](https://github.com/bandanize/bandanize/compare/web@v1.12.1...web@v1.13.0) (2026-03-06)
 
 
