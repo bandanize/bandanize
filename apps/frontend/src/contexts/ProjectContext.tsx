@@ -680,7 +680,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               bpm: copiedSongData.bpm,
               key: copiedSongData.songKey,
               files: copiedSongData.files || [],
-              tablatures: copiedSongData.tablatures ? copiedSongData.tablatures.map((tab: any) => ({
+              tablatures: copiedSongData.tablatures ? copiedSongData.tablatures.map((tab: {
+                  id: number;
+                  name: string;
+                  instrument: string;
+                  instrumentIcon: string;
+                  tuning: string;
+                  content: string;
+                  files?: MediaFile[];
+              }) => ({
                   id: String(tab.id),
                   name: tab.name,
                   instrument: tab.instrument,

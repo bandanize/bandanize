@@ -577,7 +577,7 @@ export function SongManager() {
       try {
           await duplicateSongList(currentProject.id, list.id);
           toast.success(t('songlist_duplicated', 'Lista duplicada correctamente.'));
-      } catch (error) {
+      } catch {
           toast.error(t('error_duplicating_list', 'Error al duplicar la lista'));
       }
   };
