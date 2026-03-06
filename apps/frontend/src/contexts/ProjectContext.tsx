@@ -127,6 +127,7 @@ interface ProjectContextType {
   createSongList: (projectId: string, name: string) => void;
   updateSongList: (projectId: string, listId: string, name: string) => void;
   deleteSongList: (projectId: string, listId: string) => void;
+  duplicateSongList: (projectId: string, listId: string) => Promise<void>;
   reorderSongLists: (projectId: string, listIds: string[]) => void;
   reorderSongs: (projectId: string, listId: string, songIds: string[]) => void;
   createSong: (projectId: string, listId: string, song: Omit<Song, 'id' | 'tablatures' | 'files' | 'bandName'>) => void;
@@ -437,6 +438,40 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     } catch(error) { 
         console.error("Error updating song list", error); 
         throw error; 
+    }
+  };
+
+  const duplicateSongList = async (projectId: string, listId: string) => {
+    try {
+        const response = await api.post(`/songlists/${listId}/duplicate`);
+        const duplicatedList = response.data;
+        const newList: SongList = {
+            id: String(duplicatedList.id),
+            name: duplicatedList.name,
+            songs: duplicatedList.songs ? duplicatedList.songs.map((s: any) => ({
+              id: String(s.id),
+              name: s.name,
+              originalBand: s.originalBand,
+              songKey: s.songKey,
+              bpm: s.bpm,
+              files: s.files || [],
+              tablatures: s.tablatures || []
+            })) : []
+        };
+        updateLocalProject(projectId, (p) => {
+            // Place it after the original one if possible
+            const clonedLists = [...p.songLists];
+            const originalIndex = clonedLists.findIndex(l => l.id === listId);
+            if (originalIndex !== -1) {
+                clonedLists.splice(originalIndex + 1, 0, newList);
+            } else {
+                clonedLists.push(newList);
+            }
+            return { ...p, songLists: clonedLists };
+        });
+    } catch (error) {
+        console.error("Error duplicating song list", error);
+        throw error;
     }
   };
 
@@ -842,6 +877,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       createSongList,
       updateSongList,
       deleteSongList,
+      duplicateSongList,
       reorderSongLists,
       reorderSongs,
       createSong,
