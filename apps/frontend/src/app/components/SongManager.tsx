@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu';
+import { Badge } from '@/app/components/ui/badge';
 
 // React DnD
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -46,9 +47,10 @@ interface SortableSongRowProps {
   onDelete: (listId: string, songId: string) => void;
   onEdit: (listId: string, song: Song) => void;
   onMoveCopy: (listId: string, song: Song) => void;
+  isDuplicate: boolean;
 }
 
-const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete, onEdit, onMoveCopy }: SortableSongRowProps) => {
+const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate }: SortableSongRowProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
@@ -109,11 +111,18 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
         className="flex-1 min-w-0 cursor-pointer"
         onClick={() => onSelect(listId, song)}
       >
-        <p className="font-medium text-foreground text-sm truncate">{song.name}</p>
+        <div className="flex items-center gap-2">
+            <p className="font-medium text-foreground text-sm truncate">{song.name}</p>
+            {isDuplicate && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border font-medium">
+                    {t('duplicate', 'Duplicado')}
+                </Badge>
+            )}
+        </div>
         <p className="text-xs text-muted-foreground font-medium truncate">
           {song.originalBand || song.bandName}
-          {song.bpm && ` • ${song.bpm} BPM`}
-          {song.key && ` • ${song.key}`}
+          {(song.bpm !== undefined && song.bpm !== null && song.bpm !== 0) ? ` • ${song.bpm} BPM` : ''}
+          {song.key ? ` • ${song.key}` : ''}
         </p>
       </div>
       
@@ -175,9 +184,10 @@ interface SortableSongListProps {
     onDeleteSong: (listId: string, songId: string) => void;
     onEditSong: (listId: string, song: Song) => void;
     onMoveCopySong: (listId: string, song: Song) => void;
+    duplicateSongIds: Set<string>;
 }
 
-const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong, onMoveCopySong }: SortableSongListProps) => {
+const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong, onMoveCopySong, duplicateSongIds }: SortableSongListProps) => {
     const [items, setItems] = useState<Song[]>(songs);
 
     useEffect(() => {
@@ -215,6 +225,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
                     onDelete={onDeleteSong} 
                     onEdit={onEditSong}
                     onMoveCopy={onMoveCopySong}
+                    isDuplicate={duplicateSongIds.has(song.id)}
                 />
             ))}
         </div>
@@ -360,7 +371,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
 // --- Main SongManager Component ---
 
 export function SongManager() {
-  const { currentProject, createSongList, updateSongList, deleteSongList, duplicateSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong, moveSongToList, copySongToList } = useProjects();
+  const { currentProject, createSongList, updateSongList, deleteSongList, duplicateSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong, moveSongToList, copySongToList, replicateSongInList } = useProjects();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -487,6 +498,12 @@ export function SongManager() {
   const [editListDialog, setEditListDialog] = useState(false);
   const [listToEdit, setListToEdit] = useState<SongList | null>(null);
   const [editListName, setEditListName] = useState('');
+  
+  // --- Duplicate List Dialog ---
+  const [duplicateListDialogProps, setDuplicateListDialogProps] = useState<{
+      isOpen: boolean;
+      list: SongList | null;
+  }>({ isOpen: false, list: null });
 
   // --- Move/Copy Dialog State ---
   const [moveCopyDialogProps, setMoveCopyDialogProps] = useState<{
@@ -514,7 +531,7 @@ export function SongManager() {
       });
   };
 
-  const executeMoveCopy = async (action: 'move' | 'copy') => {
+  const executeMoveCopy = async (action: 'move' | 'copy' | 'replicate') => {
       if (!currentProject) return;
       const { sourceListId, songId, targetListId } = moveCopyDialogProps;
       if (!targetListId) return; // Prevent if not selected
@@ -527,9 +544,12 @@ export function SongManager() {
               if (selectedSongId === songId && selectedListId === sourceListId) {
                   handleSelectList(targetListId);
               }
-          } else {
+          } else if (action === 'copy') {
               await copySongToList(currentProject.id, sourceListId, songId, targetListId);
-              toast.success(t('song_copied', 'Canción copiada'));
+              toast.success(t('song_linked', 'Canción vinculada'));
+          } else if (action === 'replicate') {
+              await replicateSongInList(currentProject.id, sourceListId, songId, targetListId);
+              toast.success(t('song_copied', 'Canción copiada (duplicada)'));
           }
       } catch (error) {
           console.error(error);
@@ -561,13 +581,20 @@ export function SongManager() {
     }
   };
 
-  const handleDuplicateList = async (list: SongList) => {
-      if (!currentProject) return;
+  const handleDuplicateListClick = (list: SongList) => {
+      setDuplicateListDialogProps({ isOpen: true, list });
+  };
+
+  const handleDuplicateList = async (deepCopy: boolean) => {
+      const { list } = duplicateListDialogProps;
+      if (!currentProject || !list) return;
       try {
-          await duplicateSongList(currentProject.id, list.id);
+          await duplicateSongList(currentProject.id, list.id, deepCopy);
           toast.success(t('songlist_duplicated', 'Lista duplicada correctamente.'));
       } catch {
           toast.error(t('error_duplicating_list', 'Error al duplicar la lista'));
+      } finally {
+          setDuplicateListDialogProps(prev => ({ ...prev, isOpen: false }));
       }
   };
 
@@ -649,6 +676,22 @@ export function SongManager() {
       setEditListName(list.name);
       setEditListDialog(true);
   };
+
+  // Calculate duplicate song IDs across all lists (must be before conditional return)
+  const duplicateSongIds = React.useMemo(() => {
+    if (!currentProject) return new Set<string>();
+    const songCounts = new Map<string, number>();
+    currentProject.songLists.forEach((list: SongList) => {
+        list.songs.forEach((song: Song) => {
+            songCounts.set(song.id, (songCounts.get(song.id) || 0) + 1);
+        });
+    });
+    const duplicates = new Set<string>();
+    songCounts.forEach((count, id) => {
+        if (count > 1) duplicates.add(id);
+    });
+    return duplicates;
+  }, [currentProject, currentProject?.songLists]);
 
   if (!currentProject) return null;
 
@@ -735,7 +778,7 @@ export function SongManager() {
                   onSelect={handleSelectList}
                   onEdit={handleEditListClick}
                   onDelete={handleDeleteList}
-                  onDuplicate={handleDuplicateList}
+                  onDuplicate={handleDuplicateListClick}
                   onExport={handleExportList}
                   onSongDropOnList={handleSongDropOnList}
                 />
@@ -792,6 +835,7 @@ export function SongManager() {
                       onDeleteSong={handleDeleteSong}
                       onEditSong={handleEditSongClick}
                       onMoveCopySong={handleManualMoveCopyClick}
+                      duplicateSongIds={duplicateSongIds}
                   />
                 )}
               </CardContent>
@@ -896,6 +940,61 @@ export function SongManager() {
         </DialogContent>
       </Dialog>
       
+      {/* Duplicate List Dialog */}
+      <Dialog open={duplicateListDialogProps.isOpen} onOpenChange={(open: boolean) => {
+          if (!open) setDuplicateListDialogProps(prev => ({ ...prev, isOpen: false }));
+      }}>
+        <DialogContent className="max-w-md bg-card border-border p-6 shadow-xl rounded-2xl">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+               <Copy className="size-5 text-primary" />
+               {t('duplicate_list', 'Duplicar Lista')}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+               {t('duplicate_list_desc', 'Selecciona cómo quieres duplicar las canciones de esta lista.')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              {/* Option 1: True Duplicate */}
+              <Card 
+                className={`relative overflow-hidden cursor-pointer transition-all border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
+                onClick={() => handleDuplicateList(true)}
+              >
+                <CardContent className="p-4 flex flex-col h-full">
+                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                    <Copy className="size-5 text-primary" />
+                  </div>
+                  <h4 className="font-semibold text-foreground mb-1">
+                      {t('duplicate_songs', 'Copiar canciones')}
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t('duplicate_songs_desc', 'Se crearán copias independientes de cada canción (con sus propios archivos y tabs).')}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Option 2: Link */}
+              <Card 
+                className={`relative overflow-hidden cursor-pointer transition-all border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
+                onClick={() => handleDuplicateList(false)}
+              >
+                <CardContent className="p-4 flex flex-col h-full">
+                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                    <ArrowRightLeft className="size-5 text-primary" />
+                  </div>
+                  <h4 className="font-semibold text-foreground mb-1">
+                      {t('link_songs', 'Vincular canciones')}
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t('link_songs_desc', 'Las mismas canciones aparecerán en la nueva lista. Los cambios en una afectarán a la otra.')}
+                  </p>
+                </CardContent>
+              </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       {/* Move/Copy Dialog */}
       <Dialog open={moveCopyDialogProps.isOpen} onOpenChange={(isOpen: boolean) => !isOpen && setMoveCopyDialogProps(prev => ({ ...prev, isOpen }))}>
           <DialogContent className="bg-card border-border text-foreground">
@@ -924,7 +1023,10 @@ export function SongManager() {
 
                   <div className="flex justify-end gap-3 pt-2">
                       <Button variant="outline" onClick={() => executeMoveCopy('copy')} disabled={!moveCopyDialogProps.targetListId} className="text-foreground border-border hover:bg-accent hover:text-foreground">
-                          {t('copy', 'Copiar')}
+                          {t('link', 'Vincular')}
+                      </Button>
+                      <Button variant="outline" onClick={() => executeMoveCopy('replicate')} disabled={!moveCopyDialogProps.targetListId} className="text-foreground border-border hover:bg-accent hover:text-foreground">
+                          {t('duplicate', 'Duplicar')}
                       </Button>
                       <Button onClick={() => executeMoveCopy('move')} disabled={!moveCopyDialogProps.targetListId} className="bg-primary text-primary-foreground hover:bg-primary/90">
                           {t('move', 'Mover')}

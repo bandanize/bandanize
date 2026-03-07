@@ -193,15 +193,100 @@ class SongServiceTest {
 
         when(songListRepository.findById(100L)).thenReturn(Optional.of(songList));
         when(songListRepository.findMaxOrderIndexByBandId(10L)).thenReturn(2);
-        when(songListRepository.save(any(SongListModel.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        SongListModel result = songService.duplicateSongList(100L);
+        SongListModel mockedNewList = new SongListModel();
+        mockedNewList.setId(101L);
+        mockedNewList.setBand(band);
+        mockedNewList.setName("Setlist 1 (Copy)");
+        mockedNewList.setOrderIndex(3);
+        mockedNewList.setSongs(new ArrayList<>());
+
+        when(songListRepository.save(any(SongListModel.class))).thenAnswer(inv -> {
+            SongListModel sl = inv.getArgument(0);
+            if (sl.getId() == null) {
+                sl.setId(101L);
+                if (sl.getSongs() == null) {
+                    sl.setSongs(new ArrayList<>());
+                }
+            }
+            return sl;
+        });
+
+        when(songListRepository.findById(101L)).thenReturn(Optional.of(mockedNewList));
+        when(songRepository.findById(200L)).thenReturn(Optional.of(song));
+        when(songRepository.save(any(SongModel.class))).thenAnswer(inv -> {
+            SongModel s = inv.getArgument(0);
+            s.setId(201L);
+            return s;
+        });
+
+        SongListModel result = songService.duplicateSongList(100L, true);
 
         assertEquals("Setlist 1 (Copy)", result.getName());
         assertEquals(3, result.getOrderIndex());
         assertEquals(band, result.getBand());
         assertEquals(1, result.getSongs().size());
-        assertTrue(result.getSongs().contains(song));
+        assertEquals("Test Song", result.getSongs().get(0).getName());
+    }
+
+    @Test
+    void replicateSong_Success() {
+        songList.setBand(band);
+        songList.getSongs().add(song);
+
+        // Optional: add a file to verify copying attempt
+        MediaFile f = new MediaFile("original.mp3", "audio/mp3", "/uploads/audio/original.mp3");
+        song.getFiles().add(f);
+
+        SongListModel targetList = new SongListModel();
+        targetList.setId(102L);
+        targetList.setSongs(new ArrayList<>());
+
+        when(songRepository.findById(200L)).thenReturn(Optional.of(song));
+        when(songListRepository.findById(102L)).thenReturn(Optional.of(targetList));
+        when(storageService.copyFile("original.mp3", "audio")).thenReturn("copied.mp3");
+
+        // We also need to mock storageService.copyFile with any() just in case the
+        // folder parsing is different
+        // or just ensure the string matches exactly. "original.mp3" is in
+        // "/uploads/audio/original.mp3"
+        // Wait, the parts split by "/":
+        // /uploads/audio/original.mp3 -> ["", "uploads", "audio", "original.mp3"]
+        // parts.length = 4.
+        // filename = parts[3] = "original.mp3"
+        // folder = parts[2] = "audio"
+        // This exactly matches.
+
+        when(songRepository.save(any(SongModel.class))).thenAnswer(inv -> {
+            SongModel s = inv.getArgument(0);
+            s.setId(205L);
+            return s;
+        });
+
+        SongModel result = songService.replicateSong(200L, 102L);
+
+        assertEquals("Test Song (Copy)", result.getName());
+        assertEquals(120, result.getBpm());
+        assertEquals("Am", result.getSongKey());
+        assertEquals("Original Band", result.getOriginalBand());
+        assertEquals(band, result.getBand());
+
+        // File checks
+        // Our current logic in testing relies on mocking storageService, but the actual
+        // URL mapping in SongService might differ slightly,
+        // or the mock might not perfectly replicate. Let's just check that getFiles is
+        // populated or we fix the logic.
+        // Let's modify the service slightly or fix the test to match what we actually
+        // receive.
+        assertEquals(1, result.getFiles().size());
+        assertEquals("original.mp3 (Copy)", result.getFiles().get(0).getName());
+        assertEquals("/api/uploads/audio/copied.mp3", result.getFiles().get(0).getUrl());
+
+        // Target list check
+        assertEquals(1, targetList.getSongs().size());
+        assertTrue(targetList.getSongs().contains(result));
+
+        verify(songListRepository).save(targetList);
     }
 
     // ── Song CRUD ───────────────────────────────────────────────────
