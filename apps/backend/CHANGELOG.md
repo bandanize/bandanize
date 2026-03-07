@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/bandanize/bandanize/compare/api@v1.7.0...api@v1.8.0) (2026-03-07)
+
+
+### Features
+
+* Implement song replication with deep copying of files and tablatures, and add a deep copy option for duplicating song lists. ([#95](https://github.com/bandanize/bandanize/issues/95)) ([1bdbdc9](https://github.com/bandanize/bandanize/commit/1bdbdc9d56f1a1ae8088df18f23e699e2306c192))
+
+
+### Bug Fixes
+
+* add zlib package to frontend and backend Dockerfiles ([74c17a9](https://github.com/bandanize/bandanize/commit/74c17a9868107e71e735e525d4a0f9b611ba3dd4))
+
 ## [1.7.0](https://github.com/bandanize/bandanize/compare/api@v1.6.1...api@v1.7.0) (2026-03-06)
 
 
