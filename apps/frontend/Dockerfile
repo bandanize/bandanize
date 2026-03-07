@@ -15,7 +15,9 @@ FROM nginx:alpine
 LABEL org.opencontainers.image.source = "https://github.com/bandanize/bandanize"
 
 # Fix security vulnerabilities
-RUN apk add --no-cache 'libpng>=1.6.55-r0'
+RUN apk add --no-cache \
+    'libpng>=1.6.55-r0' \
+    'zlib>=1.3.2-r0'
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
