@@ -127,7 +127,7 @@ interface ProjectContextType {
   createSongList: (projectId: string, name: string) => void;
   updateSongList: (projectId: string, listId: string, name: string) => void;
   deleteSongList: (projectId: string, listId: string) => void;
-  duplicateSongList: (projectId: string, listId: string) => Promise<void>;
+  duplicateSongList: (projectId: string, listId: string, deepCopy?: boolean) => Promise<void>;
   reorderSongLists: (projectId: string, listIds: string[]) => void;
   reorderSongs: (projectId: string, listId: string, songIds: string[]) => void;
   createSong: (projectId: string, listId: string, song: Omit<Song, 'id' | 'tablatures' | 'files' | 'bandName'>) => void;
@@ -135,6 +135,7 @@ interface ProjectContextType {
   deleteSong: (projectId: string, listId: string, songId: string) => void;
   moveSongToList: (projectId: string, listId: string, songId: string, targetListId: string) => Promise<void>;
   copySongToList: (projectId: string, listId: string, songId: string, targetListId: string) => Promise<void>;
+  replicateSongInList: (projectId: string, listId: string, songId: string, targetListId: string) => Promise<void>;
   addSongFile: (projectId: string, listId: string, songId: string, file: Omit<MediaFile, 'id'>) => void;
   deleteSongFile: (projectId: string, listId: string, songId: string, fileUrl: string) => void;
   createTablature: (projectId: string, listId: string, songId: string, tablature: Omit<Tablature, 'id' | 'files'>) => void;
@@ -441,9 +442,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const duplicateSongList = async (projectId: string, listId: string) => {
+  const duplicateSongList = async (projectId: string, listId: string, deepCopy: boolean = true) => {
     try {
-        const response = await api.post(`/songlists/${listId}/duplicate`);
+        const response = await api.post(`/songlists/${listId}/duplicate`, null, { params: { deepCopy } });
         const duplicatedList = response.data;
         const newList: SongList = {
             id: String(duplicatedList.id),
@@ -708,6 +709,51 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           throw error;
       }
   };
+
+  const replicateSongInList = async (projectId: string, listId: string, songId: string, targetListId: string) => {
+      try {
+          const response = await api.post(`/songs/${songId}/replicate`, null, { params: { targetListId } });
+          const replicatedSongData = response.data;
+          
+          const sourceList = projects.find(p => p.id === projectId)?.songLists.find(l => l.id === listId);
+          const originalSong = sourceList?.songs.find(s => s.id === songId);
+          
+          const newSong: Song = {
+              id: String(replicatedSongData.id),
+              name: replicatedSongData.name,
+              bandName: originalSong?.bandName || '',
+              originalBand: replicatedSongData.originalBand,
+              bpm: replicatedSongData.bpm,
+              key: replicatedSongData.songKey,
+              files: replicatedSongData.files || [],
+              tablatures: replicatedSongData.tablatures ? replicatedSongData.tablatures.map((tab: {
+                  id: number;
+                  name: string;
+                  instrument: string;
+                  instrumentIcon: string;
+                  tuning: string;
+                  content: string;
+                  files?: MediaFile[];
+              }) => ({
+                  id: String(tab.id),
+                  name: tab.name,
+                  instrument: tab.instrument,
+                  instrumentIcon: tab.instrumentIcon,
+                  tuning: tab.tuning,
+                  content: tab.content,
+                  files: tab.files || []
+              })) : []
+          };
+          
+          updateLocalProject(projectId, (p) => ({
+              ...p,
+              songLists: p.songLists.map(l => l.id === targetListId ? { ...l, songs: [...l.songs, newSong] } : l)
+          }));
+      } catch (error) {
+          console.error("Error replicating song", error);
+          throw error;
+      }
+  };
   
   const addSongFile = async (projectId: string, listId: string, songId: string, file: Omit<MediaFile, 'id'>) => {
     // 1. We assume the file is already uploaded OR this function handles the whole process.
@@ -918,6 +964,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       deleteSong,
       moveSongToList,
       copySongToList,
+      replicateSongInList,
       addSongFile,
       deleteSongFile,
       createTablature,

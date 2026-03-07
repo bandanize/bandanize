@@ -101,6 +101,11 @@ public class SongController {
         return ResponseEntity.ok(songService.copySong(songId, sourceListId, targetListId));
     }
 
+    @PostMapping("/songs/{songId}/replicate")
+    public ResponseEntity<SongModel> replicateSong(@PathVariable Long songId, @RequestParam Long targetListId) {
+        return ResponseEntity.ok(songService.replicateSong(songId, targetListId));
+    }
+
     // --- Tablatures ---
     @PostMapping("/songs/{songId}/tabs")
     public ResponseEntity<TablatureModel> addTablature(@PathVariable Long songId, @RequestBody TablatureModel tab) {
@@ -164,8 +169,9 @@ public class SongController {
     }
 
     @PostMapping("/songlists/{listId}/duplicate")
-    public ResponseEntity<SongListModel> duplicateSongList(@PathVariable Long listId) {
-        SongListModel duplicateList = songService.duplicateSongList(listId);
+    public ResponseEntity<SongListModel> duplicateSongList(@PathVariable Long listId,
+            @RequestParam(defaultValue = "true") boolean deepCopy) {
+        SongListModel duplicateList = songService.duplicateSongList(listId, deepCopy);
         return ResponseEntity.ok(duplicateList);
     }
 }

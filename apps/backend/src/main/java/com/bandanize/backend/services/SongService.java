@@ -183,6 +183,115 @@ public class SongService {
         return song;
     }
 
+    public SongModel replicateSong(Long songId, Long targetListId) {
+        return replicateSongInternal(songId, targetListId, true);
+    }
+
+    private SongModel replicateSongInternal(Long songId, Long targetListId, boolean appendCopySuffix) {
+        SongModel originalSong = songRepository.findById(songId)
+                .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        SongListModel targetList = songListRepository.findById(targetListId)
+                .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
+
+        // Create a deep copy of the song
+        SongModel clonedSong = new SongModel();
+        clonedSong.setName(originalSong.getName() + (appendCopySuffix ? " (Copy)" : ""));
+        clonedSong.setBpm(originalSong.getBpm());
+        clonedSong.setSongKey(originalSong.getSongKey());
+        clonedSong.setOriginalBand(originalSong.getOriginalBand());
+        clonedSong.setBand(originalSong.getBand());
+
+        // Clone media files (We'll duplicate the records, but they'll point to the same
+        // physical file for now.
+        // It's safe since deleting a file from storage might break the others.
+        // Ideally, we'd copy the physical file too, but we will just refer to it)
+        // Actually, since deleteFileFromStorage deletes physical file, if two DB
+        // records point to it,
+        // deleting one breaks the other.
+        // For physical files, we should probably duplicate them to be truly independent
+        // or use reference counting.
+        // Given the requirement 'Copiado y Duplicado de canciones', we will just copy
+        // the DB record for now,
+        // but note that deleting the copy will delete the file for the original.
+        // To fix this properly, we need to physically copy the file in storage.
+
+        // As a simple approach for this issue, we will just copy the metadata.
+        // A better approach would be to copy the file in storageService as well.
+        // I will copy the files in DB.
+
+        clonedSong.setFiles(new java.util.ArrayList<>());
+        for (MediaFile file : originalSong.getFiles()) {
+            try {
+                String[] parts = file.getUrl().split("/");
+                if (parts.length >= 2) {
+                    String filename = parts[parts.length - 1];
+                    String folder = parts[parts.length - 2];
+
+                    String newFilename = storageService.copyFile(filename, folder);
+                    if (newFilename != null) {
+                        MediaFile newFile = new MediaFile(
+                                file.getName() + " (Copy)",
+                                file.getType(),
+                                "/api/uploads/" + folder + "/" + newFilename);
+                        clonedSong.getFiles().add(newFile);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Failed to copy file for song replication: " + file.getUrl(), e);
+            }
+        }
+
+        // Save the cloned song first to get an ID
+        SongModel savedClone = songRepository.save(clonedSong);
+
+        // Clone tablatures
+        if (originalSong.getTablatures() != null) {
+            java.util.List<TablatureModel> clonedTabs = new java.util.ArrayList<>();
+            for (TablatureModel originalTab : originalSong.getTablatures()) {
+                TablatureModel clonedTab = new TablatureModel();
+                clonedTab.setName(originalTab.getName());
+                clonedTab.setInstrument(originalTab.getInstrument());
+                clonedTab.setInstrumentIcon(originalTab.getInstrumentIcon());
+                clonedTab.setTuning(originalTab.getTuning());
+                clonedTab.setContent(originalTab.getContent());
+                clonedTab.setSong(savedClone);
+
+                clonedTab.setFiles(new java.util.ArrayList<>());
+                for (MediaFile file : originalTab.getFiles()) {
+                    try {
+                        String[] parts = file.getUrl().split("/");
+                        if (parts.length >= 2) {
+                            String filename = parts[parts.length - 1];
+                            String folder = parts[parts.length - 2];
+
+                            String newFilename = storageService.copyFile(filename, folder);
+                            if (newFilename != null) {
+                                MediaFile newFile = new MediaFile(
+                                        file.getName() + " (Copy)",
+                                        file.getType(),
+                                        "/api/uploads/" + folder + "/" + newFilename);
+                                clonedTab.getFiles().add(newFile);
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.error("Failed to copy file for tab replication: " + file.getUrl(), e);
+                    }
+                }
+
+                clonedTabs.add(tablatureRepository.save(clonedTab));
+            }
+            if (savedClone.getTablatures() == null) {
+                savedClone.setTablatures(new java.util.ArrayList<>());
+            }
+            savedClone.getTablatures().addAll(clonedTabs);
+        }
+
+        targetList.getSongs().add(savedClone);
+        songListRepository.save(targetList);
+
+        return savedClone;
+    }
+
     public void reorderSongs(Long listId, List<Long> songIds) {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
@@ -343,7 +452,7 @@ public class SongService {
     }
 
     @org.springframework.transaction.annotation.Transactional
-    public SongListModel duplicateSongList(Long listId) {
+    public SongListModel duplicateSongList(Long listId, boolean deepCopy) {
         SongListModel originalList = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
 
@@ -355,9 +464,21 @@ public class SongService {
         Integer maxOrderIndex = songListRepository.findMaxOrderIndexByBandId(originalList.getBand().getId());
         newList.setOrderIndex(maxOrderIndex != null ? maxOrderIndex + 1 : 0);
 
-        // Copy exactly the same song references
-        newList.getSongs().addAll(originalList.getSongs());
+        if (deepCopy) {
+            // Save the new list to get an ID
+            SongListModel savedList = songListRepository.save(newList);
 
-        return songListRepository.save(newList);
+            // Deep copy all songs from the original list without appending "(Copy)" to the
+            // song names
+            for (SongModel song : originalList.getSongs()) {
+                replicateSongInternal(song.getId(), savedList.getId(), false);
+            }
+
+            return songListRepository.findById(savedList.getId()).get();
+        } else {
+            // Just copy the references to the same songs
+            newList.getSongs().addAll(originalList.getSongs());
+            return songListRepository.save(newList);
+        }
     }
 }

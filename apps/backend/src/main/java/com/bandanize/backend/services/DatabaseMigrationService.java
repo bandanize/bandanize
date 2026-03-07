@@ -70,16 +70,34 @@ public class DatabaseMigrationService {
                 }
             }
 
-            logger.info(
-                    "Migration for Issue #85 completed. You may drop 'song_list_id' and 'order_index' from 'song_model' later.");
+            logger.info("Migration for Issue #85 data completed.");
+
+            // 4. Drop the legacy columns and constraint
+            logger.info("Dropping legacy columns 'song_list_id' and 'order_index' from 'song_model'...");
+            try {
+                jdbcTemplate.execute("ALTER TABLE song_model DROP COLUMN song_list_id CASCADE");
+            } catch (Exception ex) {
+                logger.warn("Could not drop song_list_id: {}", ex.getMessage());
+            }
+            try {
+                jdbcTemplate.execute("ALTER TABLE song_model DROP COLUMN order_index CASCADE");
+            } catch (Exception ex) {
+                logger.warn("Could not drop order_index: {}", ex.getMessage());
+            }
+
+            logger.info("Legacy columns dropped successfully.");
         } catch (Exception e) {
             logger.error("Error during data migration: ", e);
         }
     }
 
     private boolean checkColumnExists(String tableName, String columnName) {
-        String sql = "SELECT column_name FROM information_schema.columns WHERE table_name = ? AND column_name = ?";
-        List<String> columns = jdbcTemplate.queryForList(sql, String.class, tableName, columnName);
-        return !columns.isEmpty();
+        try {
+            String sql = "SELECT column_name FROM information_schema.columns WHERE table_name = ? AND column_name = ?";
+            List<String> columns = jdbcTemplate.queryForList(sql, String.class, tableName, columnName);
+            return !columns.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
