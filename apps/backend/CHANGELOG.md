@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/bandanize/bandanize/compare/api@v1.9.0...api@v1.9.1) (2026-03-11)
+
+
+### Bug Fixes
+
+* yt integration ([#100](https://github.com/bandanize/bandanize/issues/100)) ([9adf990](https://github.com/bandanize/bandanize/commit/9adf99080a1852ee5e1582d6ca0b9b420ba7a32f))
+
 ## [1.9.0](https://github.com/bandanize/bandanize/compare/api@v1.8.0...api@v1.9.0) (2026-03-11)
 
 
