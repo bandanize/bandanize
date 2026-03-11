@@ -60,6 +60,8 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/bands/*/calendar.ics").permitAll()
                         .requestMatchers("/api/calendar/**").permitAll()
+                        .requestMatchers("/api/integrations/spotify/callback").permitAll()
+                        .requestMatchers("/api/integrations/youtube/callback").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
