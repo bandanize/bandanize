@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/bandanize/bandanize/compare/api@v1.8.0...api@v1.9.0) (2026-03-11)
+
+
+### Features
+
+* Add YouTube Music integration for exporting song lists. ([#98](https://github.com/bandanize/bandanize/issues/98)) ([3ec8c13](https://github.com/bandanize/bandanize/commit/3ec8c13691175089abbc2711466a3acd4525d4ba))
+
 ## [1.8.0](https://github.com/bandanize/bandanize/compare/api@v1.7.0...api@v1.8.0) (2026-03-07)
 
 
