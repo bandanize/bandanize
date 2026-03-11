@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.16.1](https://github.com/bandanize/bandanize/compare/web@v1.16.0...web@v1.16.1) (2026-03-11)
+
+
+### Bug Fixes
+
+* yt integration ([#100](https://github.com/bandanize/bandanize/issues/100)) ([9adf990](https://github.com/bandanize/bandanize/commit/9adf99080a1852ee5e1582d6ca0b9b420ba7a32f))
+
+## [1.16.0](https://github.com/bandanize/bandanize/compare/web@v1.15.0...web@v1.16.0) (2026-03-11)
+
+
+### Features
+
+* Add YouTube Music integration for exporting song lists. ([#98](https://github.com/bandanize/bandanize/issues/98)) ([3ec8c13](https://github.com/bandanize/bandanize/commit/3ec8c13691175089abbc2711466a3acd4525d4ba))
+
 ## [1.15.0](https://github.com/bandanize/bandanize/compare/web@v1.14.0...web@v1.15.0) (2026-03-07)
 
 
