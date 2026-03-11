@@ -14,6 +14,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu';
 import { Badge } from '@/app/components/ui/badge';
+import { ExportListDialog } from './ExportListDialog';
 
 // React DnD
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -346,7 +347,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                     <DropdownMenuContent align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                         <DropdownMenuItem onClick={(e: React.MouseEvent) => { e.stopPropagation(); onExport(list); }}>
                             <Share className="mr-2 size-4" />
-                            {t('export_list', 'Copiar lista')}
+                            {t('export_list', 'Exportar lista')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDuplicate(list); }}>
                             <Copy className="mr-2 size-4" />
@@ -471,12 +472,15 @@ export function SongManager() {
     toast.success(t('list_created', 'Lista creada'));
   };
 
-  const handleExportList = (list: SongList) => {
+  const handleExportListClick = (list: SongList) => {
     if (!list.songs.length) {
       toast.error(t('empty_list_export', 'La lista está vacía'));
       return;
     }
+    setExportListDialogProps({ isOpen: true, list });
+  };
 
+  const handleExportClipboard = (list: SongList) => {
     const header = `${list.name}\n${'-'.repeat(list.name.length)}\n`;
     const body = list.songs.map((song: Song, index: number) => {
       let line = `${index + 1}. ${song.name}`;
@@ -500,6 +504,11 @@ export function SongManager() {
   const [editListName, setEditListName] = useState('');
   
   // --- Duplicate List Dialog ---
+  const [exportListDialogProps, setExportListDialogProps] = useState<{
+      isOpen: boolean;
+      list: SongList | null;
+  }>({ isOpen: false, list: null });
+
   const [duplicateListDialogProps, setDuplicateListDialogProps] = useState<{
       isOpen: boolean;
       list: SongList | null;
@@ -779,7 +788,7 @@ export function SongManager() {
                   onEdit={handleEditListClick}
                   onDelete={handleDeleteList}
                   onDuplicate={handleDuplicateListClick}
-                  onExport={handleExportList}
+                  onExport={handleExportListClick}
                   onSongDropOnList={handleSongDropOnList}
                 />
               ))}
@@ -939,6 +948,14 @@ export function SongManager() {
             </div>
         </DialogContent>
       </Dialog>
+
+      {/* Export List Dialog */}
+      <ExportListDialog 
+          isOpen={exportListDialogProps.isOpen}
+          onOpenChange={(open: boolean) => setExportListDialogProps(prev => ({ ...prev, isOpen: open }))}
+          list={exportListDialogProps.list}
+          onExportClipboard={handleExportClipboard}
+      />
       
       {/* Duplicate List Dialog */}
       <Dialog open={duplicateListDialogProps.isOpen} onOpenChange={(open: boolean) => {
