@@ -18,7 +18,7 @@ export function ExportListDialog({ isOpen, onOpenChange, list, onExportClipboard
     if (!list) return null;
 
     const exportToSpotify = async () => {
-        alert(t('export_spotify_premium', 'La exportación a Spotify está deshabilitada temporalmente porque requiere la API Premium de pago.'));
+        alert(t('export_spotify', 'La exportación a Spotify está deshabilitada temporalmente.'));
         /*
         const newWindow = window.open('', '_blank');
         try {
@@ -119,10 +119,10 @@ export function ExportListDialog({ isOpen, onOpenChange, list, onExportClipboard
                             </div>
                             <h4 className="font-semibold text-sm text-foreground mb-1 relative">
                                 Spotify
-                                <span className="absolute -top-3 -right-6 text-[8px] bg-primary text-primary-foreground px-1 py-0.5 rounded-full select-none cursor-default">PREMIUM</span>
+                                <span className="absolute -top-3 -right-6 text-[8px] bg-primary text-primary-foreground px-1 py-0.5 rounded-full select-none cursor-default">DISABLED</span>
                             </h4>
                             <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                {t('export_spotify_desc', 'Requiere API Premium')}
+                                {t('export_spotify_desc', 'Coming soon.')}
                             </p>
                         </CardContent>
                     </Card>
