@@ -39,9 +39,15 @@ public class IntegrationController {
             @AuthenticationPrincipal UserDetails principal,
             @RequestParam Long listId
     ) {
-        UserDTO user = userService.getUserByUsername(principal.getUsername());
-        String url = spotifyIntegrationService.getAuthorizationUrl(user.getId(), listId);
-        return ResponseEntity.ok(Map.of("url", url));
+        try {
+            UserDTO user = userService.getUserByUsername(principal.getUsername());
+            String url = spotifyIntegrationService.getAuthorizationUrl(user.getId(), listId);
+            return ResponseEntity.ok(Map.of("url", url));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
+        }
     }
 
     @GetMapping("/spotify/callback")
@@ -67,9 +73,15 @@ public class IntegrationController {
             @AuthenticationPrincipal UserDetails principal,
             @RequestParam Long listId
     ) {
-        UserDTO user = userService.getUserByUsername(principal.getUsername());
-        String url = youtubeIntegrationService.getAuthorizationUrl(user.getId(), listId);
-        return ResponseEntity.ok(Map.of("url", url));
+        try {
+            UserDTO user = userService.getUserByUsername(principal.getUsername());
+            String url = youtubeIntegrationService.getAuthorizationUrl(user.getId(), listId);
+            return ResponseEntity.ok(Map.of("url", url));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
+        }
     }
 
     @GetMapping("/youtube/callback")
