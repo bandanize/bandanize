@@ -173,6 +173,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     assert(box && box.x >= 0 && box.y >= 0 && box.width >= 370 && box.height >= 820, JSON.stringify(box));
     assert(box.x + box.width <= 391 && box.y + box.height <= 845);
     assert.equal(await dialog.locator('pre').evaluate(el => getComputedStyle(el).fontSize), '20px');
+    assert.equal(await dialog.locator('pre button').first().evaluate(el => getComputedStyle(el).fontSize), '20px');
     const reading = await dialog.locator('pre').boundingBox();
     assert(reading.height > 600, JSON.stringify(reading));
     assert.equal(await dialog.locator('pre').evaluate(el => getComputedStyle(el).whiteSpace), 'pre');

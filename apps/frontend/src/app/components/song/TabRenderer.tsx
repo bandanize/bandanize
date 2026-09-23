@@ -115,8 +115,9 @@ function ChordPopover({
       <PopoverTrigger asChild>
         <button
           type="button"
+          style={{ fontSize: 'inherit' }}
           className="
-            inline font-mono font-bold text-[inherit]
+            inline font-mono font-bold
             text-primary
             border-b border-dashed border-primary/50
             hover:border-primary hover:text-primary/80
