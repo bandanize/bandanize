@@ -1,3 +1,4 @@
+import { Check, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
@@ -70,7 +71,7 @@ export function VerifyEmail() {
 
           {status === 'success' && (
             <div className="space-y-4">
-              <div className="text-primary text-5xl mb-4">✓</div>
+              <Check className="text-primary size-12 mx-auto mb-4" aria-hidden="true" />
               <h3 className="text-xl font-medium text-foreground">{t('email_verified_success', 'Email Verified!')}</h3>
               <p className="text-muted-foreground text-[14px]">
                 {t('email_verified_msg', 'Your account has been activated. You can log in now.')}
@@ -89,7 +90,7 @@ export function VerifyEmail() {
 
           {status === 'error' && (
             <div className="space-y-4">
-               <div className="text-destructive text-5xl mb-4">✕</div>
+               <X className="text-destructive size-12 mx-auto mb-4" aria-hidden="true" />
               <h3 className="text-xl font-medium text-foreground">{t('verification_failed', 'Verification Failed')}</h3>
                <p className="text-destructive-foreground text-[14px]">{message}</p>
               <Button 

@@ -1,3 +1,4 @@
+import { clearAuthSession, getAuthToken } from '@/lib/auth-session';
 import i18n from '@/i18n';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
@@ -37,7 +38,7 @@ const api = axios.create({
 // Request interceptor to add JWT token
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = getAuthToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -59,8 +60,7 @@ api.interceptors.response.use(
             const isPublicRoute = PUBLIC_ROUTES.some(route => window.location.pathname.startsWith(route));
 
             if (!error.config.url.includes('/auth/login') && !isPublicRoute) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('currentUser');
+                clearAuthSession();
                 window.location.href = '/login';
             }
         }

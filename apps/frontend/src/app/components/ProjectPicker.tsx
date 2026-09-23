@@ -9,13 +9,17 @@ import { getMediaUrl } from '@/services/api';
 function ProjectArtwork({ project, single }: { project: Project; single: boolean }) {
   const [failed, setFailed] = useState<string>();
   const showPhoto = project.imageUrl && failed !== project.imageUrl;
-  return <div className={`relative overflow-hidden flex items-center justify-center ${single ? 'h-44 sm:h-full sm:min-h-64' : 'h-40'} bg-[radial-gradient(ellipse_at_top_left,#607b34,transparent_70%),linear-gradient(130deg,#263022,#382730)]`}>
-    {showPhoto ? <img src={getMediaUrl(project.imageUrl!)} alt="" onError={() => setFailed(project.imageUrl)}
-      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 motion-reduce:transition-none group-hover:scale-105" />
-      : <div className="relative size-32 rounded-full border border-white/10 bg-[#17191a] shadow-[0_12px_32px_rgba(0,0,0,0.3),inset_0_0_0_12px_#202322,inset_0_0_0_13px_#343934,inset_0_0_0_25px_#202322,inset_0_0_0_26px_#343934] flex items-center justify-center">
-          <div className="size-12 rounded-full bg-primary flex items-center justify-center"><Music2 className="size-5 text-primary-foreground" /></div>
-        </div>}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+  return <div className={`relative isolate overflow-hidden flex items-center justify-center ${single ? 'h-52 sm:h-full sm:min-h-64' : 'h-48'} bg-[radial-gradient(ellipse_at_top_left,#607b34,transparent_70%),linear-gradient(130deg,#263022,#382730)]`}>
+    {showPhoto && <img src={getMediaUrl(project.imageUrl!)} alt="" aria-hidden="true"
+      className="absolute inset-0 h-full w-full object-cover scale-150 blur-3xl opacity-65 saturate-150 pointer-events-none" />}
+    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/70 pointer-events-none" />
+    <div className={`relative overflow-hidden rounded-2xl border border-white/20 bg-card shadow-[0_14px_36px_rgba(0,0,0,0.4)] transition-transform duration-300 motion-reduce:transition-none group-hover:-translate-y-1 ${single ? 'size-36 sm:size-40' : 'size-32'}`}>
+      {showPhoto ? <img src={getMediaUrl(project.imageUrl!)} alt="" onError={() => setFailed(project.imageUrl)}
+        className="h-full w-full object-cover" />
+        : <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-card">
+            <Music2 className="size-12 text-primary" aria-hidden="true" />
+          </div>}
+    </div>
   </div>;
 }
 

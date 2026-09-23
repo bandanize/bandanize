@@ -57,3 +57,6 @@
   .auth-card-header { margin-bottom: 24px; }
 }
 @media (max-width: 360px) { .auth-page { padding: 0 16px; } .auth-art { padding-right: 96px; } .auth-illustration { width: 118px; } .auth-art h1 { font-size: 32px; } }
+
+.auth-card input.auth-remember { width: 17px; height: 17px; flex-shrink: 0; margin-top: 2px; padding: 0; accent-color: var(--primary); }
+@media (max-width: 360px) { .auth-header { gap: 8px; } .auth-brand { font-size: 18px; gap: 8px; } }

@@ -1,3 +1,4 @@
+import { LoaderCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { extractErrorMessage } from '@/services/api';
@@ -15,15 +16,21 @@ export function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [remember, setRemember] = useState(false);
   const [showRegister, setShowRegister] = useState(() => new URLSearchParams(window.location.search).get('register') === '1');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setError('');
     try {
-      await login(username.trim(), password);
+      await login(username.trim(), password, remember);
     } catch (err: unknown) {
       setError(extractErrorMessage(err, t('auth.login_error')));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -42,10 +49,11 @@ export function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <form aria-busy={isSubmitting} onSubmit={handleLogin} className="flex flex-col gap-4">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-[14px] text-foreground font-normal">{t('email')}</Label>
               <Input
+                disabled={isSubmitting}
                 id="username"
                 type="text"
                 inputMode="email"
@@ -62,6 +70,7 @@ export function Login() {
             <div className="space-y-2">
               <Label htmlFor="password" className="text-[14px] text-foreground font-normal">{t('auth.password')}</Label>
               <Input
+                disabled={isSubmitting}
                 id="password"
                 type="password"
                 value={password}
@@ -75,6 +84,10 @@ export function Login() {
               </div>
             </div>
             
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} disabled={isSubmitting} className="auth-remember" aria-describedby="remember-hint" />
+              <span>{t('auth.remember')}<span id="remember-hint" className="block mt-1 text-xs text-muted-foreground">{t('auth.remember_hint')}</span></span>
+            </label>
             {error && (
               <div role="alert" className="text-sm text-red-500 bg-red-500/10 p-2 rounded text-center">
                 {error}
@@ -83,20 +96,23 @@ export function Login() {
 
             <div className="flex flex-col gap-3 mt-4">
               <Button 
-                type="submit" 
+                type="submit" disabled={isSubmitting} 
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-sans text-[14px] h-[40px] rounded-[8px]"
               >
-                {t('auth.login')}
+                {isSubmitting && <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />}
+                {t(isSubmitting ? 'auth.signing_in' : 'auth.login')}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="auth-secondary w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
+                disabled={isSubmitting}
                 onClick={() => setShowRegister(true)}
               >
                 {t('auth.create_account')}
               </Button>
             </div>
+            <span role="status" className="sr-only">{isSubmitting ? t('auth.please_wait') : ''}</span>
           </form>
         </CardContent>
       </Card>
@@ -112,16 +128,21 @@ function Register({ onBack }: { onBack: () => void }) {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false); // New success state
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setError('');
     try {
       await register(email.trim().toLowerCase(), password, name, username);
       setSuccess(true); // Set success on successful registration
     } catch (err: unknown) {
       setError(extractErrorMessage(err, t('auth.register_error')));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -141,7 +162,7 @@ function Register({ onBack }: { onBack: () => void }) {
                         {t('auth.verify_instructions')}
                     </p>
                     <Button 
-                        onClick={onBack}
+                        disabled={isSubmitting} onClick={onBack}
                         variant="outline"
                         className="auth-secondary w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
                     >
@@ -164,10 +185,11 @@ function Register({ onBack }: { onBack: () => void }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <form onSubmit={handleRegister} className="flex flex-col gap-4">
+          <form aria-busy={isSubmitting} onSubmit={handleRegister} className="flex flex-col gap-4">
              <div className="space-y-2">
               <Label htmlFor="name" className="text-[14px] text-foreground font-normal">{t('name')}</Label>
               <Input
+                disabled={isSubmitting}
                 id="name"
                 type="text"
                 placeholder={t('auth.name_placeholder')}
@@ -180,6 +202,7 @@ function Register({ onBack }: { onBack: () => void }) {
             <div className="space-y-2">
               <Label htmlFor="username" className="text-[14px] text-foreground font-normal">{t('auth.username')}</Label>
               <Input
+                disabled={isSubmitting}
                 id="username"
                 type="text"
                 placeholder={t('auth.username_placeholder')}
@@ -192,6 +215,7 @@ function Register({ onBack }: { onBack: () => void }) {
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[14px] text-foreground font-normal">{t('email')}</Label>
               <Input
+                disabled={isSubmitting}
                 id="email"
                 type="email"
                 autoComplete="email"
@@ -207,6 +231,7 @@ function Register({ onBack }: { onBack: () => void }) {
             <div className="space-y-2">
               <Label htmlFor="password" className="text-[14px] text-foreground font-normal">{t('auth.password')}</Label>
               <Input
+                disabled={isSubmitting}
                 id="password"
                 type="password"
                 value={password}
@@ -221,18 +246,20 @@ function Register({ onBack }: { onBack: () => void }) {
               </div>
             )}
             <div className="flex flex-col gap-3 mt-4">
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-sans text-[14px] h-[40px] rounded-[8px]">
-                {t('auth.register')}
+              <Button type="submit" disabled={isSubmitting} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-sans text-[14px] h-[40px] rounded-[8px]">
+                {isSubmitting && <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />}
+                {t(isSubmitting ? 'auth.registering' : 'auth.register')}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="auth-secondary w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
-                onClick={onBack}
+                disabled={isSubmitting} onClick={onBack}
               >
                 {t('auth.back_to_login')}
               </Button>
             </div>
+            <span role="status" className="sr-only">{isSubmitting ? t('auth.please_wait') : ''}</span>
           </form>
         </CardContent>
       </Card>

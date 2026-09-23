@@ -1,3 +1,4 @@
+import { getAuthToken } from '@/lib/auth-session';
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { Card, CardContent } from '@/app/components/ui/card';
@@ -26,7 +27,7 @@ export function ExportListDialog({ isOpen, onOpenChange, list, onExportClipboard
             const response = await fetch(`${apiUrl}/api/integrations/spotify/auth-url?listId=${list.id}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${getAuthToken()}`
                 }
             });
             
@@ -53,7 +54,7 @@ export function ExportListDialog({ isOpen, onOpenChange, list, onExportClipboard
             const response = await fetch(`${apiUrl}/api/integrations/youtube/auth-url?listId=${list.id}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${getAuthToken()}`
                 }
             });
             
