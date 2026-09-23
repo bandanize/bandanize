@@ -208,7 +208,7 @@ export function ProjectHub() {
     <PageLayout
       headerContent={
         <div className="max-w-[1280px] w-full mx-auto px-4 sm:px-6">
-            <div className="max-w-[1216px] w-full mx-auto flex items-center gap-4">
+            <div className="max-w-[1216px] w-full mx-auto flex items-center gap-2 sm:gap-4">
             <Button 
                 variant="ghost" 
                 onClick={() => navigate('/dashboard')} 
@@ -217,7 +217,7 @@ export function ProjectHub() {
               <ArrowLeft className="size-4 text-foreground" />
             </Button>
             
-            <div className="flex-1 flex items-center gap-3 min-w-[200px] select-none">
+            <div className="flex-1 flex items-center gap-3 min-w-0 select-none">
                 <div className="size-10 aspect-square flex-shrink-0 rounded-md overflow-hidden bg-white/5 flex items-center justify-center pointer-events-none">
                     {currentProject.imageUrl ? (
                         <img 
@@ -334,20 +334,20 @@ export function ProjectHub() {
         </div>
       }
     >
-      <div className="max-w-[1280px] w-full mx-auto py-8 px-4 sm:px-6">
+      <div className="max-w-[1280px] w-full mx-auto py-6 sm:py-8 px-4 sm:px-6">
          <div className="max-w-[1216px] w-full mx-auto">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="bg-card rounded-[14px] p-0 h-[36px] flex items-center w-full sm:w-fit max-w-full mx-auto overflow-visible">
+          <TabsList className="bg-card/80 border border-border rounded-xl p-1 h-11 flex items-center w-full sm:w-fit max-w-full mx-auto overflow-visible">
             <TabsTrigger 
                 value="songs"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
               <Music className="size-4 sm:mr-2 flex-shrink-0" />
               <span className="hidden sm:inline">{t('songs', 'Canciones')}</span>
             </TabsTrigger>
             <TabsTrigger 
                 value="chat"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
             >
               <MessageSquare className="size-4 sm:mr-2 flex-shrink-0" />
               <span className="hidden sm:inline">{t('chat', 'Chat')}</span>
@@ -357,21 +357,21 @@ export function ProjectHub() {
             </TabsTrigger>
             <TabsTrigger 
                 value="members"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
               <Users className="size-4 sm:mr-2 flex-shrink-0" />
               <span className="hidden sm:inline">{t('members', 'Miembros')}</span>
             </TabsTrigger>
             <TabsTrigger 
                 value="calendar"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
               <Calendar className="size-4 sm:mr-2 flex-shrink-0" />
               <span className="hidden sm:inline">{t('calendar', 'Calendario')}</span>
             </TabsTrigger>
             <TabsTrigger 
                 value="notifications"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-[14px] h-[36px] flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
             >
               <Bell className="size-4 sm:mr-2 flex-shrink-0" />
               <span className="hidden sm:inline">{t('notifications', 'Notificaciones')}</span>

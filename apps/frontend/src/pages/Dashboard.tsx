@@ -109,7 +109,7 @@ export function Dashboard() {
   return (
     <PageLayout
       headerContent={
-        <div className="max-w-[1280px] w-full mx-auto px-6">
+        <div className="max-w-[1280px] w-full mx-auto px-4 sm:px-6">
           <div className="max-w-[1216px] w-full flex justify-between items-center mx-auto">
             {/* Logo Section */}
             <div className="flex items-center gap-3 select-none">
@@ -122,7 +122,7 @@ export function Dashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
                <LanguageSwitcher />
 
                {/* User Button */}
@@ -251,7 +251,7 @@ export function Dashboard() {
 
         {/* Project List or Loading or Empty State */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1216px] w-full mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-[1216px] w-full mx-auto">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="w-full h-[140px] bg-card border border-border rounded-[14px] p-[12px] gap-[10px] flex">
                 <Skeleton className="w-[116px] h-[116px] rounded-[9px]" />
@@ -260,7 +260,7 @@ export function Dashboard() {
                     <Skeleton className="h-4 w-3/4" />
                     <Skeleton className="h-12 w-full" />
                   </div>
-                  <div className="flex items-center gap-2 h-[20px]">
+                  <div className="flex items-center gap-2 h-[20px] mt-auto">
                     <Skeleton className="h-4 w-24" />
                   </div>
                 </div>
@@ -289,7 +289,9 @@ export function Dashboard() {
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="w-full h-[140px] bg-card border border-border rounded-[14px] p-[12px] gap-[10px] flex cursor-pointer hover:shadow-lg transition-shadow"
+                role="button" tabIndex={0}
+                onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleProjectClick(project.id); } }}
+                className="group w-full min-h-[140px] bg-card border border-border rounded-2xl p-3 gap-4 flex cursor-pointer hover:border-primary/30 hover:bg-accent/60 hover:shadow-[0_8px_32px_rgba(0,0,0,0.15)] transition-colors focus-visible:outline focus-visible:outline-primary"
                 onClick={() => handleProjectClick(project.id)}
               >
                   {/* Image Section */}
@@ -310,16 +312,16 @@ export function Dashboard() {
                   {/* Content Section */}
                   <div className="flex flex-col h-[116px] flex-1 gap-1 min-w-0">
                       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                           <h3 className="text-[16px] font-normal font-poppins text-foreground leading-4 truncate">{project.name}</h3>
-                           <p className="text-[16px] font-normal font-poppins text-foreground leading-6 line-clamp-3 text-ellipsis overflow-hidden h-[72px] opacity-60">
-                               {project.description || 'Sin descripción'}
+                           <h3 className="text-base font-medium font-poppins text-foreground leading-6 truncate tracking-tight">{project.name}</h3>
+                           <p className="text-sm text-muted-foreground leading-5 line-clamp-2 overflow-hidden">
+                               {project.description || t('visual.no_description')}
                            </p>
                       </div>
                       <div className="flex items-center gap-2 h-[20px]">
                            <div className="flex items-center gap-2 text-foreground">
                                 <Users className="size-4" />
                                 <span className="text-[14px] font-normal font-sans leading-5">
-                                    {project.members.length} {project.members.length === 1 ? 'miembro' : 'miembros'}
+                                    {t('visual.member_count', { count: project.members.length })}
                                 </span>
                            </div>
                            

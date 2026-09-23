@@ -10,10 +10,10 @@ interface PageLayoutProps {
 export function PageLayout({ children, headerContent, className = "", headerClassName = "" }: PageLayoutProps) {
   return (
     <div className={`min-h-screen bg-background relative ${className}`}>
-      <header className={`min-h-[84px] pt-[env(safe-area-inset-top)] bg-card border-b border-border shadow-[0px_1px_3px_rgba(0,0,0,0.1)] flex flex-col justify-center w-full ${headerClassName}`}>
+      <header className={`min-h-[84px] pt-[env(safe-area-inset-top)] bg-card/80 border-b border-white/[0.06] backdrop-blur-xl flex flex-col justify-center w-full ${headerClassName}`}>
         {headerContent}
       </header>
-      <main>
+      <main className="bg-[radial-gradient(ellipse_at_top,rgba(163,230,53,0.025),transparent_60%)]">
         {children}
       </main>
     </div>
