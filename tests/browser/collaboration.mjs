@@ -137,7 +137,14 @@ try {
     await page.getByRole('link', { name: 'Create account', exact: true }).click();
     await page.locator('#email').waitFor();
     assert.match(await page.evaluate(() => localStorage.getItem('bandanize.pendingInvite')), new RegExp(token));
-    await page.goto(origin + '/login');
+    await page.locator('#name').fill('Owner');
+    await page.locator('#username').fill('owner');
+    await page.locator('#email').fill('Owner@Example.test');
+    await page.locator('#password').fill('fixture-password');
+    await page.locator('form button[type=submit]').click();
+    await page.getByText('Check your email', { exact: true }).waitFor();
+    await page.goto(origin + '/verify-email?token=fixture-verification');
+    await page.waitForURL('**/login');
     await page.locator('#username').fill('owner@example.test');
     await page.locator('#password').fill('fixture-password');
     await page.locator('form button[type=submit]').click();
@@ -161,6 +168,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     const dialog = page.getByRole('dialog');
     await dialog.waitFor();
     await dialog.getByRole('combobox', { name: 'Font size' }).selectOption('4');
+    await dialog.evaluate(async el => { await Promise.all(el.getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {}))); });
     const box = await dialog.boundingBox();
     assert(box && box.x >= 0 && box.y >= 0 && box.width >= 370 && box.height >= 820, JSON.stringify(box));
     assert(box.x + box.width <= 391 && box.y + box.height <= 845);
@@ -170,7 +178,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     assert.equal(await dialog.locator('pre').evaluate(el => getComputedStyle(el).whiteSpace), 'pre');
     await capture(page, name + '-mobile-fullscreen');
     await dialog.getByRole('button', { name: /Exit fullscreen|Salir de pantalla completa/i }).click();
-    assert.equal(await page.getByRole('dialog').count(), 0);
+    await page.getByRole('dialog').waitFor({ state: 'detached' });
     assert.deepEqual(errors, []);
     console.log('PASS ' + name + ' mobile viewport, scrolling, font size and exit');
   } catch (error) { await capture(page, name + '-failure'); throw error; }
