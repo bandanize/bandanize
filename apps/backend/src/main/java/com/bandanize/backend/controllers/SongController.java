@@ -149,22 +149,21 @@ public class SongController {
 
     // --- Tab Comments ---
     @GetMapping("/tabs/{tabId}/comments")
-    public ResponseEntity<List<TabCommentModel>> getTabComments(@PathVariable Long tabId) {
-        return ResponseEntity.ok(tabCommentService.getComments(tabId));
+    public ResponseEntity<List<TabCommentModel>> getTabComments(@PathVariable Long tabId, Principal principal) {
+        return ResponseEntity.ok(tabCommentService.getComments(tabId, getCurrentUserId(principal)));
     }
 
     @PostMapping("/tabs/{tabId}/comments")
     public ResponseEntity<TabCommentModel> addTabComment(@PathVariable Long tabId,
-            @RequestBody java.util.Map<String, String> request, Principal principal) {
+            @RequestBody com.bandanize.backend.dtos.TabCommentRequest request, Principal principal) {
         Long userId = getCurrentUserId(principal);
-        String message = request.get("message");
-        return ResponseEntity.ok(tabCommentService.addComment(tabId, userId, message));
+        return ResponseEntity.ok(tabCommentService.addComment(tabId, userId, request));
     }
 
     @DeleteMapping("/tabs/{tabId}/comments/{commentId}")
     public ResponseEntity<Void> deleteTabComment(@PathVariable Long tabId, @PathVariable Long commentId,
             Principal principal) {
-        tabCommentService.deleteComment(commentId, getCurrentUserId(principal));
+        tabCommentService.deleteComment(tabId, commentId, getCurrentUserId(principal));
         return ResponseEntity.ok().build();
     }
 

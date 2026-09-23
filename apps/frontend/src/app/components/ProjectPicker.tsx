@@ -13,10 +13,10 @@ function ProjectArtwork({ project, single }: { project: Project; single: boolean
     {showPhoto && <img src={getMediaUrl(project.imageUrl!)} alt="" aria-hidden="true"
       className="absolute inset-0 h-full w-full object-cover scale-150 blur-3xl opacity-65 saturate-150 pointer-events-none" />}
     <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/70 pointer-events-none" />
-    <div className={`relative overflow-hidden rounded-2xl border border-white/20 bg-card shadow-[0_14px_36px_rgba(0,0,0,0.4)] transition-transform duration-300 motion-reduce:transition-none group-hover:-translate-y-1 ${single ? 'size-36 sm:size-40' : 'size-32'}`}>
+    <div className={`relative rounded-2xl drop-shadow-[0_14px_20px_rgba(0,0,0,0.4)] transition-transform duration-300 motion-reduce:transition-none group-hover:-translate-y-1 ${single ? 'size-36 sm:size-40' : 'size-32'}`}>
       {showPhoto ? <img src={getMediaUrl(project.imageUrl!)} alt="" onError={() => setFailed(project.imageUrl)}
-        className="h-full w-full object-cover" />
-        : <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-card">
+        className="h-full w-full object-contain rounded-2xl" />
+        : <div className="h-full w-full rounded-2xl flex items-center justify-center bg-gradient-to-br from-primary/20 to-card">
             <Music2 className="size-12 text-primary" aria-hidden="true" />
           </div>}
     </div>

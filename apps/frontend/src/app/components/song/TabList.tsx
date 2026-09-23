@@ -90,7 +90,7 @@ export function TabList({
           <CardTitle className="text-foreground">{t('tabs_title', 'Tablaturas')} ({song.tablatures.length})</CardTitle>
           <Dialog open={openTabDialog} onOpenChange={setOpenTabDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button aria-label={t('new_tab')} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 <Plus className="size-4 md:mr-2" />
                 <span className="hidden md:inline">{t('new_tab', 'Nueva tablatura')}</span>
               </Button>
@@ -216,17 +216,17 @@ export function TabList({
                 onClick={() => onSelectTab(tab.id)}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-secondary/20 rounded-md border border-border">
+                  <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="shrink-0 p-2 bg-secondary/20 rounded-md border border-border">
                             {getInstrumentIcon(tab.instrumentIcon || 'guitar')}
                           </div>
-                          <div>
-                            <h4 className="font-medium text-foreground">{tab.name}</h4>
+                          <div className="min-w-0">
+                            <h4 className="font-medium text-sm text-foreground truncate" title={tab.name}>{tab.name}</h4>
                             <p className="text-xs text-muted-foreground">{tab.tuning || t('standard_tuning', 'Estandar')}</p>
                           </div>
                         </div>
-                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost" 
                               size="icon"

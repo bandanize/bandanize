@@ -27,6 +27,24 @@ public class TabCommentModel {
     @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
 
+    private Integer anchorStart;
+    private Integer anchorEnd;
+    @Column(columnDefinition = "TEXT")
+    private String quote;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "tab_comment_attachments", joinColumns = @JoinColumn(name = "comment_id"))
+    private java.util.List<MediaFile> attachments = new java.util.ArrayList<>();
+
+    public Integer getAnchorStart() { return anchorStart; }
+    public void setAnchorStart(Integer value) { anchorStart = value; }
+    public Integer getAnchorEnd() { return anchorEnd; }
+    public void setAnchorEnd(Integer value) { anchorEnd = value; }
+    public String getQuote() { return quote; }
+    public void setQuote(String value) { quote = value; }
+    public java.util.List<MediaFile> getAttachments() { return attachments; }
+    public void setAttachments(java.util.List<MediaFile> value) { attachments = value; }
+
     public Long getId() {
         return id;
     }

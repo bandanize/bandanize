@@ -58,8 +58,9 @@ interface SortableSongRowProps {
 }
 
 const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate }: SortableSongRowProps) => {
-  const reducedMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
+  const blockDrag = useRef(false);
+  const lastDrag = useRef(0);
   const { t } = useTranslation();
 
   const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
@@ -92,9 +93,11 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
 
   const [{ isDragging }, drag, preview] = useDrag({
     type: ItemType.SONG_ROW,
+    canDrag: () => !blockDrag.current,
     item: () => ({ id: song.id, index, type: ItemType.SONG_ROW, sourceListId: listId, name: song.name }),
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     end: (_item, monitor) => {
+      lastDrag.current = Date.now();
       const result = monitor.getDropResult<PlaylistDropResult>();
       if (result?.targetListId && result.targetListId !== listId) onCancelDrag();
       else onDrop();
@@ -104,27 +107,25 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
   const opacity = isDragging ? 0.4 : 1;
 
   return (
-    <motion.div layout="position" transition={{ duration: reducedMotion ? 0 : 0.18 }}
+    <div
       ref={(node) => {
-          drop(node);
+          drag(drop(node));
           preview(node);
           ref.current = node;
       }}
       style={{ opacity }}
-      className="group flex items-center gap-2 min-h-14 px-2 py-2 rounded-lg hover:bg-white/[0.035] transition-colors select-none"
+      className="group cursor-grab active:cursor-grabbing flex items-center gap-2 min-h-14 px-2 py-2 rounded-lg hover:bg-white/[0.035] transition-colors select-none"
+      onPointerDownCapture={event => { blockDrag.current = !!(event.target as HTMLElement).closest('button, a, input, select, textarea'); }}
+      onClick={event => { if (!(event.target as HTMLElement).closest('button, a, input, select, textarea') && Date.now() - lastDrag.current > 300) onSelect(listId, song); }}
       data-song-id={song.id}
       data-handler-id={handlerId}
     >
-      {/* Drag Handle */}
-      <button type="button" ref={(node) => { drag(node); }} aria-label={t('visual.drag_song', { name: song.name })}
-        className="cursor-grab active:cursor-grabbing flex h-8 w-6 shrink-0 items-center justify-center touch-none text-muted-foreground/50 hover:text-primary focus-visible:outline focus-visible:outline-primary">
-           <GripVertical className="size-4" />
-      </button>
+
      
       <div 
         className="flex-1 min-w-0 cursor-pointer rounded focus-visible:outline focus-visible:outline-primary"
         role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(listId, song); } }}
-        onClick={() => onSelect(listId, song)}
+
       >
         <div className="flex items-center gap-2">
             <p className="font-medium text-foreground text-sm truncate">{song.name}</p>
@@ -195,7 +196,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </motion.div>
+    </div>
   );
 };
 
@@ -791,7 +792,7 @@ export function SongManager() {
 
   // --- Render ---
   return (
-    <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true }}>
+    <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true, delayTouchStart: 180, touchSlop: 8 }}>
       <DragPreview />
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Panel - Song Lists */}

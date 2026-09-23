@@ -1,0 +1,12 @@
+.song-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; grid-template-areas: 'tabs' 'score' 'comments' 'media'; align-items: start; }
+.song-tabs { grid-area: tabs; }
+.song-score { grid-area: score; }
+.song-comments { grid-area: comments; }
+.song-media { grid-area: media; }
+.song-tabs > [data-slot=card] { gap: 12px; }
+.song-tabs > [data-slot=card] > [data-slot=card-header] { padding-top: 16px; }
+.song-tabs [data-slot=card-header], .song-tabs [data-slot=card-content] { padding-inline: 16px; }
+.song-tabs [data-slot=card-title] { font-size: 14px; }
+@media (min-width: 1024px) {
+  .song-workspace { grid-template-columns: 300px minmax(0, 1fr); grid-template-areas: 'tabs score' 'comments score' 'media score'; grid-template-rows: auto auto 1fr; gap: 16px 24px; }
+}
