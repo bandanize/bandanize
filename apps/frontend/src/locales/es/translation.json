@@ -355,7 +355,7 @@
     "save_before_comment": "Guarda los cambios antes de comentar este fragmento.",
     "comment_selection": "Comentar selección",
     "comments_failed": "No se pudieron cargar los comentarios.",
-    "comment_failed": "No se pudo enviar. Si la tablatura cambió, selecciona de nuevo el fragmento.",
+    "comment_failed": "No se pudo guardar el comentario. Tu texto y adjuntos siguen aquí; vuelve a intentarlo.",
     "see_passage": "Ver fragmento",
     "passage_changed": "El fragmento ha cambiado o ya no se puede localizar.",
     "commenting_on": "Comentando este fragmento",
@@ -397,6 +397,12 @@
     "use_part": "Comentar estas líneas",
     "mention": "Mencionar a alguien",
     "part_comment": "Tu comentario quedará unido a las líneas seleccionadas.",
-    "general_comment": "Comenta toda la tablatura aquí. Para señalar líneas, pulsa «Comentar una parte» en la tablatura."
+    "general_comment": "Escribe y pulsa enviar. No necesitas seleccionar ninguna parte.",
+    "general_button": "Comentario general",
+    "general_placeholder": "Escribe tu comentario…",
+    "part_placeholder": "Comenta este fragmento…",
+    "send_error": "No se pudo guardar el comentario. Tu texto y adjuntos siguen aquí; vuelve a intentarlo.",
+    "stale_error": "La tablatura cambió desde que seleccionaste el fragmento. Vuelve a seleccionarlo o pulsa «Comentario general» para enviar solo tu texto.",
+    "network_error": "No se pudo conectar con el servidor. Tu comentario sigue aquí; revisa la conexión y vuelve a intentarlo."
   }
 }

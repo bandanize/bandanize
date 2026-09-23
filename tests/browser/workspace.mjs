@@ -52,13 +52,13 @@ await page.getByRole('button',{name:'Comentar selección',exact:true}).click();a
 const input=page.locator('#tab-comment-input');await input.fill('Probamos esta frase más suave.');
 await page.locator('.song-comments input[type=file]').setInputFiles({name:'original.wav',mimeType:'audio/wav',buffer:Buffer.from('fixture-audio')});await page.locator('#upload-name').fill('Ensayo acústico');
 await page.getByRole('button',{name:'Subir archivo',exact:true}).click();await page.getByText('Ensayo acústico.wav',{exact:true}).waitFor();
-failComment=true;await page.getByRole('button',{name:'Enviar comentario'}).click();await page.getByText(/No se pudo enviar/).waitFor();assert.equal(await input.inputValue(),'Probamos esta frase más suave.');
+failComment=true;await page.getByRole('button',{name:'Enviar comentario'}).click();await page.getByText(/No se pudo guardar/).waitFor();assert.equal(await input.inputValue(),'Probamos esta frase más suave.');
 failComment=false;await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForFunction(()=>document.querySelector('#tab-comment-input').value==='');
 assert.equal(comments.at(-1).quote,'Una melodía para volver');assert.equal(comments.at(-1).attachments[0].name,'Ensayo acústico.wav');
 const upload=requests.find(r=>r.path.endsWith('/upload/chunk'));assert(upload.data.includes('Ensayo acústico.wav'));
 await page.reload();await page.getByText('Probamos esta frase más suave.',{exact:true}).waitFor();
 // Both song and tablature uploads share the rename step.
-for (const [area, name, endpoint] of [['.song-media','Demo canción','/songs/21/files'],['.song-score','Demo guitarra','/tabs/31/files']]) {
+for (const [area, name, endpoint] of [['.song-media','Demo canción','/songs/21/files'],['.song-tab-media','Demo guitarra','/tabs/31/files']]) {
  await page.locator(area).getByRole('button',{name:'Añadir',exact:true}).click();
  await page.locator('.song-workspace').locator('..').locator('input[type=file]').first().setInputFiles({name:'take.wav',mimeType:'audio/wav',buffer:Buffer.from('take')});
  await page.locator('#upload-name').fill(name);await page.getByRole('button',{name:'Subir archivo',exact:true}).click();

@@ -1,0 +1,75 @@
+name: Publish tested backend image
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: backend-main-image
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Publish only a current main revision with backend changes
+        id: revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          source_sha=$(git rev-parse HEAD)
+          main_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+          if [ "$source_sha" != "$main_sha" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ] || ! git diff --quiet HEAD^ HEAD -- apps/backend .github/workflows/backend-image.yml; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-java@v6
+        if: steps.revision.outputs.publish == 'true'
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: maven
+      - name: Test and package the server
+        if: steps.revision.outputs.publish == 'true'
+        working-directory: apps/backend
+        run: |
+          chmod +x mvnw
+          ./mvnw --batch-mode verify
+      - uses: docker/setup-buildx-action@v4
+        if: steps.revision.outputs.publish == 'true'
+      - uses: docker/login-action@v4
+        if: steps.revision.outputs.publish == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish the matching backend
+        if: steps.revision.outputs.publish == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: apps/backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/backend:latest
+            ghcr.io/${{ github.repository_owner }}/backend:sha-${{ steps.revision.outputs.sha }}

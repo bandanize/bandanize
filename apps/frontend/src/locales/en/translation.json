@@ -355,7 +355,7 @@
     "save_before_comment": "Save your changes before commenting on this passage.",
     "comment_selection": "Comment on selection",
     "comments_failed": "Could not load comments.",
-    "comment_failed": "Could not send. If the tablature changed, select the passage again.",
+    "comment_failed": "Could not save the comment. Your text and attachments are still here; please try again.",
     "see_passage": "View passage",
     "passage_changed": "This passage has changed or can no longer be located.",
     "commenting_on": "Commenting on this passage",
@@ -397,6 +397,12 @@
     "use_part": "Comment on these lines",
     "mention": "Mention someone",
     "part_comment": "Your comment will be linked to the selected lines.",
-    "general_comment": "Comment on the whole tablature here. To select lines, use “Comment on a passage” above the tablature."
+    "general_comment": "Write and send. You do not need to select a passage.",
+    "general_button": "General comment",
+    "general_placeholder": "Write your comment…",
+    "part_placeholder": "Comment on this passage…",
+    "send_error": "Could not save the comment. Your text and attachments are still here; please try again.",
+    "stale_error": "The tablature changed after you selected the passage. Select it again or choose “General comment” to send only your text.",
+    "network_error": "Could not connect to the server. Your comment is still here; check your connection and try again."
   }
 }
