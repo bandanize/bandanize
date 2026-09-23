@@ -399,7 +399,7 @@ export function ProjectHub() {
 
             <TabsContent value="calendar" className="m-0">
                 {currentProject && (
-                    <ProjectCalendar 
+                    <ProjectCalendar key={currentProject.id}
                         projectId={currentProject.id.toString()} 
                     />
                 )}

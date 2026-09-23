@@ -160,7 +160,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
-  const fetchProjects = useCallback(async () => {
+  const fetchProjects = useCallback(async (throwOnError = false) => {
     setIsLoading(true);
     try {
       const response = await api.get('/bands/my-bands');
@@ -218,6 +218,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setProjects(mappedProjects);
     } catch (error) {
       console.error("Error fetching projects", error);
+      if (throwOnError) throw error;
     } finally {
       setIsLoading(false);
     }
@@ -468,6 +469,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 instrumentIcon: string;
                 tuning: string;
                 content: string;
+                commentCount?: number;
                 files?: MediaFile[];
               }[];
             }) => ({
@@ -485,6 +487,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 instrumentIcon: tab.instrumentIcon,
                 tuning: tab.tuning,
                 content: tab.content,
+                commentCount: tab.commentCount,
                 files: tab.files || []
               })) : []
             })) : []
@@ -693,6 +696,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                   instrumentIcon: string;
                   tuning: string;
                   content: string;
+                  commentCount?: number;
                   files?: MediaFile[];
               }) => ({
                   id: String(tab.id),
@@ -701,6 +705,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                   instrumentIcon: tab.instrumentIcon,
                   tuning: tab.tuning,
                   content: tab.content,
+                  commentCount: tab.commentCount,
                   files: tab.files || []
               })) : []
           };
@@ -738,6 +743,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                   instrumentIcon: string;
                   tuning: string;
                   content: string;
+                  commentCount?: number;
                   files?: MediaFile[];
               }) => ({
                   id: String(tab.id),
@@ -746,6 +752,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                   instrumentIcon: tab.instrumentIcon,
                   tuning: tab.tuning,
                   content: tab.content,
+                  commentCount: tab.commentCount,
                   files: tab.files || []
               })) : []
           };
@@ -801,6 +808,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
              instrumentIcon: t.instrumentIcon,
              tuning: t.tuning,
              content: t.content,
+             commentCount: t.commentCount ?? 0,
              files: []
         };
         
@@ -957,7 +965,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ProjectContext.Provider value={{
-      refreshProjects: fetchProjects,
+      refreshProjects: () => fetchProjects(true),
       updateTabCommentCount,
       projects,
       invitations,
