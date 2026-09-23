@@ -69,6 +69,20 @@ public class BandModel {
     @Column(unique = true)
     private String calendarToken;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(unique = true, length = 64)
+    private String inviteTokenHash;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private java.time.Instant inviteExpiresAt;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getInviteTokenHash() { return inviteTokenHash; }
+    public void setInviteTokenHash(String value) { inviteTokenHash = value; }
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public java.time.Instant getInviteExpiresAt() { return inviteExpiresAt; }
+    public void setInviteExpiresAt(java.time.Instant value) { inviteExpiresAt = value; }
+
     // Getters y setters
     public Long getId() {
         return id;

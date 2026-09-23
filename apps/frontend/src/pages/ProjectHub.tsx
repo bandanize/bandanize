@@ -62,7 +62,7 @@ export function ProjectHub() {
 
   // Handle auto-selection on refresh
   useEffect(() => {
-      if (!isLoading && projectId && !currentProject && projects.length > 0) {
+      if (!isLoading && projectId && currentProject?.id !== projectId && projects.some(project => project.id === projectId)) {
           selectProject(projectId);
       }
   }, [isLoading, projectId, currentProject, projects, selectProject]);
@@ -399,7 +399,7 @@ export function ProjectHub() {
 
             <TabsContent value="calendar" className="m-0">
                 {currentProject && (
-                    <ProjectCalendar 
+                    <ProjectCalendar key={currentProject.id}
                         projectId={currentProject.id.toString()} 
                     />
                 )}

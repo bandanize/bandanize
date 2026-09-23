@@ -23,11 +23,12 @@ interface TabCommentsProps {
 
 export function TabComments({ tabId }: TabCommentsProps) {
   const { t } = useTranslation();
-  const { currentProject } = useProjects();
+  const { currentProject, updateTabCommentCount } = useProjects();
   const { user } = useAuth();
   const [comments, setComments] = useState<TabComment[]>([]);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedTabId, setLoadedTabId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +45,7 @@ export function TabComments({ tabId }: TabCommentsProps) {
     try {
       const response = await api.get(`/tabs/${tabId}/comments`);
       setComments(response.data);
+      setLoadedTabId(tabId);
     } catch (error) {
       console.error('Error fetching comments', error);
     } finally {
@@ -54,6 +56,10 @@ export function TabComments({ tabId }: TabCommentsProps) {
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
+
+  useEffect(() => {
+    if (loadedTabId === tabId) updateTabCommentCount(tabId, comments.length);
+  }, [tabId, comments.length, loadedTabId, updateTabCommentCount]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {

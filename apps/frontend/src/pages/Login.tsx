@@ -16,7 +16,7 @@ export function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [showRegister, setShowRegister] = useState(false);
+  const [showRegister, setShowRegister] = useState(() => new URLSearchParams(window.location.search).get('register') === '1');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

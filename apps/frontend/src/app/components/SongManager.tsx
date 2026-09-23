@@ -5,7 +5,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical, FileText, Paperclip, MessageCircle } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
@@ -16,8 +16,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Badge } from '@/app/components/ui/badge';
 import { ExportListDialog } from './ExportListDialog';
 
+import { motion, useReducedMotion } from 'motion/react';
+
 // React DnD
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { DndProvider, useDrag, useDrop, useDragLayer } from 'react-dnd';
 import { TouchBackend } from 'react-dnd-touch-backend';
 
 type Identifier = string | symbol;
@@ -34,6 +36,7 @@ interface DragItem {
   id: string;
   type: string;
   sourceListId?: string;
+  name: string;
 }
 
 // --- Sortable Song Row ---
@@ -52,6 +55,7 @@ interface SortableSongRowProps {
 }
 
 const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate }: SortableSongRowProps) => {
+  const reducedMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
@@ -63,7 +67,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
       };
     },
     hover(item: DragItem, monitor) {
-      if (!ref.current) return;
+      if (!ref.current || item.sourceListId !== listId) return;
       const dragIndex = item.index;
       const hoverIndex = index;
 
@@ -85,7 +89,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
 
   const [{ isDragging }, drag, preview] = useDrag({
     type: ItemType.SONG_ROW,
-    item: () => ({ id: song.id, index, type: ItemType.SONG_ROW, sourceListId: listId }),
+    item: () => ({ id: song.id, index, type: ItemType.SONG_ROW, sourceListId: listId, name: song.name }),
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     end: () => { onDrop(); }
   });
@@ -93,14 +97,14 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
   const opacity = isDragging ? 0.4 : 1;
 
   return (
-    <div
+    <motion.div layout="position" transition={{ duration: reducedMotion ? 0 : 0.18 }}
       ref={(node) => {
           drop(node);
           preview(node);
           ref.current = node;
       }}
       style={{ opacity }}
-      className="group flex items-center gap-3 py-2.5 px-1 hover:bg-card/50 rounded-lg transition-all select-none"
+      className="group flex items-center gap-3 py-2.5 px-1 hover:bg-card/50 rounded-lg transition-colors select-none"
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
@@ -125,6 +129,20 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           {(song.bpm !== undefined && song.bpm !== null && song.bpm !== 0) ? ` • ${song.bpm} BPM` : ''}
           {song.key ? ` • ${song.key}` : ''}
         </p>
+        <div className="flex flex-wrap gap-1.5 mt-1.5 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5" title={t('library.tab_count', { count: song.tablatures.length })}>
+            <FileText className="size-3" aria-hidden="true" />{t('library.tab_count', { count: song.tablatures.length })}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5">
+            <Paperclip className="size-3" aria-hidden="true" />{t('library.file_count', { count: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0) })}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5">
+            <MessageCircle className="size-3" aria-hidden="true" />{song.tablatures.some(tab => tab.commentCount === undefined)
+              ? t('library.comments_unavailable')
+              : t('library.comment_count', { count: song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0) })}
+          </span>
+        </div>
+
       </div>
       
       {/* Actions Dropdown */}
@@ -133,7 +151,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-all shrink-0 data-[state=open]:text-foreground"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-colors shrink-0 data-[state=open]:text-foreground"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <MoreVertical className="size-4" />
@@ -171,7 +189,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </motion.div>
   );
 };
 
@@ -250,7 +268,8 @@ interface SortableListItemProps {
 }
 
 const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect, onEdit, onDelete, onDuplicate, onExport, onSongDropOnList }: SortableListItemProps) => {
-    const ref = useRef<HTMLDivElement>(null);
+    const reducedMotion = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
 
     const [{ handlerId, isOver }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null, isOver: boolean }>({
@@ -292,15 +311,15 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
 
     const [{ isDragging }, drag, preview] = useDrag({
         type: ItemType.SONG_LIST,
-        item: () => ({ id: list.id, index }),
+        item: () => ({ id: list.id, index, name: list.name, type: ItemType.SONG_LIST }),
         collect: (monitor) => ({ isDragging: monitor.isDragging() }),
         end: () => { onDrop(); }
     });
 
-    const opacity = isDragging ? 0 : 1;
+    const opacity = isDragging ? 0.3 : 1;
 
     return (
-        <div 
+        <motion.div layout="position" transition={{ duration: reducedMotion ? 0 : 0.18 }} 
             ref={(node) => { 
                 drop(node); 
                 preview(node); 
@@ -309,7 +328,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
             style={{ opacity }} 
             data-handler-id={handlerId} 
             className={`
-                group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all select-none
+                group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-colors select-none
                 ${isSelected 
                     ? 'bg-card border-2 border-primary' 
                     : 'bg-card border border-border hover:border-border/80'
@@ -365,9 +384,24 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-        </div>
+        </motion.div>
     );
 };
+
+function DragPreview() {
+  const { item, offset, dragging } = useDragLayer(monitor => ({
+    item: monitor.getItem() as DragItem | null,
+    offset: monitor.getClientOffset(),
+    dragging: monitor.isDragging(),
+  }));
+  if (!dragging || !item || !offset) return null;
+  return <div aria-hidden="true" className="fixed inset-0 z-[100] pointer-events-none">
+    <div style={{ transform: 'translate(' + (offset.x + 12) + 'px, ' + (offset.y + 12) + 'px)' }}
+      className="w-max max-w-[65vw] rounded-xl border-2 border-primary bg-card px-4 py-3 shadow-2xl text-foreground">
+      <div className="flex items-center gap-2"><GripVertical className="size-4 text-primary" /><span className="truncate">{item.name}</span></div>
+    </div>
+  </div>;
+}
 
 // --- Main SongManager Component ---
 
@@ -728,6 +762,7 @@ export function SongManager() {
   // --- Render ---
   return (
     <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true }}>
+      <DragPreview />
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Panel - Song Lists */}
         <div className={`w-full lg:w-[420px] lg:shrink-0 space-y-4 ${selectedListId ? 'hidden lg:block' : 'block'}`}>
@@ -975,7 +1010,7 @@ export function SongManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
               {/* Option 1: True Duplicate */}
               <Card 
-                className={`relative overflow-hidden cursor-pointer transition-all border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
+                className={`relative overflow-hidden cursor-pointer transition-colors border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
                 onClick={() => handleDuplicateList(true)}
               >
                 <CardContent className="p-4 flex flex-col h-full">
@@ -993,7 +1028,7 @@ export function SongManager() {
 
               {/* Option 2: Link */}
               <Card 
-                className={`relative overflow-hidden cursor-pointer transition-all border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
+                className={`relative overflow-hidden cursor-pointer transition-colors border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
                 onClick={() => handleDuplicateList(false)}
               >
                 <CardContent className="p-4 flex flex-col h-full">

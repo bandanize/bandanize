@@ -426,6 +426,17 @@ public class BandService {
     }
 
     @org.springframework.transaction.annotation.Transactional
+    public String getCalendarTokenForMember(Long bandId, String username) {
+        BandModel band = bandRepository.findById(bandId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        boolean owner = band.getOwner() != null && band.getOwner().getUsername().equals(username);
+        boolean member = band.getUsers().stream().anyMatch(user -> user.getUsername().equals(username));
+        if (!owner && !member)
+            throw new org.springframework.security.access.AccessDeniedException("Project membership required");
+        return getOrGenerateCalendarToken(bandId);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
     public String getOrGenerateCalendarToken(Long bandId) {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
