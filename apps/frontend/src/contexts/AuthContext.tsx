@@ -1,3 +1,4 @@
+import { authStorage, clearAuthSession, getAuthToken, saveAuthSession } from '@/lib/auth-session';
 import React, { createContext, useContext, useState } from 'react';
 import api from '@/services/api';
 import { PUBLIC_ROUTES } from '@/services/api';
@@ -15,7 +16,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, remember?: boolean) => Promise<void>;
   register: (email: string, password: string, name: string, username: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
@@ -27,8 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     // Check for token and load user
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('currentUser');
+        const token = getAuthToken();
+        const storedUser = authStorage().getItem('currentUser');
         if (token && storedUser) {
             try {
                 return JSON.parse(storedUser);
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Verify token on mount
   React.useEffect(() => {
     const verifyToken = async () => {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       if (token) {
         try {
           // We use the new /me endpoint which requires authentication
@@ -52,8 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Token verification failed, logging out
           // Logout logic duplicated here to avoid dependency cycle or closure issues before logout is defined
           setUser(null);
-          localStorage.removeItem('currentUser');
-          localStorage.removeItem('token');
+          clearAuthSession();
           const isPublicRoute = PUBLIC_ROUTES.some(route => window.location.pathname.startsWith(route));
           
           if (!isPublicRoute) {
@@ -75,20 +75,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(previous => {
         if (!previous || previous.id !== id || previous.photo === data.photo) return previous;
         const next = { ...previous, photo: data.photo };
-        localStorage.setItem('currentUser', JSON.stringify(next));
+        authStorage().setItem('currentUser', JSON.stringify(next));
         return next;
       });
     }).catch(() => { /* Profile images are optional; a failure must not end the session. */ });
     return () => controller.abort();
   }, [user?.id]);
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, remember = false) => {
     try {
-      const response = await api.post('/auth/login', { username, password });
+      const response = await api.post('/auth/login', { username, password }, { timeout: 30000 });
       const { token, id, email, name, city } = response.data;
-      
-      localStorage.setItem('token', token);
-      
       const user: User = { 
         id: String(id), // Ensure it's a string for frontend consistency
         username: response.data.username || username,
@@ -98,8 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         photo: response.data.photo || '',
       };
       
+      saveAuthSession(token, user, remember);
       setUser(user);
-      localStorage.setItem('currentUser', JSON.stringify(user));
       
     } catch (error) {
        console.error("Login error", error);
@@ -133,8 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');
+    clearAuthSession();
   };
 
   const updateProfile = (data: Partial<User>) => {
@@ -142,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       const updatedUser = { ...user, ...data };
       setUser(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      authStorage().setItem('currentUser', JSON.stringify(updatedUser));
        // TODO: Call backend update endpoint if available
     }
   };

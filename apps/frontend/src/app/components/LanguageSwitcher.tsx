@@ -1,29 +1,22 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/app/components/ui/button';
 import { Languages } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
-  const isSpanish = (i18n.resolvedLanguage || i18n.language).startsWith('es');
-
-  const toggleLanguage = () => {
-    const newLang = isSpanish ? 'en' : 'es';
-    i18n.changeLanguage(newLang);
-  };
+  const language = (i18n.resolvedLanguage || i18n.language).startsWith('es') ? 'es' : 'en';
 
   return (
-    <Button
-      type="button"
-      aria-label={isSpanish ? 'Switch to English' : 'Cambiar a español'}
-      variant="ghost"
-      size="sm"
-      onClick={toggleLanguage}
-      className="w-auto px-3 text-muted-foreground hover:text-foreground hover:bg-accent"
-    >
-      <Languages className="size-4" aria-hidden="true" />
-      <span lang={isSpanish ? 'en' : 'es'}>{isSpanish ? 'English' : 'Español'}</span>
-    </Button>
+    <Select value={language} onValueChange={value => { void i18n.changeLanguage(value); }}>
+      <SelectTrigger aria-label="Idioma / Language" className="w-auto min-w-[142px] gap-2 rounded-lg bg-card text-sm">
+        <Languages className="size-4" aria-hidden="true" />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="end">
+        <SelectItem value="es"><span lang="es">Español</span></SelectItem>
+        <SelectItem value="en"><span lang="en">English</span></SelectItem>
+      </SelectContent>
+    </Select>
   );
 }

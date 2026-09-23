@@ -156,6 +156,11 @@
   "photo_upload_error": "Error al subir la foto",
   "invalid_image": "Por favor selecciona un archivo de imagen",
   "auth": {
+    "signing_in": "Entrando…",
+    "registering": "Creando cuenta…",
+    "please_wait": "Estamos procesando tu solicitud. Un momento, por favor.",
+    "remember": "Mantener la sesión iniciada",
+    "remember_hint": "Solo en un dispositivo de confianza.",
     "brand_home": "Bandanize, volver al inicio",
     "your_backstage": "Tu pase al backstage",
     "less_chaos": "MENOS CAOS.",
@@ -194,6 +199,14 @@
     "comments_unavailable": "Comentarios: —"
   },
   "reader": {
+    "edit": "Editar tablatura",
+    "view": "Ver acordes",
+    "copy": "Copiar",
+    "export": "Exportar",
+    "save": "Guardar",
+    "controls": "Controles de lectura",
+    "copied": "Copiado al portapapeles",
+    "copy_failed": "No se pudo copiar el texto",
     "font_size": "Tamaño de letra"
   },
   "invite": {

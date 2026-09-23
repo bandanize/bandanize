@@ -159,13 +159,45 @@ export function TabEditor({
     return <Icon className="size-4" />;
   };
 
+  const copyContent = async () => {
+    try {
+      await navigator.clipboard.writeText(editingContent);
+      toast.success(t('reader.copied'));
+    } catch { toast.error(t('reader.copy_failed')); }
+  };
+
+  const exportContent = () => {
+    const blob = new Blob([tab.name + '\n' + (tab.tuning || 'Standard') + '\n\n' + editingContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = songName + '-' + tab.name + '.txt';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   const editor = (
     <div 
         className={cn(
-            isFullscreen ? "flex flex-col h-full min-h-0 gap-2 bg-background" : "space-y-4"
+            isFullscreen ? "flex flex-col h-full min-h-0 gap-0 bg-background" : "space-y-4"
         )}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+      {isFullscreen && <div className="flex shrink-0 items-center gap-1 border-b border-border px-1 py-1" role="toolbar" aria-label={t('reader.controls')}>
+        <span className="hidden sm:block truncate max-w-52 text-sm mr-auto" title={tab.name}>{tab.name}</span>
+        <select aria-label={t('reader.font_size')} value={fontSizeIndex} onChange={event => setFontSizeIndex(Number(event.target.value))}
+          className="bg-card border border-border rounded-md text-sm h-10 px-1">
+          {[12, 14, 16, 18, 20].map((size, index) => <option key={size} value={index}>{size} px</option>)}
+        </select>
+        <Button variant="ghost" size="icon" className="size-10 shrink-0" onClick={() => setViewMode(mode => mode === 'view' ? 'edit' : 'view')}
+          aria-label={viewMode === 'view' ? t('reader.edit') : t('reader.view')} title={viewMode === 'view' ? t('reader.edit') : t('reader.view')}>
+          {viewMode === 'view' ? <Pencil className="size-4" /> : <Eye className="size-4" />}
+        </Button>
+        <Button variant="ghost" size="icon" className="size-10 shrink-0" onClick={copyContent} aria-label={t('reader.copy')} title={t('reader.copy')}><FileText className="size-4" /></Button>
+        <Button variant="ghost" size="icon" className="size-10 shrink-0" onClick={exportContent} aria-label={t('reader.export')} title={t('reader.export')}><Download className="size-4" /></Button>
+        {hasChanges && <Button size="icon" className="size-10 shrink-0" onClick={() => onSave(editingContent)} disabled={isSaving} aria-label={t(isSaving ? 'saving' : 'reader.save')} title={t('reader.save')}><Save className="size-4" /></Button>}
+        <Button variant="outline" size="icon" className="size-10 shrink-0 ml-auto" onClick={toggleFullscreen} aria-label={t('exit_fullscreen')} title={t('exit_fullscreen')}><Minimize className="size-4" /></Button>
+      </div>}
+      <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0", isFullscreen && "hidden")}>
         {/* ... (Start of header remains same) */}
         <div className="flex flex-wrap items-center gap-2">
             {getInstrumentIcon(tab.instrumentIcon || 'guitar')}
@@ -214,7 +246,7 @@ export function TabEditor({
                         : 'bg-card text-foreground'
                 )}
                 onClick={() => setViewMode(prev => prev === 'edit' ? 'view' : 'edit')}
-                title={viewMode === 'edit' ? t('view_chords', 'Ver acordes') : t('edit_tab', 'Editar tablatura')}
+                title={viewMode === 'edit' ? t('reader.view', 'Ver acordes') : t('reader.edit', 'Editar tablatura')}
             >
                 {viewMode === 'edit' ? <Eye className="size-4 mr-2" /> : <Pencil className="size-4 mr-2" />}
                 <span className="hidden sm:inline">{viewMode === 'edit' ? t('view', 'Ver') : t('edit', 'Editar')}</span>
@@ -240,7 +272,7 @@ export function TabEditor({
                     className="flex-1 sm:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                     <Save className="size-4 mr-2" />
-                    <span className="truncate">{isSaving ? t('saving', 'C...') : t('save', 'Guardar')}</span>
+                    <span className="truncate">{isSaving ? t('saving', 'C...') : t('reader.save', 'Guardar')}</span>
                 </Button>
             )}
             <Button
@@ -258,13 +290,13 @@ export function TabEditor({
                 }}
             >
                 <Download className="size-4 mr-2" />
-                {t('export', 'Exportar')}
+                {t('reader.export', 'Exportar')}
             </Button>
         </div>
       </div>
 
       <div className={cn("relative", isFullscreen && "flex-1 min-h-0 overflow-hidden")}>
-          <div className="absolute top-2 right-2 flex gap-1 z-10">
+          <div className={cn("absolute top-2 right-2 flex gap-1 z-10", isFullscreen && "hidden")}>
               <Button
                   variant="ghost"
                   size="sm"
@@ -273,7 +305,7 @@ export function TabEditor({
                       navigator.clipboard.writeText(editingContent);
                       toast.success("Copiado al portapapeles");
                   }}
-                  title={t('copy', "Copiar")}
+                  title={t('reader.copy', "Copiar")}
               >
                   <FileText className="size-4" />
               </Button>
@@ -284,7 +316,7 @@ export function TabEditor({
               className={cn(
                 "min-h-[400px]",
                 fontSizes[fontSizeIndex],
-                isFullscreen && "h-full min-h-0 w-full p-2 pr-10 whitespace-pre break-normal overflow-auto"
+                isFullscreen && "h-full min-h-0 w-full rounded-none border-0 p-2 whitespace-pre break-normal overflow-auto leading-snug"
               )}
             />
           ) : (
@@ -296,7 +328,7 @@ export function TabEditor({
               className={cn(
                   "font-mono min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4",
                   fontSizes[fontSizeIndex],
-                  isFullscreen && "h-full min-h-0 w-full p-2 pr-10 whitespace-pre break-normal overflow-auto"
+                  isFullscreen && "h-full min-h-0 w-full rounded-none border-0 p-2 whitespace-pre break-normal overflow-auto leading-snug"
               )}
               placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
               spellCheck={false}
@@ -389,12 +421,13 @@ export function TabEditor({
     <Dialog open onOpenChange={setIsFullscreen}>
       <DialogContent aria-describedby={undefined}
         style={{
-          top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
-          left: 'calc(env(safe-area-inset-left, 0px) + 8px)',
-          width: 'calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 16px)',
-          height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px)',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100dvh',
+          padding: 'env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)',
         }}
-        className="flex flex-col max-w-none sm:max-w-none translate-x-0 translate-y-0 p-2 gap-0 overflow-hidden [&>button]:hidden">
+        className="flex flex-col max-w-none sm:max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 gap-0 overflow-hidden [&>button]:hidden">
         <DialogTitle className="sr-only">{tab.name}</DialogTitle>
         {editor}
       </DialogContent>

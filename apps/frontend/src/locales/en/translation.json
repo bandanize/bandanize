@@ -156,6 +156,11 @@
   "photo_upload_error": "Error uploading photo",
   "invalid_image": "Please select an image file",
   "auth": {
+    "signing_in": "Signing in…",
+    "registering": "Creating account…",
+    "please_wait": "Processing your request. Please wait.",
+    "remember": "Keep me signed in",
+    "remember_hint": "Only on a device you trust.",
     "brand_home": "Bandanize, back to home",
     "your_backstage": "Your backstage pass",
     "less_chaos": "LESS CHAOS.",
@@ -194,6 +199,14 @@
     "comments_unavailable": "Comments: —"
   },
   "reader": {
+    "edit": "Edit tablature",
+    "view": "View chords",
+    "copy": "Copy",
+    "export": "Export",
+    "save": "Save",
+    "controls": "Reading controls",
+    "copied": "Copied to clipboard",
+    "copy_failed": "Could not copy the text",
     "font_size": "Font size"
   },
   "invite": {
