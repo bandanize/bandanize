@@ -1,0 +1,9 @@
+# Publishing the comment server update
+
+The frontend deployed at app.bandanize.com uses the API at https://bandanize-api.rdvl.net/api. The repository's release workflow publishes the backend Docker image only when release-please creates an API release. Merging frontend/backend features into main alone previously did not update that image. The API v1.10.0 comment controller accepts Map<String,String>; even an empty attachments array is rejected during deserialization.
+
+The new `Publish tested backend image` workflow runs after successful main CI for backend changes (and can be run manually on main). It tests and packages the current main revision, then publishes `ghcr.io/bandanize/backend:latest` and an immutable `sha-<commit>` tag. Versioned API releases remain available through the existing Release workflow. Outdated CI revisions are skipped.
+
+Publishing an image does not restart the running API. The operator of bandanize-api.rdvl.net must update the existing backend service to that image, retaining its current database, volumes, environment variables and network settings. This repository has no remote-server connection or deployment credentials configured for us to perform that step. The comment model from PR #154 adds optional anchor columns and the tab_comment_attachments table; the existing default Hibernate ddl-auto=update applies those additions. If the server overrides it with validate/none, apply the schema changes before restarting with the new image.
+
+After the update, verify both a plain comment and a selected-passage comment, then reload the song and confirm the passage and any attachment remain. Do not discard selection metadata or silently convert a selected comment to a general one if the old API rejects it. The frontend preserves drafts on error and offers an explicit General comment action.

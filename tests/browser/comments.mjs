@@ -12,7 +12,7 @@ const owner={id:'1',name:'Marina',username:'marina',email:'marina@example.test'}
 const content='Am              C\nUna melodía para volver\nG               F\nCuando se encienden las luces\n\nESTRIBILLO\nC               G\nSeguimos el ritmo de la ciudad\nAm              F\nY el escenario nos vuelve a llamar\n\ne|---0---3---5---3---|\nB|---1---1---1---1---|\nG|---2---0---2---0---|';
 const band={id:1,name:'The Sodawaves',description:'Canciones, ensayos y directos.',photo:'/api/uploads/images/round.svg',ownerId:1,members:[owner,{id:2,name:'Alex',username:'alex',email:'alex@example.test'},{id:3,name:'Jules',username:'jules',email:'jules@example.test'}],songLists:[{id:11,name:'Próximo directo',songs:[{id:21,name:'Luces de la ciudad',originalBand:'The Sodawaves',bpm:112,songKey:'Am',files:[{name:'Demo del ensayo.wav',type:'audio/wav',url:'/api/uploads/audio/demo.wav'},{name:'Directo.mp4',type:'video/mp4',url:'/api/uploads/videos/live.mp4'},{name:'Letra.pdf',type:'application/pdf',url:'/api/uploads/files/lyrics.pdf'},{name:'Notas.txt',type:'text/plain',url:'/api/uploads/files/notes.txt'}],tablatures:[{id:31,name:'Guitarra y voz',instrument:'Guitar',instrumentIcon:'guitar',tuning:'Standard',content,commentCount:1,files:[{name:'Guitarra aislada.wav',type:'audio/wav',url:'/api/uploads/audio/guitar.wav'}]}]},{id:22,name:'Mar abierto',originalBand:'The Sodawaves',bpm:96,songKey:'C',files:[],tablatures:[]}]}],chatMessages:[{id:51,sender:owner,message:'He subido la demo del ensayo. Revisamos el estribillo el jueves.',timestamp:new Date().toISOString()},{id:52,sender:{id:2,name:'Alex'},message:'¡Perfecto! Llevo la nueva línea de bajo.',timestamp:new Date().toISOString()}]};
 let comments=[{id:1,sender:owner,message:'Aquí podemos bajar la intensidad antes del estribillo.',timestamp:new Date().toISOString(),anchorStart:18,anchorEnd:40,quote:'Una melodía para volver',attachments:[]}];
-const requests=[];let failComment=false;
+const requests=[];let failComment=false;let legacyMode=false;
 await context.addInitScript(owner=>{localStorage.setItem('token','fixture');localStorage.setItem('currentUser',JSON.stringify(owner));localStorage.setItem('welcome_seen_1','true');localStorage.setItem('i18nextLng','es');localStorage.setItem('vite-ui-theme','dark');},owner);
 await context.addCookies([{name:'i18next',value:'es',url:origin}]);
 const page=await context.newPage();page.setDefaultTimeout(10000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -23,7 +23,7 @@ await context.route('**/api/**',async route=>{
  if(path.endsWith('/upload/chunk')) return route.fulfill({body:'123_Ensayo acústico.wav'});
  if(path.endsWith('/upload/image')) return route.fulfill({body:'123_Logo nuevo.png'});
  if(path.endsWith('/comments')){
-  if(r.method()==='POST'){if(failComment)return route.fulfill({status:400,json:{message:'Selection changed'}});const c={...JSON.parse(r.postData()),id:comments.length+1,sender:owner,timestamp:new Date().toISOString()};comments.push(c);return route.fulfill({json:c});}
+  if(r.method()==='POST'){if(legacyMode && Object.values(JSON.parse(r.postData())).some(value=>typeof value!=='string'))return route.fulfill({status:400,json:{message:'Legacy string-only request'}});if(failComment)return route.fulfill({status:400,json:{message:'Selection changed'}});const c={...JSON.parse(r.postData()),id:comments.length+1,sender:owner,timestamp:new Date().toISOString()};comments.push(c);return route.fulfill({json:c});}
   return route.fulfill({json:comments});
  }
  if(path.endsWith('/tabs/31/files')&&r.method()==='POST'){const f=JSON.parse(r.postData());band.songLists[0].songs[0].tablatures[0].files.push(f);return route.fulfill({json:band.songLists[0].songs[0].tablatures[0]});}
@@ -67,5 +67,13 @@ await page.setViewportSize({width:390,height:844});await page.getByRole('button'
 await page.getByRole('dialog').locator('pre > span').nth(1).dblclick({position:{x:12,y:8}});await page.getByRole('button',{name:'Comentar selección',exact:true}).click();await page.waitForTimeout(250);assert.equal(await page.getByRole('dialog').count(),0);
 await page.getByRole('button',{name:'Pantalla completa',exact:true}).click();
 await page.getByRole('button',{name:'Comentar una parte',exact:true}).click();const picker=page.getByRole('dialog',{name:'Comentar una parte',exact:true});await picker.getByRole('button',{name:'Línea 2: Una melodía para volver',exact:true}).click();await picker.getByRole('button',{name:'Comentar estas líneas',exact:true}).click();await page.waitForTimeout(250);assert.equal(await page.getByRole('dialog').count(),0);assert(await page.locator('#tab-comment-input').evaluate(el=>document.activeElement===el));
+// The plain path works against the legacy server and never sends an attachments array.
+legacyMode=true;await page.getByRole('button',{name:'Comentario general',exact:true}).click();await page.locator('#tab-comment-input').fill('Sin seleccionar ninguna línea');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);
+assert.deepEqual(JSON.parse(requests.filter(r=>r.path.endsWith('/comments')&&r.method==='POST').at(-1).data),{message:'Sin seleccionar ninguna línea'});assert.equal(comments.at(-1).message,'Sin seleccionar ninguna línea');
+// Verify the requested visual order, and the scope of both libraries.
+const header=await page.getByText('Luces de la ciudad',{exact:true}).first().boundingBox(),songFiles=await page.locator('.song-media').boundingBox(),workspace=await page.locator('.song-workspace').boundingBox(),commentPanel=await page.locator('.song-comments > div').first().boundingBox(),tabFiles=await page.locator('.song-tab-media').boundingBox();
+assert(songFiles.y>header.y && songFiles.y+songFiles.height<=workspace.y);assert(tabFiles.y>=commentPanel.y+commentPanel.height);
+await page.screenshot({path:'test-results/song-files-reordered-mobile.png',fullPage:true});
+await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'test-results/song-files-reordered.png',fullPage:true});
 assert.deepEqual(errors,[]);console.log('PASS floating selection, line picker desktop/mobile/fullscreen, mentions and submitted anchors');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

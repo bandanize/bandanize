@@ -1,3 +1,4 @@
+import { MediaLibrary } from './song/MediaLibrary';
 import React, { useState, useRef } from 'react';
 import { useProjects, Song } from '@/contexts/ProjectContext';
 import { useSearchParams } from 'react-router-dom';
@@ -188,6 +189,10 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
         isSaving={isSavingSong}
       />
 
+        <div className="song-media min-w-0"><FileList song={song} onUpload={() => handleFileUploadTrigger('song')}
+          isUploading={isUploading && uploadTarget?.type === 'song'} uploadStatus={uploadStatus} uploadProgress={uploadProgress}
+          onPreview={setPreviewFile} onDelete={url => currentProject && deleteSongFile(currentProject.id, listId, song.id, url)} /></div>
+
       <SongEditDialog
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
@@ -201,20 +206,22 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
           onDeleteTab={handleDeleteTab} onCreateTab={handleCreateTab} onUpdateTabDetails={handleUpdateTabDetails} /></div>
         <div className="song-score min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4">
           {selectedTab ? <TabEditor key={selectedTab.id} tab={selectedTab} songName={song.name} onSave={handleSaveTabContent} isSaving={isSavingTab}
+            hideFiles
             onUpload={tabId => handleFileUploadTrigger('tab', tabId)} uploading={isUploading && uploadTarget?.type === 'tab'} uploadProgress={uploadProgress}
             onDeleteFile={(tabId, url) => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, tabId, url)} onPreview={setPreviewFile}
             focusedAnchor={focusedAnchor?.tabId === selectedTab.id ? focusedAnchor.anchor : null}
             onAnnotate={anchor => { setPendingAnchor({ tabId: selectedTab.id, anchor }); setTimeout(() => { const input = document.getElementById('tab-comment-input'); input?.scrollIntoView({ block: 'center', behavior: 'smooth' }); input?.focus({ preventScroll: true }); }, 150); }} />
             : <div className="min-h-64 flex items-center justify-center text-center text-sm text-muted-foreground p-6">{t('workspace.choose_tab')}</div>}
         </div>
-        <div className="song-comments min-w-0">
+        <div className="song-comments min-w-0 space-y-4">
           {selectedTab && <TabComments key={selectedTab.id} tabId={selectedTab.id} content={selectedTab.content}
             anchor={pendingAnchor?.tabId === selectedTab.id ? pendingAnchor.anchor : null} onClearAnchor={() => setPendingAnchor(null)}
             onLocate={anchor => setFocusedAnchor({ tabId: selectedTab.id, anchor })} onPreview={setPreviewFile} />}
+          {selectedTab && <div className="song-tab-media"><MediaLibrary files={selectedTab.files || []} title={t('workspace.tab_files')}
+            onUpload={() => handleFileUploadTrigger('tab', selectedTab.id)} uploading={isUploading && uploadTarget?.type === 'tab'} progress={uploadProgress}
+            onPreview={setPreviewFile} onDelete={url => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, selectedTab.id, url)} /></div>}
         </div>
-        <div className="song-media min-w-0"><FileList song={song} onUpload={() => handleFileUploadTrigger('song')}
-          isUploading={isUploading && uploadTarget?.type === 'song'} uploadStatus={uploadStatus} uploadProgress={uploadProgress}
-          onPreview={setPreviewFile} onDelete={url => currentProject && deleteSongFile(currentProject.id, listId, song.id, url)} /></div>
+
       </div>
 
       <MediaPreviewDialog 

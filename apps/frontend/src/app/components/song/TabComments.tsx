@@ -8,6 +8,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
+import axios from 'axios';
 
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
@@ -59,6 +60,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
   const [isLoading, setIsLoading] = useState(true);
   const [loadedTabId, setLoadedTabId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -126,17 +128,23 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
     e.preventDefault();
     if ((!message.trim() && !attachments.length) || !user || isSending || uploading) return;
 
+    setSendError('');
     setIsSending(true);
     try {
       const response = await api.post(`/tabs/${tabId}/comments`, {
-        message: message.trim(), attachments,
+        message: message.trim(),
+        // The legacy server accepts only string fields. Plain comments need only message.
+        ...((anchor || attachments.length) ? { attachments } : {}),
         ...(anchor ? { anchorStart: anchor.start, anchorEnd: anchor.end, quote: anchor.quote } : {})
       });
       setComments(prev => [...prev, response.data]);
       setMessage(''); setAttachments([]); setShowMentions(false); onClearAnchor();
     } catch (error) {
       console.error('Error sending comment', error);
-      toast.error(t('workspace.comment_failed'));
+      const response = axios.isAxiosError(error) ? error.response : undefined;
+      const reason = response?.data?.message;
+      const stale = response?.status === 400 && typeof reason === 'string' && reason.includes('selected passage has changed');
+      setSendError(t(stale ? 'comments_ui.stale_error' : !response ? 'comments_ui.network_error' : 'comments_ui.send_error'));
     } finally {
       setIsSending(false);
     }
@@ -250,6 +258,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
       </div>
 
       <div className="p-3 border-t border-border relative">
+        <div className="flex flex-wrap gap-2 mb-2"><Button type="button" variant={anchor ? 'outline' : 'secondary'} size="sm" aria-pressed={!anchor} onClick={() => { onClearAnchor(); setSendError(''); inputRef.current?.focus(); }}>{t('comments_ui.general_button')}</Button></div>
         <p className="text-xs text-muted-foreground mb-2">{t(anchor ? 'comments_ui.part_comment' : 'comments_ui.general_comment')}</p>
         <Button type="button" variant="outline" size="sm" className="mb-3" disabled={isSending} onClick={() => { setShowMentions(value => !value); setMentionQuery(''); setMentionRange(null); setMentionIndex(0); }}><AtSign className="size-4" />{t('comments_ui.mention')}</Button>
         {showMentions && (
@@ -280,6 +289,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
         </div>}
         {!!attachments.length && <div className="mb-3 space-y-1">{attachments.map(file => <div key={file.url} className="flex gap-2 text-xs items-center"><Paperclip className="size-3 shrink-0" /><span className="truncate">{file.name}</span><button type="button" className="ml-auto" disabled={isSending} onClick={() => setAttachments(previous => previous.filter(item => item.url !== file.url))} aria-label={t('workspace.delete')}><X className="size-3" /></button></div>)}</div>}
         {uploading && <p role="status" className="text-xs text-primary mb-2">{t('workspace.uploading')} {uploadProgress}%</p>}
+        {sendError && <p role="alert" className="text-xs text-destructive mb-3">{sendError}</p>}
         <form onSubmit={handleSendComment} className="flex gap-2">
           <Button type="button" size="icon" variant="outline" className="size-8 shrink-0" disabled={uploading || isSending || attachments.length >= 5} onClick={() => attachmentInput.current?.click()} aria-label={t('workspace.attach_file')}><Paperclip className="size-4" /></Button>
           <Input
@@ -287,7 +297,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
             value={message}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={t('write_comment', 'Escribe un comentario... (@miembro)')}
+            placeholder={t(anchor ? 'comments_ui.part_placeholder' : 'comments_ui.general_placeholder')}
             className="flex-1 h-8 text-sm bg-background border-border text-foreground"
             ref={inputRef}
             disabled={isSending}

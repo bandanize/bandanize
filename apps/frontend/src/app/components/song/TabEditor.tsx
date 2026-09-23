@@ -95,6 +95,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
 }
 
 interface TabEditorProps {
+  hideFiles?: boolean;
   onAnnotate?: (anchor: CommentAnchor) => void;
   focusedAnchor?: CommentAnchor | null;
   uploading?: boolean;
@@ -115,7 +116,7 @@ export function TabEditor({
   isSaving, 
   onUpload, 
   onDeleteFile,
-  onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress
+  onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress, hideFiles = false
 }: TabEditorProps) {
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
@@ -399,7 +400,7 @@ export function TabEditor({
 
       {!isFullscreen && viewMode === 'edit' && <TablatureControls onInsert={handleInsertText} />}
 
-      {!isFullscreen && <MediaLibrary files={tab.files || []} title={t('workspace.tab_files')} onUpload={() => onUpload(tab.id)}
+      {!isFullscreen && !hideFiles && <MediaLibrary files={tab.files || []} title={t('workspace.tab_files')} onUpload={() => onUpload(tab.id)}
         onDelete={url => onDeleteFile(tab.id, url)} onPreview={onPreview} uploading={uploading} progress={uploadProgress} />}
 
     </div>
