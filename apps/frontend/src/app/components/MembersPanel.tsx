@@ -1,3 +1,4 @@
+import { MemberAvatar } from './MemberAvatar';
 import React, { useState, useEffect } from 'react';
 import { useProjects, Member } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { UserPlus, User, Check, Trash2, Crown, MoreVertical } from 'lucide-react';
+import { UserPlus, Check, Trash2, Crown, MoreVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/app/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/app/components/ui/command";
@@ -25,6 +26,7 @@ export function MembersPanel() {
   const [cardOpen, setCardOpen] = useState(false);
   
   interface SearchUser {
+    photo?: string;
     id: string;
     email: string;
     name: string;
@@ -126,6 +128,7 @@ export function MembersPanel() {
                                     selectedUserId === u.id.toString() ? "opacity-100" : "opacity-0"
                                   )}
                                 />
+                                <MemberAvatar name={u.name} photo={u.photo} className="size-8 mr-2" />
                                 <div className="flex flex-col">
                                     <span>{u.name}</span>
                                     <span className="text-xs text-muted-foreground">@{u.username}</span>
@@ -154,9 +157,7 @@ export function MembersPanel() {
                 className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group cursor-pointer hover:bg-secondary/20 transition-colors"
                 onClick={() => { setCardMember(member); setCardOpen(true); }}
               >
-                <div className="size-10 bg-secondary rounded-full flex items-center justify-center">
-                  <User className="size-5 text-foreground" />
-                </div>
+                <MemberAvatar name={member.name} photo={member.id === user?.id ? user?.photo ?? member.photo : member.photo} className="size-10" />
                 <div className="flex-1">
                   <p className="font-medium text-foreground">
                       {member.name} 

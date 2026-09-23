@@ -1,3 +1,5 @@
+import { ProjectPicker } from '@/app/components/ProjectPicker';
+import { MemberAvatar } from '@/app/components/MemberAvatar';
 import React, { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { LogOut, Plus, Music2, Users, User, Settings, Mail, Bell } from 'lucide-react';
+import { LogOut, Plus, Settings, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WelcomeModal } from '@/app/components/WelcomeModal';
 import { getUnreadNotificationCount } from '@/services/api';
@@ -132,7 +134,7 @@ export function Dashboard() {
                       variant="outline" 
                       className="w-9 sm:min-w-[148px] sm:w-auto h-[36px] bg-card border-border rounded-[8px] text-foreground text-[14px] font-normal font-sans hover:bg-accent hover:text-white px-0 sm:px-4"
                     >
-                      <User className="size-4 sm:mr-2" />
+                      <MemberAvatar name={user?.name || ''} photo={user?.photo} className="size-6 sm:mr-1" />
                       <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
                       {(invitations?.length || 0) > 0 && (
                         <span className="ml-2 bg-destructive text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
@@ -173,17 +175,6 @@ export function Dashboard() {
         <div className="flex justify-between items-center mb-6 max-w-[1216px] w-full mx-auto h-[36px]">
           <h2 className="text-[20px] font-bold text-foreground font-sans leading-7 select-none">{t('your_projects')}</h2>
           
-          {/* Quick Access for Last Project */}
-          {cookies.lastProjectId && projects.find(p => p.id === cookies.lastProjectId) && (
-             <Button 
-                variant="outline"
-                className="ml-4 h-[36px] border-primary text-primary hover:bg-primary/10 hidden md:flex items-center gap-2"
-                onClick={() => handleProjectClick(cookies.lastProjectId)}
-             >
-                <span>🚀 {t('resume', 'Reanudar')}: {projects.find(p => p.id === cookies.lastProjectId)?.name}</span>
-             </Button>
-          )}
-
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="w-9 sm:min-w-[148px] sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-0 sm:px-4">
@@ -285,58 +276,7 @@ export function Dashboard() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1216px] w-full mx-auto">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                role="button" tabIndex={0}
-                onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleProjectClick(project.id); } }}
-                className="group w-full min-h-[140px] bg-card border border-border rounded-2xl p-3 gap-4 flex cursor-pointer hover:border-primary/30 hover:bg-accent/60 hover:shadow-[0_8px_32px_rgba(0,0,0,0.15)] transition-colors focus-visible:outline focus-visible:outline-primary"
-                onClick={() => handleProjectClick(project.id)}
-              >
-                  {/* Image Section */}
-                  <div className="w-[116px] h-[116px] flex-shrink-0 rounded-[9px] overflow-hidden flex items-center justify-center">
-                    {project.imageUrl ? (
-                        <img
-                          src={getMediaUrl(project.imageUrl)}
-                          alt={project.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-[linear-gradient(135deg,#A3E635_0%,#FF96A5_100%)] flex items-center justify-center">
-                          <Music2 className="size-10 text-[#222424]" />
-                        </div>
-                    )}
-                  </div>
-
-                  {/* Content Section */}
-                  <div className="flex flex-col h-[116px] flex-1 gap-1 min-w-0">
-                      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                           <h3 className="text-base font-medium font-poppins text-foreground leading-6 truncate tracking-tight">{project.name}</h3>
-                           <p className="text-sm text-muted-foreground leading-5 line-clamp-2 overflow-hidden">
-                               {project.description || t('visual.no_description')}
-                           </p>
-                      </div>
-                      <div className="flex items-center gap-2 h-[20px]">
-                           <div className="flex items-center gap-2 text-foreground">
-                                <Users className="size-4" />
-                                <span className="text-[14px] font-normal font-sans leading-5">
-                                    {t('visual.member_count', { count: project.members.length })}
-                                </span>
-                           </div>
-                           
-                           {/* Notification Badge */}
-                           {unreadCounts[project.id] > 0 && (
-                               <div className="ml-auto bg-destructive text-destructive-foreground text-[12px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm h-[22px]">
-                                   <Bell className="size-3" />
-                                   <span>{unreadCounts[project.id] > 99 ? '99+' : unreadCounts[project.id]}</span>
-                               </div>
-                           )}
-                      </div>
-                  </div>
-              </div>
-            ))}
-          </div>
+          <ProjectPicker projects={projects} lastProjectId={String(cookies.lastProjectId || '')} unreadCounts={unreadCounts} onSelect={handleProjectClick} />
         )}
       </div>
 

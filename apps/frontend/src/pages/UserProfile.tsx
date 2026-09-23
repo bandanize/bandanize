@@ -38,7 +38,7 @@ export function UserProfile() {
     bio: user?.bio || '',
   });
   const [rrss, setRrss] = useState<Record<string, string>>({});
-  const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [photoUrl, setPhotoUrl] = useState<string>(user?.photo || '');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [passwordData, setPasswordData] = useState({
@@ -82,6 +82,7 @@ export function UserProfile() {
         city: response.data.city,
         instrument: response.data.instrument,
         bio: response.data.bio,
+        photo: response.data.photo,
       });
       if (response.data.rrss) setRrss(response.data.rrss);
       toast.success(t('profile_updated', 'Perfil actualizado correctamente'));
@@ -131,6 +132,7 @@ export function UserProfile() {
       // Save immediately
       if (user?.id) {
         await api.put(`/users/${user.id}`, { photo: fullUrl });
+        updateProfile({ photo: fullUrl });
         toast.success(t('photo_updated', 'Foto de perfil actualizada'));
       }
     } catch {
@@ -213,7 +215,7 @@ export function UserProfile() {
           <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
             <Avatar className="size-24 border-2 border-border">
               {photoUrl ? (
-                <AvatarImage src={photoUrl} alt={user?.name || ''} />
+                <AvatarImage src={getMediaUrl(photoUrl)} className="object-cover" alt={user?.name || ''} />
               ) : null}
               <AvatarFallback className="text-2xl bg-secondary text-foreground">
                 {initials}

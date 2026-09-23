@@ -4,6 +4,7 @@ import api from '@/services/api';
 import { toast } from 'sonner';
 
 export interface Member {
+  photo?: string;
   id: string;
   name: string;
   username: string;
@@ -11,6 +12,7 @@ export interface Member {
 }
 
 export interface ChatMessage {
+  userPhoto?: string;
   id: string;
   userId: string;
   userName: string;
@@ -73,8 +75,8 @@ interface BandApiResponse {
   description: string;
   photo?: string;
   ownerId?: number;
-  members?: { id: number; name: string; username: string; email: string }[];
-  users?: { id: number; name: string; username: string; email: string }[];
+  members?: { id: number; name: string; username: string; email: string; photo?: string }[];
+  users?: { id: number; name: string; username: string; email: string; photo?: string }[];
   songLists?: {
     id: number;
     name: string;
@@ -99,7 +101,7 @@ interface BandApiResponse {
   }[];
   chatMessages?: {
     id: number;
-    sender?: { id: number; name: string };
+    sender?: { id: number; name: string; photo?: string };
     message?: string;
     timestamp?: string;
   }[];
@@ -175,11 +177,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           id: String(m.id),
           name: m.name,
           username: m.username || '',
+          photo: m.photo,
           email: m.email
         })) : band.users ? band.users.map((u) => ({ // Fallback if backend returns users list
           id: String(u.id),
           name: u.name,
           username: u.username || '',
+          photo: u.photo,
           email: u.email
         })) : [],
         songLists: band.songLists ? band.songLists.map((list) => ({
@@ -209,6 +213,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           id: String(msg.id),
           userId: msg.sender ? String(msg.sender.id) : 'unknown',
           userName: msg.sender ? msg.sender.name : 'Unknown User',
+          userPhoto: msg.sender?.photo,
           message: msg.message || '',
           timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
           mentions: [] 
@@ -270,7 +275,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           description: description,
           imageUrl: imageUrl,
           ownerId: String(user.id),
-          members: [{ id: String(user.id), name: user.name, username: user.username, email: user.email }],
+          members: [{ id: String(user.id), name: user.name, username: user.username, email: user.email, photo: user.photo }],
           songLists: [],
           chat: [],
           createdAt: new Date() 
@@ -413,6 +418,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           id: String(msg.id),
           userId: msg.sender ? String(msg.sender.id) : 'unknown',
           userName: msg.sender ? msg.sender.name : 'Unknown User',
+          userPhoto: msg.sender?.photo,
           message: msg.message || '',
           timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
           mentions: [],
