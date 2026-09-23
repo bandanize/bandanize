@@ -154,5 +154,25 @@
     "click_to_change_photo": "Click to change your photo",
     "photo_updated": "Profile photo updated",
     "photo_upload_error": "Error uploading photo",
-    "invalid_image": "Please select an image file"
+    "invalid_image": "Please select an image file",
+    "auth": {
+        "login_description": "Sign in to your musician account",
+        "password": "Password",
+        "forgot_password": "Forgot your password?",
+        "login": "Sign in",
+        "create_account": "Create account",
+        "register_description": "Join Bandanize as a musician",
+        "username": "Username",
+        "register": "Sign up",
+        "back_to_login": "Back to sign in",
+        "check_email": "Check your email",
+        "verify_instructions": "Please check your inbox and click the link to verify your account and start using Bandanize.",
+        "verification_sent": "We've sent a verification link to {{email}}.",
+        "email_placeholder": "you@email.com",
+        "name_placeholder": "Your full name",
+        "username_placeholder": "Username",
+        "login_error": "Unable to sign in",
+        "register_error": "Unable to sign up"
+    },
+    "network_error": "Could not connect to the server. Check your connection and try again in a few minutes."
 }

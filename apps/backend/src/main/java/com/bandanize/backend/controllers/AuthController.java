@@ -1,5 +1,7 @@
 package com.bandanize.backend.controllers;
 
+import java.util.Locale;
+
 import com.bandanize.backend.dtos.ChangePasswordDTO;
 import com.bandanize.backend.exceptions.ResourceNotFoundException;
 import com.bandanize.backend.models.UserModel;
@@ -107,12 +109,12 @@ public class AuthController {
         if (user.getHashedPassword() == null || user.getHashedPassword().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password is required");
         }
+        user.setEmail(user.getEmail().trim().toLowerCase(Locale.ROOT));
         if (!user.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
         }
 
         user.setUsername(user.getUsername().trim());
-        user.setEmail(user.getEmail().trim());
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");

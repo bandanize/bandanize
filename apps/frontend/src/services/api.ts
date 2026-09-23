@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
 /** Routes that don't require authentication */
@@ -10,6 +11,9 @@ export const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset
  */
 export function extractErrorMessage(err: unknown, fallback = 'Ha ocurrido un error'): string {
     if (axios.isAxiosError(err)) {
+        if (!err.response && err.code === 'ERR_NETWORK') {
+            return i18n.t('network_error');
+        }
         const data = (err as AxiosError).response?.data;
         if (data && typeof data === 'object' && 'message' in data) {
             return (data as { message: string }).message;
