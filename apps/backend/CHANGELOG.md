@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.3](https://github.com/bandanize/bandanize/compare/api@v1.9.2...api@v1.9.3) (2026-09-23)
+
+
+### Bug Fixes
+
+* **auth:** login bilingüe, botones uniformes y correo sin distinguir mayúsculas ([#127](https://github.com/bandanize/bandanize/issues/127)) ([d429ece](https://github.com/bandanize/bandanize/commit/d429ecefbcb4e45171ddc0f4f953372b7d8ff396))
+
 ## [1.9.2](https://github.com/bandanize/bandanize/compare/api@v1.9.1...api@v1.9.2) (2026-03-12)
 
 
