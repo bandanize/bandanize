@@ -13,7 +13,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<UserModel, Long> {
     Optional<UserModel> findByUsername(String username);
 
-    Optional<UserModel> findByEmail(String email);
+    @Query("SELECT u FROM UserModel u WHERE LOWER(u.email) = LOWER(:email)")
+    Optional<UserModel> findByEmail(@Param("email") String email);
 
     List<UserModel> findByEmailContaining(String email);
 

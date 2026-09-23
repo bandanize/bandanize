@@ -6,20 +6,24 @@ import { Languages } from 'lucide-react';
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
+  const isSpanish = (i18n.resolvedLanguage || i18n.language).startsWith('es');
+
   const toggleLanguage = () => {
-    const newLang = i18n.language === 'es' ? 'en' : 'es';
+    const newLang = isSpanish ? 'en' : 'es';
     i18n.changeLanguage(newLang);
   };
 
   return (
     <Button
+      type="button"
+      aria-label={isSpanish ? 'Switch to English' : 'Cambiar a español'}
       variant="ghost"
       size="sm"
       onClick={toggleLanguage}
-      className="w-9 sm:w-auto px-0 sm:px-4 text-muted-foreground hover:text-foreground hover:bg-accent"
+      className="w-auto px-3 text-muted-foreground hover:text-foreground hover:bg-accent"
     >
-      <Languages className="size-4 sm:mr-2" />
-      <span className="uppercase hidden sm:inline">{i18n.language}</span>
+      <Languages className="size-4" aria-hidden="true" />
+      <span lang={isSpanish ? 'en' : 'es'}>{isSpanish ? 'English' : 'Español'}</span>
     </Button>
   );
 }
