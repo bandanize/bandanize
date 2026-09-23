@@ -53,11 +53,11 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
     else if (path.endsWith('/auth/register') || path.includes('/auth/verify')) body = { message: 'OK' };
     else if (path.endsWith('/bands/my-bands')) body = [band];
     else if (path.includes('/invite-links/')) body = path.endsWith('/accept') ? { bandId: 1 } : { bandName: 'Rehearsal', expiresAt: '2030-01-01T00:00:00Z' };
-    else if (path.endsWith('/calendar-token')) body = { token: 'fixture-calendar-token' };
+    else if (path.endsWith('/calendar-token')) body = 'fixture-calendar-token';
     else if (path.endsWith('/heartbeat')) body = { onlineCount: 1 };
     else if (path.includes('unread-count')) body = 0;
     else if (path.includes('unread')) body = false;
-    else if (path.endsWith('/comments')) body = [{ id: 1, content: 'One', user: owner, createdAt: '2026-09-23T10:00:00Z' }, { id: 2, content: 'Two', user: owner, createdAt: '2026-09-23T10:00:00Z' }];
+    else if (path.endsWith('/comments')) body = [{ id: 1, message: 'One', sender: owner, timestamp: '2026-09-23T10:00:00Z' }, { id: 2, message: 'Two', sender: owner, timestamp: '2026-09-23T10:00:00Z' }];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });
   return { context, page, errors, requests };

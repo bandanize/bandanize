@@ -290,6 +290,7 @@ export function TabEditor({
           ) : (
             <Textarea
               ref={textareaRef}
+              style={{ fontSize: [12, 14, 16, 18, 20][fontSizeIndex] }}
               value={editingContent}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingContent(e.target.value)}
               className={cn(

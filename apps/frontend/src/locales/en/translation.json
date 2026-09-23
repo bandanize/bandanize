@@ -256,5 +256,9 @@
     "url": "Private calendar URL",
     "manual": "Open “From URL”",
     "copy_manually": "Could not copy. Select the URL and copy it manually."
-  }
+  },
+  "fullscreen": "Fullscreen",
+  "exit_fullscreen": "Exit fullscreen",
+  "increase_font_size": "Increase font size",
+  "decrease_font_size": "Decrease font size"
 }

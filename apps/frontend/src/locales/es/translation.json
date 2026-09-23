@@ -256,5 +256,9 @@
     "url": "URL privada del calendario",
     "manual": "Abrir «Desde URL»",
     "copy_manually": "No se ha podido copiar. Selecciona la URL y cópiala manualmente."
-  }
+  },
+  "fullscreen": "Pantalla completa",
+  "exit_fullscreen": "Salir de pantalla completa",
+  "increase_font_size": "Aumentar tamaño de letra",
+  "decrease_font_size": "Disminuir tamaño de letra"
 }
