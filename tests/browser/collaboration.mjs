@@ -158,6 +158,7 @@ try {
     assert(handle && target);
     await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
     await page.mouse.down();
+          await page.waitForTimeout(50);
     await page.waitForTimeout(50);
     await page.mouse.move(target.x + 20, target.y + target.height * .8, { steps: 15 });
     await page.locator('.fixed.pointer-events-none').filter({ hasText: 'First song' }).waitFor();
@@ -204,6 +205,7 @@ try {
         if (mobile) {
           const session = await context.newCDPSession(page);
           await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [from] });
+          await page.waitForTimeout(240);
           for (let step = 1; step <= 12; step++) await session.send('Input.dispatchTouchEvent', {
             type: 'touchMove', touchPoints: [{ x: from.x + (to.x - from.x) * step / 12, y: from.y + (to.y - from.y) * step / 12 }]
           });
@@ -212,6 +214,7 @@ try {
         } else {
           await page.mouse.move(from.x, from.y);
           await page.mouse.down();
+          await page.waitForTimeout(50);
           await page.mouse.move(to.x, to.y, { steps: 15 });
           await page.mouse.up();
         }

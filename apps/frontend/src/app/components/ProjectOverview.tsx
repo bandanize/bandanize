@@ -37,7 +37,7 @@ export function ProjectOverview({ project, unreadCount, onOpen }: { project: Pro
   </section>;
   return <div className="space-y-5">
     <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-5 sm:p-7">
-      <p className="text-xs uppercase tracking-widest text-primary mb-2">{t('workspace.overview')}</p><h1 className="text-2xl sm:text-3xl font-semibold break-words">{project.name}</h1><p className="text-sm text-muted-foreground mt-2">{t('workspace.overview_hint')}</p>
+      <p className="text-xs uppercase tracking-widest text-primary mb-2">{t('workspace.overview')}</p><p className="text-2xl sm:text-3xl font-semibold break-words">{project.name}</p><p className="text-sm text-muted-foreground mt-2">{t('workspace.overview_hint')}</p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">{[
         { label:'songs', value: new Set(songs.map(s=>s.id)).size, tab:'songs', Icon:Music },
         { label:'lists', value:project.songLists.length, tab:'songs', Icon:ListMusic },
