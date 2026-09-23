@@ -260,6 +260,8 @@ try {
     assert((await first.boundingBox()).width > 1000, 'A single project gets a complete featured card');
     await first.locator('img[alt="Owner"]').waitFor();
     assert(await first.locator('img[alt="Owner"]').evaluate(img => img.complete && img.naturalWidth > 0));
+    await page.locator('header img[alt="Owner"]').waitFor();
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('currentUser')).photo), owner.photo);
     await capture(page, 'projects-single');
     controls.extraProjects = [
       { ...structuredClone(band), id: 2, name: 'Acoustic sessions', description: 'Ideas for the next set', songLists: [] },

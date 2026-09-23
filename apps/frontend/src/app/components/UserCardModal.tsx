@@ -88,7 +88,7 @@ export function UserCardModal({ member, open, onOpenChange }: UserCardModalProps
             {/* Avatar */}
             <Avatar className="size-20">
               {profile.photo ? (
-                <AvatarImage src={getMediaUrl(profile.photo)} alt={profile.name} />
+                <AvatarImage src={getMediaUrl(profile.photo)} alt={profile.name} className="object-cover" />
               ) : null}
               <AvatarFallback className="text-lg bg-secondary text-foreground">
                 {initials}

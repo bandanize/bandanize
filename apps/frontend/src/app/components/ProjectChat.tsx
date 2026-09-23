@@ -250,7 +250,7 @@ export function ProjectChat() {
             const isMe = msg.userId === user?.id;
             return (
               <div key={msg.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
-                 <MemberAvatar name={msg.userName} photo={isMe ? user?.photo ?? msg.userPhoto : currentProject.members.find(member => member.id === msg.userId)?.photo ?? msg.userPhoto} />
+                 <MemberAvatar name={msg.userName} photo={isMe ? user?.photo || msg.userPhoto : currentProject.members.find(member => member.id === msg.userId)?.photo ?? msg.userPhoto} />
                 
                 <div className={`flex flex-col gap-1 max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
                   <span className="text-sm text-foreground font-medium">{msg.userName}</span>

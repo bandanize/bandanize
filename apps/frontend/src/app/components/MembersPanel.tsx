@@ -157,7 +157,7 @@ export function MembersPanel() {
                 className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group cursor-pointer hover:bg-secondary/20 transition-colors"
                 onClick={() => { setCardMember(member); setCardOpen(true); }}
               >
-                <MemberAvatar name={member.name} photo={member.id === user?.id ? user?.photo ?? member.photo : member.photo} className="size-10" />
+                <MemberAvatar name={member.name} photo={member.id === user?.id ? user?.photo || member.photo : member.photo} className="size-10" />
                 <div className="flex-1">
                   <p className="font-medium text-foreground">
                       {member.name} 

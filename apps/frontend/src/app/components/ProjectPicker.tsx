@@ -47,7 +47,7 @@ export function ProjectPicker({ projects, lastProjectId, unreadCounts, onSelect 
           <div className="flex items-center justify-between gap-3 border-t border-border pt-4 mt-auto">
             <div className="flex items-center -space-x-2">
               {project.members.slice(0, 4).map(member => <MemberAvatar key={member.id} name={member.name}
-                photo={member.id === user?.id ? user.photo ?? member.photo : member.photo} className="size-7 border-2 border-card" />)}
+                photo={member.id === user?.id ? user?.photo || member.photo : member.photo} className="size-7 border-2 border-card" />)}
               {project.members.length > 4 && <span className="size-7 rounded-full border-2 border-card bg-secondary text-[10px] flex items-center justify-center">+{project.members.length - 4}</span>}
             </div>
             <span className="flex items-center gap-2">

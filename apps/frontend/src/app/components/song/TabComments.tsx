@@ -185,7 +185,7 @@ export function TabComments({ tabId }: TabCommentsProps) {
             const isMe = String(comment.sender.id) === user?.id;
             return (
               <div key={comment.id} className="flex gap-2 group">
-                <MemberAvatar name={comment.sender.name} className="size-7" photo={String(comment.sender.id) === user?.id ? user?.photo ?? comment.sender.photo : currentProject?.members.find(member => member.id === String(comment.sender.id))?.photo ?? comment.sender.photo} />
+                <MemberAvatar name={comment.sender.name} className="size-7" photo={String(comment.sender.id) === user?.id ? user?.photo || comment.sender.photo : currentProject?.members.find(member => member.id === String(comment.sender.id))?.photo ?? comment.sender.photo} />
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
