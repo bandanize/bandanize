@@ -11,7 +11,7 @@ import api from '@/services/api';
 
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
-import { Send, Trash2, MessageCircle, Paperclip, X, LoaderCircle } from 'lucide-react';
+import { Send, Trash2, MessageCircle, Paperclip, X, LoaderCircle, AtSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
@@ -65,9 +65,11 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
   // Mention state
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionRange, setMentionRange] = useState<{ start: number; end: number } | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
 
   const mentionFilteredMembers = currentProject?.members.filter(member =>
-    member.name.toLowerCase().includes(mentionQuery.toLowerCase()) && member.id !== user?.id
+    (member.name + ' ' + member.username).toLowerCase().includes(mentionQuery.toLowerCase()) && member.id !== user?.id
   ) || [];
 
   useEffect(() => {
@@ -93,40 +95,31 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
   }, [comments]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value, caret = e.target.selectionStart ?? value.length;
     setMessage(value);
-
-    const lastWord = value.split(' ').pop();
-    if (lastWord && lastWord.startsWith('@')) {
-      setShowMentions(true);
-      setMentionQuery(lastWord.slice(1));
-    } else {
-      setShowMentions(false);
-    }
+    const match = value.slice(0, caret).match(/(?:^|\s)@([^@\n]*)$/);
+    setShowMentions(!!match); setMentionIndex(0);
+    setMentionQuery(match?.[1] || '');
+    setMentionRange(match ? { start: caret - match[1].length - 1, end: caret } : null);
   };
-
   const handleSelectMention = (name: string) => {
-    const words = message.split(' ');
-    words.pop();
-    const newMessage = [...words, `@${name} `].join(' ');
-    setMessage(newMessage);
-    setShowMentions(false);
-    inputRef.current?.focus();
+    const start = mentionRange?.start ?? inputRef.current?.selectionStart ?? message.length;
+    const end = mentionRange?.end ?? inputRef.current?.selectionEnd ?? start;
+    const prefix = start > 0 && !/\s/.test(message[start - 1]) ? ' ' : '';
+    const insertion = prefix + '@' + name + ' ';
+    setMessage(message.slice(0, start) + insertion + message.slice(end));
+    setShowMentions(false); setMentionRange(null);
+    requestAnimationFrame(() => { inputRef.current?.focus(); inputRef.current?.setSelectionRange(start + insertion.length, start + insertion.length); });
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (showMentions && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    if (!showMentions) return;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
-    }
-    if (showMentions && e.key === 'Enter') {
+      setMentionIndex(index => (index + (e.key === 'ArrowDown' ? 1 : -1) + mentionFilteredMembers.length) % Math.max(1, mentionFilteredMembers.length));
+    } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (mentionFilteredMembers.length > 0) {
-        handleSelectMention(mentionFilteredMembers[0].name);
-      }
-    }
-    if (showMentions && e.key === 'Escape') {
-      setShowMentions(false);
-    }
+      const member = mentionFilteredMembers[mentionIndex]; if (member) handleSelectMention(member.name);
+    } else if (e.key === 'Escape') { e.preventDefault(); setShowMentions(false); }
   };
 
   const handleSendComment = async (e: React.FormEvent) => {
@@ -140,7 +133,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
         ...(anchor ? { anchorStart: anchor.start, anchorEnd: anchor.end, quote: anchor.quote } : {})
       });
       setComments(prev => [...prev, response.data]);
-      setMessage(''); setAttachments([]); onClearAnchor();
+      setMessage(''); setAttachments([]); setShowMentions(false); onClearAnchor();
     } catch (error) {
       console.error('Error sending comment', error);
       toast.error(t('workspace.comment_failed'));
@@ -257,13 +250,16 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
       </div>
 
       <div className="p-3 border-t border-border relative">
+        <p className="text-xs text-muted-foreground mb-2">{t(anchor ? 'comments_ui.part_comment' : 'comments_ui.general_comment')}</p>
+        <Button type="button" variant="outline" size="sm" className="mb-3" disabled={isSending} onClick={() => { setShowMentions(value => !value); setMentionQuery(''); setMentionRange(null); setMentionIndex(0); }}><AtSign className="size-4" />{t('comments_ui.mention')}</Button>
         {showMentions && (
-          <div className="absolute bottom-full mb-2 left-3 w-56 bg-popover border border-border rounded-md shadow-lg overflow-hidden z-10 max-h-48 overflow-y-auto">
+          <div id="comment-mention-options" role="listbox" aria-label={t('comments_ui.mention')} className="mb-3 w-full bg-popover border border-border rounded-md max-h-48 overflow-y-auto">
             {mentionFilteredMembers.length > 0 ? (
-              mentionFilteredMembers.map(member => (
+              mentionFilteredMembers.map((member, index) => (
                 <button
-                  key={member.id}
-                  className="w-full text-left px-3 py-2 hover:bg-accent text-sm flex items-center gap-2 text-foreground"
+                  key={member.id} id={`comment-member-${index}`} type="button" role="option" aria-label={member.name} aria-selected={index === mentionIndex}
+                  onMouseDown={event => event.preventDefault()}
+                  className={`w-full text-left px-3 py-3 hover:bg-accent text-sm flex items-center gap-2 text-foreground ${index === mentionIndex ? 'bg-accent' : ''}`}
                   onClick={() => handleSelectMention(member.name)}
                 >
                   <MemberAvatar name={member.name} photo={member.photo} className="size-5" />
@@ -287,7 +283,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
         <form onSubmit={handleSendComment} className="flex gap-2">
           <Button type="button" size="icon" variant="outline" className="size-8 shrink-0" disabled={uploading || isSending || attachments.length >= 5} onClick={() => attachmentInput.current?.click()} aria-label={t('workspace.attach_file')}><Paperclip className="size-4" /></Button>
           <Input
-            id="tab-comment-input" aria-label={t('workspace.comment')} maxLength={10000}
+            id="tab-comment-input" role="combobox" aria-autocomplete="list" aria-expanded={showMentions} aria-controls={showMentions ? "comment-mention-options" : undefined} aria-activedescendant={showMentions && mentionFilteredMembers[mentionIndex] ? `comment-member-${mentionIndex}` : undefined} aria-label={t('workspace.comment')} maxLength={10000}
             value={message}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}

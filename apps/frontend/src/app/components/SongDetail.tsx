@@ -204,7 +204,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             onUpload={tabId => handleFileUploadTrigger('tab', tabId)} uploading={isUploading && uploadTarget?.type === 'tab'} uploadProgress={uploadProgress}
             onDeleteFile={(tabId, url) => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, tabId, url)} onPreview={setPreviewFile}
             focusedAnchor={focusedAnchor?.tabId === selectedTab.id ? focusedAnchor.anchor : null}
-            onAnnotate={anchor => { setPendingAnchor({ tabId: selectedTab.id, anchor }); setTimeout(() => document.getElementById('tab-comment-input')?.focus(), 0); }} />
+            onAnnotate={anchor => { setPendingAnchor({ tabId: selectedTab.id, anchor }); setTimeout(() => { const input = document.getElementById('tab-comment-input'); input?.scrollIntoView({ block: 'center', behavior: 'smooth' }); input?.focus({ preventScroll: true }); }, 150); }} />
             : <div className="min-h-64 flex items-center justify-center text-center text-sm text-muted-foreground p-6">{t('workspace.choose_tab')}</div>}
         </div>
         <div className="song-comments min-w-0">
