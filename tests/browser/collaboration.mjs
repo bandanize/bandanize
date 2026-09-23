@@ -199,7 +199,7 @@ try {
       await drop();
       controls.failNextTransfer = true;
       await page.getByRole('button', { name: /^Move Remove/ }).click();
-      await page.getByText(/error|try again/i).first().waitFor();
+      await page.getByText('Could not update the playlist. Please try again.', { exact: true }).waitFor();
       assert(await page.getByRole('dialog', { name: 'Move or duplicate song' }).isVisible());
       await page.getByRole('button', { name: /^Duplicate Keep/ }).click();
       await page.getByRole('dialog').waitFor({ state: 'detached' });
@@ -214,7 +214,7 @@ try {
       assert.equal(await page.locator('[data-song-id="99"]').count(), 1, 'Independent copy and moved song both reach target');
       if (!mobile) {
         await page.goto(origin + '/dashboard');
-        await page.getByRole('button').filter({ hasText: 'Rehearsal' }).waitFor();
+        await page.locator('.group[role="button"]').filter({ hasText: 'Rehearsal' }).waitFor();
         await capture(page, 'visual-dashboard');
       }
       assert.deepEqual(test.errors, []);

@@ -274,5 +274,13 @@
     "transferring": "Actualizando playlists…",
     "link_option": "O usar la misma canción en ambas playlists",
     "link_hint": "Las canciones vinculadas comparten cambios, tabs y archivos. Las copias son independientes."
-  }
+  },
+  "move": "Mover",
+  "duplicate": "Duplicar",
+  "cancel": "Cancelar",
+  "link": "Vincular",
+  "action_error": "No se pudo actualizar la playlist. Inténtalo de nuevo.",
+  "song_moved": "Canción movida",
+  "song_linked": "Canción vinculada",
+  "song_copied": "Copia independiente creada"
 }

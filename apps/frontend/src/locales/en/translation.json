@@ -274,5 +274,13 @@
     "transferring": "Updating playlists…",
     "link_option": "Or use the same song in both playlists",
     "link_hint": "Linked songs share edits, tabs and files. Duplicates are independent."
-  }
+  },
+  "move": "Move",
+  "duplicate": "Duplicate",
+  "cancel": "Cancel",
+  "link": "Link",
+  "action_error": "Could not update the playlist. Please try again.",
+  "song_moved": "Song moved",
+  "song_linked": "Song linked",
+  "song_copied": "Independent copy created"
 }
