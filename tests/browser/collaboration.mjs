@@ -1,0 +1,178 @@
+// Runs exclusively on a GitHub Actions runner; API fixtures never touch production.
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { mkdir } from 'node:fs/promises';
+const require = createRequire(process.env.BROWSER_PACKAGE + '/package.json');
+const { chromium, webkit } = require('playwright');
+const origin = 'http://127.0.0.1:4173';
+const token = 'a'.repeat(43);
+const owner = { id: '1', name: 'Owner', username: 'owner', email: 'owner@example.test' };
+const band = {
+  id: 1, name: 'Rehearsal', description: 'Browser fixture', ownerId: 1,
+  members: [owner, { id: 2, name: 'Alex', username: 'alex', email: 'alex@example.test' }],
+  songLists: [{ id: 11, name: 'Setlist', songs: [
+    { id: 21, name: 'First song', files: [], tablatures: [{ id: 31, name: 'Guitar tab',
+      instrument: 'Guitar', instrumentIcon: 'guitar', tuning: 'Standard',
+      content: 'Am C G\n' + ('e|---3---5---7---|' + '-'.repeat(100) + '\n').repeat(35),
+      commentCount: 2, files: [{ id: '41', name: 'Notes', type: 'text/plain', url: '/fixture.txt' }] }] },
+    { id: 22, name: 'Second song', files: [], tablatures: [] }
+  ] }],
+  chatMessages: [{ id: 51, sender: owner, message: '@Alex #[First song](song:21:11) @Alex', timestamp: '2026-09-23T10:00:00Z' }]
+};
+await mkdir('test-results', { recursive: true });
+async function setup(browser, mobile = false, auth = true, optional = false) {
+  const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, hasTouch: mobile, isMobile: mobile, serviceWorkers: 'block' });
+  await context.addCookies([{ name: 'i18next', value: 'en', url: origin }]);
+  await context.addInitScript(({ owner, auth, optional }) => {
+    localStorage.setItem('i18nextLng', 'en');
+    localStorage.setItem('welcome_seen_1', 'true');
+    if (auth) {
+      localStorage.setItem('token', 'fixture');
+      localStorage.setItem('currentUser', JSON.stringify(owner));
+    }
+    if (optional) {
+      window.consentCalls = [];
+      window.zaraz = { consent: { APIReady: true,
+        purposes: { 'analysis-id': { name: 'Analytics', description: 'Optional test purpose' } },
+        getAll: () => ({ 'analysis-id': false }),
+        set: values => window.consentCalls.push(values)
+      } };
+    }
+  }, { owner, auth, optional });
+  const page = await context.newPage();
+  page.setDefaultTimeout(12000);
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const requests = [];
+  await page.route('**/api/**', async route => {
+    const request = route.request(), path = new URL(request.url()).pathname;
+    requests.push({ path, method: request.method(), data: request.postData() });
+    let body = [];
+    if (path.endsWith('/auth/me')) body = owner;
+    else if (path.endsWith('/auth/login')) body = { ...owner, token: 'fixture' };
+    else if (path.endsWith('/auth/register') || path.includes('/auth/verify')) body = { message: 'OK' };
+    else if (path.endsWith('/bands/my-bands')) body = [band];
+    else if (path.includes('/invite-links/')) body = path.endsWith('/accept') ? { bandId: 1 } : { bandName: 'Rehearsal', expiresAt: '2030-01-01T00:00:00Z' };
+    else if (path.endsWith('/calendar-token')) body = { token: 'fixture-calendar-token' };
+    else if (path.endsWith('/heartbeat')) body = { onlineCount: 1 };
+    else if (path.includes('unread-count')) body = 0;
+    else if (path.includes('unread')) body = false;
+    else if (path.endsWith('/comments')) body = [{ id: 1, content: 'One', user: owner, createdAt: '2026-09-23T10:00:00Z' }, { id: 2, content: 'Two', user: owner, createdAt: '2026-09-23T10:00:00Z' }];
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+  });
+  return { context, page, errors, requests };
+}
+async function dismiss(page) {
+  const button = page.getByRole('button', { name: 'Understood', exact: true });
+  if (await button.isVisible()) await button.click();
+}
+async function capture(page, name) { await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true }); }
+const browser = await chromium.launch();
+try {
+  const { context, page, errors } = await setup(browser, false, false, true);
+  try {
+    await page.goto(origin + '/cookies');
+    await page.getByRole('button', { name: 'Reject optional', exact: true }).click();
+    assert.equal(await page.evaluate(() => window.consentCalls.at(-1)['analysis-id']), false);
+    await page.reload();
+    assert.equal(await page.getByRole('region', { name: 'Cookies and privacy' }).count(), 0);
+    await page.getByRole('button', { name: 'Cookie settings', exact: true }).first().click();
+    await page.getByRole('checkbox', { name: /Analytics/ }).check();
+    await page.getByRole('button', { name: 'Save preferences' }).click();
+    assert.equal(await page.evaluate(() => window.consentCalls.at(-1)['analysis-id']), true);
+    await page.getByRole('button', { name: 'Cookie settings', exact: true }).first().click();
+    await page.getByRole('button', { name: 'Reject optional', exact: true }).click();
+    assert.equal(await page.evaluate(() => window.consentCalls.at(-1)['analysis-id']), false);
+    for (const path of ['/privacy', '/terms&conditions', '/cookies']) {
+      await page.goto(origin + path);
+      await page.locator('main h1').waitFor();
+      assert.equal(new URL(page.url()).pathname, path);
+    }
+    await capture(page, 'cookies');
+    assert.deepEqual(errors, []);
+    console.log('PASS public legal routes and persistent, reversible consent');
+  } finally { await context.close(); }
+
+  const test = await setup(browser);
+  try {
+    const { page, requests, errors } = test;
+    await page.goto(origin + '/project/1?tab=songs&listId=11');
+    await dismiss(page);
+    await page.getByText('2 comments', { exact: true }).waitFor();
+    assert.equal(await page.getByText('1 tabs', { exact: true }).count(), 1);
+    assert.equal(await page.getByText('1 files', { exact: true }).count(), 1);
+    const row = page.locator('[data-handler-id]').filter({ has: page.getByText('First song', { exact: true }) });
+    const second = page.locator('[data-handler-id]').filter({ has: page.getByText('Second song', { exact: true }) });
+    const handle = await row.locator('.cursor-grab').boundingBox(), target = await second.boundingBox();
+    assert(handle && target);
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target.x + 20, target.y + target.height * .8, { steps: 15 });
+    await page.locator('.fixed.pointer-events-none').filter({ hasText: 'First song' }).waitFor();
+    await capture(page, 'drag-preview');
+    await page.mouse.up();
+    await page.waitForFunction(() => [...document.querySelectorAll('[data-handler-id]')].filter(el => /First song|Second song/.test(el.textContent)).map(el => el.textContent).join('|').startsWith('Second song'));
+    assert(requests.some(request => request.path.includes('reorder')));
+    await page.goto(origin + '/project/1?tab=chat');
+    await page.getByText('@Alex', { exact: true }).first().waitFor();
+    assert.equal(await page.getByText('@Alex', { exact: true }).count(), 2);
+    assert.equal(await page.getByText('@Alex', { exact: true }).first().evaluate(el => getComputedStyle(el).color), 'rgb(41, 65, 10)');
+    await page.getByRole('button', { name: /First song/ }).click();
+    await page.waitForURL(/songId=21/);
+    await page.goto(origin + '/project/1?tab=calendar');
+    await page.getByRole('button', { name: /Google Calendar/ }).click();
+    const link = page.locator('a[href*="calendar.google.com/calendar/render"]');
+    await link.waitFor();
+    assert.match(await link.getAttribute('href'), /fixture-calendar-token/);
+    await capture(page, 'calendar-link');
+    assert.deepEqual(errors, []);
+    console.log('PASS song counters, animated drag, mention navigation and calendar link');
+  } finally { await test.context.close(); }
+
+  const invite = await setup(browser, false, false);
+  try {
+    const { page, errors } = invite;
+    await page.goto(origin + '/join/' + token);
+    await dismiss(page);
+    await page.getByRole('link', { name: 'Create account', exact: true }).click();
+    await page.locator('#email').waitFor();
+    assert.match(await page.evaluate(() => localStorage.getItem('bandanize.pendingInvite')), new RegExp(token));
+    await page.goto(origin + '/login');
+    await page.locator('#username').fill('owner@example.test');
+    await page.locator('#password').fill('fixture-password');
+    await page.locator('form button[type=submit]').click();
+    await page.waitForURL('**/join/' + token);
+    await page.getByRole('button', { name: 'Join project', exact: true }).click();
+    await page.waitForURL('**/project/1');
+    await page.getByRole('heading', { name: 'Rehearsal' }).waitFor();
+    assert.equal(await page.evaluate(() => localStorage.getItem('bandanize.pendingInvite')), null);
+    assert.deepEqual(errors, []);
+    console.log('PASS invitation survives account entry and resumes after sign-in');
+  } finally { await invite.context.close(); }
+} finally { await browser.close(); }
+
+for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
+  const browser = await engine.launch();
+  const { context, page, errors } = await setup(browser, true);
+  try {
+    await page.goto(origin + '/project/1?tab=songs&listId=11&songId=21&tabId=31');
+    await dismiss(page);
+    await page.getByRole('button', { name: 'Fullscreen', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.waitFor();
+    await dialog.getByRole('combobox', { name: 'Font size' }).selectOption('4');
+    const box = await dialog.boundingBox();
+    assert(box && box.x >= 0 && box.y >= 0 && box.width >= 370 && box.height >= 820, JSON.stringify(box));
+    assert(box.x + box.width <= 391 && box.y + box.height <= 845);
+    assert.equal(await dialog.locator('pre').evaluate(el => getComputedStyle(el).fontSize), '20px');
+    const reading = await dialog.locator('pre').boundingBox();
+    assert(reading.height > 600, JSON.stringify(reading));
+    assert.equal(await dialog.locator('pre').evaluate(el => getComputedStyle(el).whiteSpace), 'pre');
+    await capture(page, name + '-mobile-fullscreen');
+    await dialog.getByRole('button', { name: /Exit fullscreen|Salir de pantalla completa/i }).click();
+    assert.equal(await page.getByRole('dialog').count(), 0);
+    assert.deepEqual(errors, []);
+    console.log('PASS ' + name + ' mobile viewport, scrolling, font size and exit');
+  } catch (error) { await capture(page, name + '-failure'); throw error; }
+  finally { await context.close(); await browser.close(); }
+}

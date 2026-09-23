@@ -1,0 +1,39 @@
+name: Browser collaboration checks
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BROWSER_PACKAGE: ${{ runner.temp }}/bandanize-browser
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=@bandanize/frontend
+      - name: Install browsers in CI
+        run: |
+          npm install --prefix "$BROWSER_PACKAGE" --no-save --package-lock=false playwright@1.63.0
+          node "$BROWSER_PACKAGE/node_modules/playwright/cli.js" install --with-deps chromium webkit
+      - name: Check browser flows on the GitHub runner
+        run: |
+          mkdir -p test-results
+          npm run preview --workspace=@bandanize/frontend -- --host 127.0.0.1 --port 4173 > test-results/preview.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/login > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/browser/collaboration.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: collaboration-browser-evidence
+          path: test-results/

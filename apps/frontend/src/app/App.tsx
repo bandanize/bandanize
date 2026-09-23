@@ -1,4 +1,5 @@
 import React from 'react';
+import { CookiesProvider } from 'react-cookie';
 import { JoinProject } from '@/pages/JoinProject';
 import { pendingInvitePath } from '@/lib/pending-invite';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -78,7 +79,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <Router>
-      <ConsentProvider>
+      <CookiesProvider><ConsentProvider>
         <ThemeProvider storageKey="vite-ui-theme">
           <AuthProvider>
             <ProjectProvider>
@@ -91,7 +92,7 @@ export default function App() {
             </ProjectProvider>
           </AuthProvider>
         </ThemeProvider>
-      </ConsentProvider>
+      </ConsentProvider></CookiesProvider>
     </Router>
   );
 }

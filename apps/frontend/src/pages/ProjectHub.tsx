@@ -62,7 +62,7 @@ export function ProjectHub() {
 
   // Handle auto-selection on refresh
   useEffect(() => {
-      if (!isLoading && projectId && !currentProject && projects.length > 0) {
+      if (!isLoading && projectId && currentProject?.id !== projectId && projects.some(project => project.id === projectId)) {
           selectProject(projectId);
       }
   }, [isLoading, projectId, currentProject, projects, selectProject]);

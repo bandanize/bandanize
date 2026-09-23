@@ -104,7 +104,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           ref.current = node;
       }}
       style={{ opacity }}
-      className="group flex items-center gap-3 py-2.5 px-1 hover:bg-card/50 rounded-lg transition-all select-none"
+      className="group flex items-center gap-3 py-2.5 px-1 hover:bg-card/50 rounded-lg transition-colors select-none"
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
@@ -151,7 +151,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-all shrink-0 data-[state=open]:text-foreground"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-colors shrink-0 data-[state=open]:text-foreground"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <MoreVertical className="size-4" />
@@ -328,7 +328,7 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
             style={{ opacity }} 
             data-handler-id={handlerId} 
             className={`
-                group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all select-none
+                group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-colors select-none
                 ${isSelected 
                     ? 'bg-card border-2 border-primary' 
                     : 'bg-card border border-border hover:border-border/80'
@@ -1010,7 +1010,7 @@ export function SongManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
               {/* Option 1: True Duplicate */}
               <Card 
-                className={`relative overflow-hidden cursor-pointer transition-all border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
+                className={`relative overflow-hidden cursor-pointer transition-colors border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
                 onClick={() => handleDuplicateList(true)}
               >
                 <CardContent className="p-4 flex flex-col h-full">
@@ -1028,7 +1028,7 @@ export function SongManager() {
 
               {/* Option 2: Link */}
               <Card 
-                className={`relative overflow-hidden cursor-pointer transition-all border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
+                className={`relative overflow-hidden cursor-pointer transition-colors border-2 border-border hover:border-primary/50 bg-background hover:bg-accent/5`}
                 onClick={() => handleDuplicateList(false)}
               >
                 <CardContent className="p-4 flex flex-col h-full">

@@ -31,6 +31,8 @@ export function LegalPage({ kind }: { kind: 'cookies' | 'privacy' | 'terms' }) {
           ['bandanizeConsent', t('legal.consent_purpose'), t('legal.days_180')],
           ['token / currentUser', t('legal.session_purpose'), t('legal.until_logout')],
           ['i18next / i18nextLng', t('legal.language_purpose'), t('legal.language_duration')],
+          ['lastProjectId', t('legal.project_purpose'), t('legal.days_30')],
+          ['welcome_seen_*', t('legal.welcome_purpose'), t('legal.until_clear')],
           ['vite-ui-theme', t('legal.theme_purpose'), t('legal.until_clear')],
           ['bandanize.pendingInvite', t('legal.invite_purpose'), t('legal.days_7')],
           ['Cache Storage / Service Worker', t('legal.cache_purpose'), t('legal.cache_duration')],
