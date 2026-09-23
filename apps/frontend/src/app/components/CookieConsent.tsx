@@ -1,100 +1,53 @@
-import { useEffect } from 'react';
-import { useCookies } from 'react-cookie';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useConsent } from '@/contexts/CookieConsentContext';
 import { Button } from '@/app/components/ui/button';
-import CookiesImage from '@/assets/cookies.svg';
-import { useAuth } from '@/contexts/AuthContext';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 
-// Define available consent types here for scalability
-const CONSENT_TYPES = ['Analytics', 'Marketing'] as const;
-type ConsentType = typeof CONSENT_TYPES[number];
-
-/**
- * Updates Zaraz consent settings
- */
-const updateZarazConsent = (consents: Partial<Record<ConsentType, boolean>>) => {
-  const attemptSet = (retries: number) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const zaraz = (window as any).zaraz;
-    
-    if (zaraz && zaraz.consent && zaraz.consent.set) {
-      try {
-        zaraz.consent.set(consents);
-      } catch {
-        // Silent fail or minimal error
-      }
-    } else if (retries > 0) {
-      setTimeout(() => attemptSet(retries - 1), 500);
-    }
-  };
-  attemptSet(10); // Try for 5 seconds
-};
-
+function Preferences() {
+  const { t } = useTranslation();
+  const { record, purposes, save } = useConsent();
+  const [choices, setChoices] = useState<Record<string, boolean>>(record?.choices || {});
+  return <div className="space-y-4">
+    <p className="text-sm">{t('consent.necessary_description')}</p>
+    <label className="flex gap-3 items-center"><input type="checkbox" checked disabled />{t('consent.necessary')}</label>
+    {purposes.length ? purposes.map(purpose => <label key={purpose.id} className="flex gap-3 items-start border-t border-border pt-3">
+      <input type="checkbox" className="mt-1 accent-lime-400"
+        checked={choices[purpose.id] === true}
+        onChange={event => setChoices(previous => ({ ...previous, [purpose.id]: event.target.checked }))} />
+      <span><span className="font-medium">{purpose.name}</span><span className="block text-sm text-muted-foreground">{purpose.description}</span></span>
+    </label>) : <p className="text-sm text-muted-foreground">{t('consent.no_optional')}</p>}
+    <Button className="w-full" onClick={() => save(Object.fromEntries(purposes.map(purpose => [purpose.id, choices[purpose.id] === true])))}>{t('consent.save')}</Button>
+  </div>;
+}
 export function CookieConsent() {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const [cookies, setCookie] = useCookies(['cookieConsent']);
-
-  useEffect(() => {
-    // Sync with Zaraz if cookie exists
-    if (cookies.cookieConsent) {
-      const isAllowed = cookies.cookieConsent === 'true';
-      // Apply to all types for now, can be granularized later
-      const consents: Record<string, boolean> = {};
-      CONSENT_TYPES.forEach(type => consents[type] = isAllowed);
-      updateZarazConsent(consents);
-    }
-  }, [cookies.cookieConsent]);
-
-  const handleAccept = () => {
-    setCookie('cookieConsent', 'true', { path: '/', maxAge: 365 * 24 * 60 * 60 });
-    const consents: Record<string, boolean> = {};
-    CONSENT_TYPES.forEach(type => consents[type] = true);
-    updateZarazConsent(consents);
-  };
-
-  const handleDecline = () => {
-    setCookie('cookieConsent', 'declined', { path: '/', maxAge: 365 * 24 * 60 * 60 });
-    const consents: Record<string, boolean> = {};
-    CONSENT_TYPES.forEach(type => consents[type] = false);
-    updateZarazConsent(consents);
-  };
-
-
-
-  // Only show if user is logged in and hasn't consented yet
-  if (!user || cookies.cookieConsent) return null;
-
-  return (
-    <div className="fixed bottom-4 left-4 z-50 w-[calc(100vw-32px)] sm:w-[400px] h-auto bg-card rounded-[14px] flex flex-col shadow-2xl border border-white/5 overflow-hidden">
-      {/* Image placeholder */}
-      <div className="w-full h-[200px] bg-white/5 flex items-center justify-center">
-        <img src={CookiesImage} alt="Cookies" />
+  const { record, purposes, open, setOpen, save } = useConsent();
+  const needsChoice = !record || purposes.some(purpose => !(purpose.id in record.choices));
+  const all = (allowed: boolean) => save(Object.fromEntries(purposes.map(purpose => [purpose.id, allowed])));
+  return <>
+    {needsChoice && !open && <section role="region" aria-label={t('consent.title')}
+      className="fixed bottom-3 left-3 right-3 sm:right-auto sm:max-w-md z-50 rounded-xl border border-border bg-card shadow-xl p-4 space-y-3">
+      <h2 className="font-semibold">{t('consent.title')}</h2>
+      <p className="text-sm text-muted-foreground">{t(purposes.length ? 'consent.description' : 'consent.essential_only')}</p>
+      <Link className="text-sm text-primary underline" to="/cookies">{t('consent.details')}</Link>
+      <div className="flex gap-2 flex-wrap">
+        {purposes.length > 0 ? <>
+          <Button variant="outline" className="flex-1" onClick={() => all(false)}>{t('consent.reject')}</Button>
+          <Button variant="outline" className="flex-1" onClick={() => all(true)}>{t('consent.accept')}</Button>
+        </> : <Button variant="outline" onClick={() => all(false)}>{t('consent.understood')}</Button>}
+        <Button variant="outline" onClick={() => setOpen(true)}>{t('consent.settings')}</Button>
       </div>
-      
-      <div className="px-6 pb-6 pt-12 flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <h4 className="text-[20px] font-medium font-poppins text-foreground leading-6">{t('cookies_privacy')}</h4>
-          <p className="text-[12px] font-normal font-poppins text-foreground leading-4">
-            {t('cookies_text')}
-          </p>
-        </div>
-        
-        <div className="flex gap-4 w-full">
-          <Button 
-            onClick={handleDecline}
-            className="flex-1 h-[36px] bg-card border border-border rounded-[8px] text-foreground font-poppins text-[14px] hover:bg-accent"
-          >
-            {t('decline')}
-          </Button>
-          <Button 
-            onClick={handleAccept}
-            className="flex-1 h-[36px] bg-primary hover:bg-primary/90 rounded-[8px] text-primary-foreground font-poppins text-[14px]"
-          >
-            {t('accept')}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+    </section>}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-h-[85dvh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{t('consent.title')}</DialogTitle>
+          <DialogDescription>{t('consent.description')}</DialogDescription></DialogHeader>
+        {open && <Preferences />}
+        <Button variant="outline" onClick={() => all(false)}>{t('consent.reject')}</Button>
+        <Link className="text-sm text-primary underline" to="/cookies" onClick={() => setOpen(false)}>{t('consent.details')}</Link>
+      </DialogContent>
+    </Dialog>
+  </>;
 }

@@ -75,6 +75,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     const { t, i18n } = useTranslation();
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [googleOpen, setGoogleOpen] = useState(false);
     const [calendarToken, setCalendarToken] = useState<string | null>(null);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [highlightedDay, setHighlightedDay] = useState<Date | null>(null);
@@ -261,43 +262,17 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         URL.revokeObjectURL(url);
     };
 
-    // Copy live subscription URL
-    const copySubscriptionUrl = () => {
-        let baseUrl = (import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL || window.location.origin + '/api';
-        
-        // Ensure we are using the correct protocol for subscription (webcal://)
-        // If baseUrl starts with http:// or https://, we replace it with webcal:// or webcals://
-        // Ideally, webcal:// works for both, but secure usually prefers webcals:// or just webcal:// pointing to https.
-        // The robust way for iOS/macOS is webcal://(domain)/path
-        
-        // First, resolve the absolute URL if it is relative
-        if (baseUrl.startsWith('/')) {
-            baseUrl = window.location.origin + baseUrl;
-        }
-
-        // Construct the full URL
-        const subUrl = calendarToken 
-            ? `${baseUrl}/calendar/${calendarToken}.ics`
-            : `${baseUrl}/bands/${projectId}/calendar.ics`;
-
-        // Replace protocol with webcal://
-        // If the original was https, webcal:// will typically attempt secure connection. 
-        // Some clients prefer https:// for subscription too, but webcal:// triggers the app open.
-        // The user specifically mentioned http vs https issues.
-        // Let's force proper protocol.
-        
-        let finalUrl = subUrl;
-        if (subUrl.startsWith('https://')) {
-            finalUrl = subUrl.replace('https://', 'webcal://');
-        } else if (subUrl.startsWith('http://')) {
-             // If we are erroneously on http but want secure, we might want to force webcals:// or upgrade to https logic if server supports it.
-             // Given the user wants security ("securizar"), let's try to assume https if possible or just use webcal.
-             finalUrl = subUrl.replace('http://', 'webcal://');
-        }
-        
-        navigator.clipboard.writeText(finalUrl).then(() => {
-            toast.success(t('subscription_url_copied', 'URL copiada — pégala en tu app de calendario'));
-        });
+    const apiBase = new URL(import.meta.env.VITE_API_URL || '/api', window.location.origin).href.replace(/\/$/, '');
+    const subscriptionUrl = calendarToken ? apiBase + '/calendar/' + encodeURIComponent(calendarToken) + '.ics' : '';
+    const googleUrl = subscriptionUrl
+      ? 'https://calendar.google.com/calendar/render?cid=' + encodeURIComponent(subscriptionUrl.replace(/^https?:/, 'webcal:'))
+      : '';
+    const copySubscriptionUrl = async () => {
+        if (!subscriptionUrl) return;
+        try {
+            await navigator.clipboard.writeText(subscriptionUrl);
+            toast.success(t('subscription_url_copied'));
+        } catch { toast.error(t('calendar_link.copy_manually')); }
     };
 
     if (loading) {
@@ -310,6 +285,17 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
 
     return (
         <Card className="bg-card border-border rounded-[14px]">
+            <Dialog open={googleOpen} onOpenChange={setGoogleOpen}>
+              <DialogContent aria-describedby={undefined}>
+                <DialogTitle>{t('calendar_link.title')}</DialogTitle>
+                <p className="text-sm text-muted-foreground">{t('calendar_link.description')}</p>
+                <Button asChild><a href={googleUrl} target="_blank" rel="noopener noreferrer">{t('calendar_link.open')}</a></Button>
+                <p className="text-sm text-muted-foreground">{t('calendar_link.fallback')}</p>
+                <Input readOnly value={subscriptionUrl} aria-label={t('calendar_link.url')} onFocus={event => event.target.select()} />
+                <Button variant="outline" onClick={copySubscriptionUrl}>{t('invite.copy')}</Button>
+                <a className="text-sm text-primary underline" href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl" target="_blank" rel="noopener noreferrer">{t('calendar_link.manual')}</a>
+              </DialogContent>
+            </Dialog>
             {/* Card Header */}
             <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
                 {/* Title row with navigation — stacks on mobile */}
@@ -346,6 +332,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                         >
                             <ChevronRight className="size-4 text-foreground" />
                         </Button>
+                        <Button variant="outline" size="sm" disabled={!subscriptionUrl}
+                            onClick={() => setGoogleOpen(true)}>Google Calendar</Button>
                         {/* Export & Subscribe buttons */}
                         <div className="flex gap-1">
                             <Button
@@ -361,6 +349,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 rounded-[8px] text-muted-foreground hover:text-foreground hover:bg-white/5"
+                                disabled={!subscriptionUrl}
                                 onClick={copySubscriptionUrl}
                                 title={t('subscribe_calendar', 'Suscribirse al calendario')}
                             >

@@ -2,7 +2,7 @@ import i18n from '@/i18n';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
 /** Routes that don't require authentication */
-export const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
+export const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/join', '/cookies', '/privacy', '/terms&conditions'];
 
 /**
  * Extract a user-friendly error message from an API error.

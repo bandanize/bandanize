@@ -27,6 +27,7 @@ export interface MediaFile {
 }
 
 export interface Tablature {
+  commentCount?: number;
   id: string;
   instrument: string;
   instrumentIcon: string;
@@ -91,6 +92,7 @@ interface BandApiResponse {
         instrumentIcon: string;
         tuning: string;
         content: string;
+        commentCount?: number;
         files?: MediaFile[];
       }[];
     }[];
@@ -110,6 +112,8 @@ export interface Invitation {
 }
 
 interface ProjectContextType {
+  refreshProjects: () => Promise<void>;
+  updateTabCommentCount: (tabId: string, count: number) => void;
   projects: Project[];
   invitations: Invitation[];
   isLoading: boolean;
@@ -196,6 +200,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               instrumentIcon: tab.instrumentIcon,
               tuning: tab.tuning,
               content: tab.content,
+              commentCount: tab.commentCount,
               files: tab.files || []
             })) : []
           })) : []
@@ -925,6 +930,20 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       }
   };
 
+  const updateTabCommentCount = useCallback((tabId: string, count: number) => {
+    const update = (project: Project): Project => ({
+      ...project,
+      songLists: project.songLists.map(list => ({
+        ...list, songs: list.songs.map(song => ({
+          ...song, tablatures: song.tablatures.map(tab =>
+            tab.id === tabId ? { ...tab, commentCount: count } : tab)
+        }))
+      }))
+    });
+    setProjects(previous => previous.map(update));
+    setCurrentProject(previous => previous ? update(previous) : previous);
+  }, []);
+
   // Helper to update local state
   const updateLocalProject = (projectId: string, updater: (p: Project) => Project) => {
     setProjects(prev => prev.map(p => {
@@ -938,6 +957,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ProjectContext.Provider value={{
+      refreshProjects: fetchProjects,
+      updateTabCommentCount,
       projects,
       invitations,
       isLoading,

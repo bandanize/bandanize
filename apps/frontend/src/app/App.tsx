@@ -1,4 +1,6 @@
 import React from 'react';
+import { JoinProject } from '@/pages/JoinProject';
+import { pendingInvitePath } from '@/lib/pending-invite';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProjectProvider } from '@/contexts/ProjectContext';
@@ -13,7 +15,9 @@ import { ForgotPassword } from '@/pages/ForgotPassword';
 import { ResetPassword } from '@/pages/ResetPassword';
 import { Toaster } from '@/app/components/ui/sonner';
 import { ThemeProvider } from '@/app/components/theme-provider'; // Wrapper we will create
-import { CookiesProvider } from 'react-cookie'; // For general cookie usage throughout the app
+import { ConsentProvider } from '@/contexts/CookieConsentContext';
+import { LegalFooter } from '@/app/components/LegalFooter';
+import { LegalPage } from '@/pages/LegalPage';
 import { CookieConsent } from '@/app/components/CookieConsent';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -26,7 +30,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
+      <Route path="/login" element={!user ? <Login /> : <Navigate to={pendingInvitePath() || "/dashboard"} />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route
@@ -61,6 +65,10 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
+      <Route path="/cookies" element={<LegalPage kind="cookies" />} />
+      <Route path="/privacy" element={<LegalPage kind="privacy" />} />
+      <Route path="/terms&conditions" element={<LegalPage kind="terms" />} />
+      <Route path="/join/:token" element={<JoinProject />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
@@ -70,17 +78,20 @@ function AppRoutes() {
 export default function App() {
   return (
     <Router>
-      <CookiesProvider>
+      <ConsentProvider>
         <ThemeProvider storageKey="vite-ui-theme">
           <AuthProvider>
             <ProjectProvider>
-              <AppRoutes />
+              <div className="min-h-dvh flex flex-col">
+                <div className="flex-1"><AppRoutes /></div>
+                <LegalFooter />
+              </div>
               <Toaster />
               <CookieConsent />
             </ProjectProvider>
           </AuthProvider>
         </ThemeProvider>
-      </CookiesProvider>
+      </ConsentProvider>
     </Router>
   );
 }

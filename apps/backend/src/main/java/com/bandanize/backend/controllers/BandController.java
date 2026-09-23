@@ -261,17 +261,7 @@ public class BandController {
     @GetMapping("/{bandId}/calendar-token")
     public ResponseEntity<String> getCalendarToken(@PathVariable Long bandId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        // Verify membership? Assuming only members should see the calendar token.
-        // BandService.getOrGenerateCalendarToken does not verify, but we should
-        // probably check if user is in band.
-        // For now, let's assume if they can access the band page they can get the
-        // token.
-        // Ideally we should check permission.
-        // Currently getBandById doesn't check permission explicitly other than returns
-        // DTO.
-
-        // I will use getOrGenerateCalendarToken
-        String token = bandService.getOrGenerateCalendarToken(bandId);
+        String token = bandService.getCalendarTokenForMember(bandId, userDetails.getUsername());
         return ResponseEntity.ok(token);
     }
 

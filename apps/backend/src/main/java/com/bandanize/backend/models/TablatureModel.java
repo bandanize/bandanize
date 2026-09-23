@@ -31,6 +31,10 @@ public class TablatureModel {
     @CollectionTable(name = "tablature_files", joinColumns = @JoinColumn(name = "tablature_id"))
     private List<MediaFile> files = new ArrayList<>();
 
+    public int getCommentCount() {
+        return comments.size();
+    }
+
     public Long getId() {
         return id;
     }

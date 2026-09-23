@@ -174,5 +174,84 @@
         "login_error": "Error al iniciar sesión",
         "register_error": "Error al registrarse"
     },
-    "network_error": "No se ha podido conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo en unos minutos."
+    "network_error": "No se ha podido conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo en unos minutos.",
+    "library": {
+        "tab_count": "{{count}} tabs",
+        "file_count": "{{count}} archivos",
+        "comment_count": "{{count}} comentarios",
+        "comments_unavailable": "Comentarios: —"
+    },
+    "reader": {
+        "font_size": "Tamaño de letra"
+    },
+    "invite": {
+        "title": "Invitación a un proyecto",
+        "to_project": "Te han invitado a «{{name}}».",
+        "expires": "El enlace caduca el {{date}}.",
+        "loading": "Cargando invitación…",
+        "join": "Unirme al proyecto",
+        "joining": "Entrando…",
+        "account_hint": "Crea una cuenta y verifica tu correo, o inicia sesión. Guardaremos esta invitación en este navegador para que puedas continuar.",
+        "back": "Volver a Bandanize",
+        "invalid": "Este enlace no es válido o ha caducado.",
+        "error": "No se ha podido completar la invitación.",
+        "link_title": "Invitar mediante enlace",
+        "link_hint": "Cualquier persona con el enlace podrá unirse tras iniciar sesión y verificar su correo. Caduca en 7 días. Al generar otro, el anterior deja de funcionar.",
+        "generate": "Generar nuevo enlace",
+        "revoke": "Desactivar enlace",
+        "revoked": "Enlace desactivado.",
+        "copy": "Copiar",
+        "copied": "Enlace copiado.",
+        "copy_manually": "Selecciona el enlace y cópialo manualmente."
+    },
+    "consent": {
+        "title": "Cookies y privacidad",
+        "description": "Las tecnologías necesarias permiten usar Bandanize. Las finalidades opcionales permanecen desactivadas hasta que las aceptes y puedes cambiar de opinión en cualquier momento.",
+        "essential_only": "Usamos almacenamiento necesario para tu sesión, tus preferencias y el funcionamiento de Bandanize. Puedes consultar los detalles y revisar tus preferencias.",
+        "details": "Ver política de cookies",
+        "settings": "Configurar cookies",
+        "reject": "Rechazar opcionales",
+        "accept": "Aceptar opcionales",
+        "understood": "Entendido",
+        "save": "Guardar preferencias",
+        "necessary": "Necesarias · siempre activas",
+        "necessary_description": "Mantienen tu sesión, recuerdan tu elección de cookies y las opciones de la aplicación que solicitas.",
+        "no_optional": "No hay finalidades opcionales disponibles en el gestor de consentimiento en este momento. No se autoriza ninguna por defecto."
+    },
+    "legal": {
+        "title": "Información legal",
+        "cookies": "Cookies",
+        "privacy": "Privacidad",
+        "terms": "Condiciones de uso",
+        "storage": "Almacenamiento",
+        "purpose": "Finalidad",
+        "duration": "Duración",
+        "cookies_intro": "Las cookies son pequeños datos que el navegador guarda para una web. Bandanize también usa almacenamiento local y caché del navegador; no todo este almacenamiento es una cookie.",
+        "consent_purpose": "Recordar tu elección de consentimiento.",
+        "days_180": "180 días.",
+        "session_purpose": "Mantener la sesión y mostrar tu usuario.",
+        "until_logout": "Hasta cerrar sesión, invalidar el acceso o borrar los datos del navegador.",
+        "language_purpose": "Recordar el idioma solicitado.",
+        "language_duration": "Cookie: 7 días. Almacenamiento local: hasta que lo borres o cambies.",
+        "theme_purpose": "Recordar la apariencia elegida.",
+        "until_clear": "Hasta cambiarla o borrar el almacenamiento.",
+        "invite_purpose": "Continuar una invitación después de registrarte.",
+        "days_7": "Máximo 7 días; se elimina al completar la invitación.",
+        "cache_purpose": "Guardar recursos de la web para su carga.",
+        "cache_duration": "Hasta que se actualice la caché o la borres.",
+        "technical_storage": "El almacenamiento de sesión y preferencias no se comparte como una autorización para publicidad o analítica. Borrar los datos del navegador puede cerrar tu sesión y restablecer tus opciones.",
+        "optional": "Finalidades opcionales",
+        "cookies_control": "Puedes rechazar las finalidades opcionales, elegirlas por separado y retirar tu elección desde «Configurar cookies» en el pie de cualquier página. Rechazarlas no impide acceder a tu cuenta. Los servicios externos que abras pueden usar sus propias cookies.",
+        "contact": "Responsable y contacto",
+        "contact_pending": "Identidad y correo de contacto pendientes de confirmar por los responsables del proyecto."
+    },
+    "calendar_link": {
+        "title": "Vincular a Google Calendar",
+        "description": "Se añadirá una suscripción de solo lectura. Compartirás con Google los eventos del proyecto a través de una URL privada. Google decide la frecuencia de actualización.",
+        "open": "Abrir Google Calendar",
+        "fallback": "Si no aparece la opción de añadirlo, abre Google Calendar en el navegador (vista de escritorio), entra en «Otros calendarios → Desde URL» y pega este enlace.",
+        "url": "URL privada del calendario",
+        "manual": "Abrir «Desde URL»",
+        "copy_manually": "No se ha podido copiar. Selecciona la URL y cópiala manualmente."
+    }
 }

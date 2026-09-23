@@ -174,5 +174,84 @@
         "login_error": "Unable to sign in",
         "register_error": "Unable to sign up"
     },
-    "network_error": "Could not connect to the server. Check your connection and try again in a few minutes."
+    "network_error": "Could not connect to the server. Check your connection and try again in a few minutes.",
+    "library": {
+        "tab_count": "{{count}} tabs",
+        "file_count": "{{count}} files",
+        "comment_count": "{{count}} comments",
+        "comments_unavailable": "Comments: —"
+    },
+    "reader": {
+        "font_size": "Font size"
+    },
+    "invite": {
+        "title": "Project invitation",
+        "to_project": "You've been invited to “{{name}}”.",
+        "expires": "This link expires on {{date}}.",
+        "loading": "Loading invitation…",
+        "join": "Join project",
+        "joining": "Joining…",
+        "account_hint": "Create an account and verify your email, or sign in. We'll remember this invitation in this browser so you can continue.",
+        "back": "Back to Bandanize",
+        "invalid": "This invitation is invalid or expired.",
+        "error": "Could not complete the invitation.",
+        "link_title": "Invite with a link",
+        "link_hint": "Anyone with this link can join after signing in and verifying their email. It expires in 7 days. Generating a new link invalidates the previous one.",
+        "generate": "Generate new link",
+        "revoke": "Revoke link",
+        "revoked": "Link revoked.",
+        "copy": "Copy",
+        "copied": "Link copied.",
+        "copy_manually": "Select the link and copy it manually."
+    },
+    "consent": {
+        "title": "Cookies and privacy",
+        "description": "Necessary technologies let you use Bandanize. Optional purposes stay disabled until you accept them, and you can change your choice at any time.",
+        "essential_only": "We use necessary storage for your session, preferences and Bandanize features. You can read the details and review your settings.",
+        "details": "Read cookie policy",
+        "settings": "Cookie settings",
+        "reject": "Reject optional",
+        "accept": "Accept optional",
+        "understood": "Understood",
+        "save": "Save preferences",
+        "necessary": "Necessary · always active",
+        "necessary_description": "These maintain your session, remember your cookie choice and the app options you request.",
+        "no_optional": "No optional purposes are currently available in the consent manager. None are authorised by default."
+    },
+    "legal": {
+        "title": "Legal information",
+        "cookies": "Cookies",
+        "privacy": "Privacy",
+        "terms": "Terms & conditions",
+        "storage": "Storage",
+        "purpose": "Purpose",
+        "duration": "Duration",
+        "cookies_intro": "Cookies are small pieces of data a browser saves for a website. Bandanize also uses local storage and browser caching; not all this storage is a cookie.",
+        "consent_purpose": "Remember your consent choice.",
+        "days_180": "180 days.",
+        "session_purpose": "Keep you signed in and display your user.",
+        "until_logout": "Until sign-out, invalidation or clearing browser data.",
+        "language_purpose": "Remember your chosen language.",
+        "language_duration": "Cookie: 7 days. Local storage: until changed or cleared.",
+        "theme_purpose": "Remember your chosen appearance.",
+        "until_clear": "Until changed or cleared.",
+        "invite_purpose": "Continue an invitation after registration.",
+        "days_7": "Up to 7 days; removed after joining.",
+        "cache_purpose": "Cache website resources for loading.",
+        "cache_duration": "Until the cache is updated or cleared.",
+        "technical_storage": "Session and preference storage is not permission for advertising or analytics. Clearing browser data may sign you out and reset your choices.",
+        "optional": "Optional purposes",
+        "cookies_control": "Reject optional purposes, choose them individually or withdraw your choice using “Cookie settings” in every page's footer. Rejecting them does not prevent account access. External services you open may use their own cookies.",
+        "contact": "Controller and contact",
+        "contact_pending": "The project maintainers still need to confirm their identity and contact email."
+    },
+    "calendar_link": {
+        "title": "Connect to Google Calendar",
+        "description": "This adds a read-only subscription. You will share the project's events with Google through a private URL. Google controls refresh timing.",
+        "open": "Open Google Calendar",
+        "fallback": "If the add option does not appear, open Google Calendar in a browser (desktop view), choose “Other calendars → From URL” and paste this link.",
+        "url": "Private calendar URL",
+        "manual": "Open “From URL”",
+        "copy_manually": "Could not copy. Select the URL and copy it manually."
+    }
 }

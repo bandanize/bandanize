@@ -12,6 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/app/components/ui/utils";
 import api from '@/services/api';
 import { useTranslation } from 'react-i18next';
+import { InviteLinkPanel } from './InviteLinkPanel';
 import { UserCardModal } from './UserCardModal';
 
 export function MembersPanel() {
@@ -82,7 +83,7 @@ export function MembersPanel() {
                   {t('invite_member', 'Invitar miembro')}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[400px] overflow-visible bg-card border-border text-foreground">
+              <DialogContent className="sm:max-w-[480px] max-h-[90dvh] overflow-y-auto bg-card border-border text-foreground">
                 <DialogHeader>
                   <DialogTitle className="text-foreground">{t('invite_member', 'Invitar miembro')}</DialogTitle>
                   <DialogDescription className="text-muted-foreground">
@@ -140,6 +141,7 @@ export function MembersPanel() {
                     {t('invite_to_project', 'Invitar al proyecto')}
                   </Button>
                 </div>
+                {currentProject.ownerId === user?.id && <InviteLinkPanel key={currentProject.id} projectId={currentProject.id} />}
               </DialogContent>
             </Dialog>
           </div>

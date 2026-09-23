@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
+import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -114,30 +115,11 @@ export function TabEditor({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   
   const fontSizes = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl'];
   const [fontSizeIndex, setFontSizeIndex] = useState(1); // Default to text-sm
 
   const hasChanges = editingContent !== (tab.content || '');
-
-  // Check if native Fullscreen API is available (it's NOT on iPhone Safari)
-  const supportsFullscreen = typeof document.documentElement.requestFullscreen === 'function';
-
-  useEffect(() => {
-    if (!supportsFullscreen) return; // CSS-based fallback handles state directly
-
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-    };
-  }, [supportsFullscreen]);
 
   const increaseFontSize = () => {
     setFontSizeIndex((prev) => Math.min(prev + 1, fontSizes.length - 1));
@@ -147,27 +129,7 @@ export function TabEditor({
     setFontSizeIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  const toggleFullscreen = async () => {
-    if (!containerRef.current) return;
-
-    if (!supportsFullscreen) {
-      // CSS-based fullscreen for iPhone Safari
-      setIsFullscreen(prev => !prev);
-      return;
-    }
-
-    try {
-      if (!document.fullscreenElement) {
-        await containerRef.current.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch (err) {
-      // Fallback to CSS-based fullscreen if native API fails
-      console.warn('Native fullscreen failed, using CSS fallback:', err);
-      setIsFullscreen(prev => !prev);
-    }
-  };
+  const toggleFullscreen = () => setIsFullscreen(previous => !previous);
 
   const handleInsertText = (text: string) => {
     if (!textareaRef.current) return;
@@ -197,15 +159,13 @@ export function TabEditor({
     return <Icon className="size-4" />;
   };
 
-  return (
+  const editor = (
     <div 
-        ref={containerRef} 
         className={cn(
-            "space-y-4 transition-all duration-300",
-            isFullscreen && "fixed inset-0 z-50 bg-background p-6 overflow-y-auto"
+            isFullscreen ? "flex flex-col h-full min-h-0 gap-2 bg-background" : "space-y-4"
         )}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
         {/* ... (Start of header remains same) */}
         <div className="flex flex-wrap items-center gap-2">
             {getInstrumentIcon(tab.instrumentIcon || 'guitar')}
@@ -215,7 +175,7 @@ export function TabEditor({
             </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center bg-card border border-border rounded-md mr-2">
                 <Button
                     variant="ghost"
@@ -227,7 +187,11 @@ export function TabEditor({
                 >
                     <ZoomOut className="size-4" />
                 </Button>
-                <div className="w-px h-4 bg-border mx-1"></div>
+                <select aria-label={t('reader.font_size')}
+                  value={fontSizeIndex} onChange={event => setFontSizeIndex(Number(event.target.value))}
+                  className="bg-card text-foreground text-sm h-8 px-1 rounded">
+                  {[12, 14, 16, 18, 20].map((size, index) => <option key={size} value={index}>{size} px</option>)}
+                </select>
                 <Button
                     variant="ghost"
                     size="icon"
@@ -261,6 +225,7 @@ export function TabEditor({
                 size="sm"
                 className="flex-1 sm:flex-none bg-card border-border text-foreground hover:bg-accent"
                 onClick={toggleFullscreen}
+                aria-label={isFullscreen ? t('exit_fullscreen', 'Salir de pantalla completa') : t('fullscreen', 'Pantalla completa')}
                 title={isFullscreen ? t('exit_fullscreen', 'Salir de pantalla completa') : t('fullscreen', 'Pantalla completa')}
             >
                 {isFullscreen ? <Minimize className="size-4 mr-2" /> : <Maximize className="size-4 mr-2" />}
@@ -298,7 +263,7 @@ export function TabEditor({
         </div>
       </div>
 
-      <div className={cn("relative", isFullscreen && "flex-1")}>
+      <div className={cn("relative", isFullscreen && "flex-1 min-h-0 overflow-hidden")}>
           <div className="absolute top-2 right-2 flex gap-1 z-10">
               <Button
                   variant="ghost"
@@ -319,7 +284,7 @@ export function TabEditor({
               className={cn(
                 "min-h-[400px]",
                 fontSizes[fontSizeIndex],
-                isFullscreen && "min-h-[calc(100vh-250px)]"
+                isFullscreen && "h-full min-h-0 w-full p-2 pr-10 whitespace-pre break-normal overflow-auto"
               )}
             />
           ) : (
@@ -330,7 +295,7 @@ export function TabEditor({
               className={cn(
                   "font-mono min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4",
                   fontSizes[fontSizeIndex],
-                  isFullscreen && "min-h-[calc(100vh-250px)]"
+                  isFullscreen && "h-full min-h-0 w-full p-2 pr-10 whitespace-pre break-normal overflow-auto"
               )}
               placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
               spellCheck={false}
@@ -338,9 +303,9 @@ export function TabEditor({
           )}
       </div>
 
-      <TablatureControls onInsert={handleInsertText} />
+      {!isFullscreen && viewMode === 'edit' && <TablatureControls onInsert={handleInsertText} />}
 
-      <div className="mt-8 pt-8 border-t border-border">
+      {!isFullscreen && <div className="mt-8 pt-8 border-t border-border">
           <div className="flex items-center justify-between mb-4">
               <h4 className="font-medium text-foreground">{t('attached_files', 'Archivos adjuntos')}</h4>
               <Button
@@ -415,19 +380,23 @@ export function TabEditor({
           ) : (
               <p className="text-sm text-muted-foreground/60 italic">{t('no_files_tab', 'No hay archivos en esta tablatura')}</p>
           )}
-      </div>
+      </div>}
 
-      {isFullscreen && (
-        <Button
-          variant="secondary"
-          size="icon"
-          className="fixed bottom-6 right-6 z-50 rounded-full shadow-lg opacity-80 hover:opacity-100 transition-opacity md:hidden"
-          onClick={toggleFullscreen}
-          title={t('exit_fullscreen', 'Salir de pantalla completa')}
-        >
-          <Minimize className="size-6" />
-        </Button>
-      )}
     </div>
   );
+  return isFullscreen ? (
+    <Dialog open onOpenChange={setIsFullscreen}>
+      <DialogContent aria-describedby={undefined}
+        style={{
+          top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
+          left: 'calc(env(safe-area-inset-left, 0px) + 8px)',
+          width: 'calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 16px)',
+          height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px)',
+        }}
+        className="flex flex-col max-w-none sm:max-w-none translate-x-0 translate-y-0 p-2 gap-0 overflow-hidden [&>button]:hidden">
+        <DialogTitle className="sr-only">{tab.name}</DialogTitle>
+        {editor}
+      </DialogContent>
+    </Dialog>
+  ) : editor;
 }

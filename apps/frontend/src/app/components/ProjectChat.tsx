@@ -193,76 +193,38 @@ export function ProjectChat() {
   };
 
   const highlightMentions = (text: string, isOwnMessage: boolean) => {
-    if (!text) return null;
-    
-    const parts = [];
-    let lastIndex = 0;
-    
-    // 1. Content Mentions: #\[([^\]]+)\]\(([^)]+)\)
+    const mentionClass = isOwnMessage
+      ? 'text-[#29410a] bg-black/5 underline decoration-current font-bold rounded px-0.5'
+      : 'text-primary bg-primary/10 font-bold rounded px-0.5';
+    const names = (currentProject?.members.map(member => member.name).filter(Boolean) || [])
+      .sort((a, b) => b.length - a.length);
+    const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const renderUsers = (value: string, key: number) => {
+      if (!names.length) return value;
+      const regex = new RegExp('(@(?:' + names.map(escapeRegex).join('|') + '))(?![\\p{L}\\p{N}_])', 'gu');
+      return value.split(regex).map((part, index) =>
+        names.includes(part.slice(1)) && part.startsWith('@')
+          ? <span key={key + '-' + index} className={mentionClass}>{part}</span>
+          : part);
+    };
+    const parts: React.ReactNode[] = [];
     const contentRegex = /#\[([^\]]+)\]\(([^)]+)\)/g;
-    
-    let match;
-    while ((match = contentRegex.exec(text)) !== null) {
-        const [fullMatch, name, idString] = match;
-        const index = match.index;
-        
-        // Push text before match
-        if (index > lastIndex) {
-            parts.push(<span key={`text-${lastIndex}`}>{text.slice(lastIndex, index)}</span>);
-        }
-        
-        // Push match
-        const [type, id, extra1, extra2] = idString.split(':');
-        
-        parts.push(
-            <span 
-                key={`content-${index}`}
-                className={`font-bold cursor-pointer hover:underline ${
-                    isOwnMessage 
-                        ? 'text-white underline decoration-white/50' 
-                        : 'text-primary'
-                }`}
-                onClick={() => navigateToContent(type, id, extra1, extra2)}
-                title={`Ir a ${name}`}
-            >
-                #{name}
-            </span>
-        );
-        
-        lastIndex = index + fullMatch.length;
+    let lastIndex = 0;
+    for (const match of text.matchAll(contentRegex)) {
+      const index = match.index!;
+      parts.push(<React.Fragment key={'text-' + index}>{renderUsers(text.slice(lastIndex, index), index)}</React.Fragment>);
+      const [type, id, extra1, extra2] = match[2].split(':');
+      parts.push(
+        <button key={'content-' + index} type="button"
+          className={mentionClass + ' inline text-left hover:underline focus-visible:outline focus-visible:outline-2'}
+          onClick={() => navigateToContent(type, id, extra1, extra2)}>
+          #{match[1]}
+        </button>
+      );
+      lastIndex = index + match[0].length;
     }
-    
-    // Remaining text
-    const remainingText = text.slice(lastIndex);
-    
-    // Process remainingText for @Mentions
-    const memberNames = currentProject?.members.map(m => m.name) || [];
-    const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const patternString = `(@(?:${memberNames.map(escapeRegex).join('|')}))`;
-    const userRegex = new RegExp(patternString, 'g');
-    
-    return (
-        <>
-            {parts}
-            {remainingText.split(userRegex).map((part, i) => {
-                 if (part.startsWith('@') && memberNames.includes(part.slice(1))) {
-                     return (
-                         <span 
-                             key={`user-${i}`} 
-                             className={`font-bold ${
-                                 isOwnMessage 
-                                     ? 'text-white underline decoration-white/50' 
-                                     : 'text-primary'
-                             }`}
-                         >
-                             {part}
-                         </span>
-                     );
-                 }
-                 return <span key={`text-end-${i}`}>{part}</span>;
-             })}
-        </>
-    );
+    parts.push(<React.Fragment key="tail">{renderUsers(text.slice(lastIndex), lastIndex)}</React.Fragment>);
+    return <>{parts}</>;
   };
 
   if (!currentProject) return null;

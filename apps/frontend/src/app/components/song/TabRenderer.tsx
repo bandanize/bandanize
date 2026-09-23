@@ -116,7 +116,7 @@ function ChordPopover({
         <button
           type="button"
           className="
-            inline font-mono font-bold
+            inline font-mono font-bold text-[inherit]
             text-primary
             border-b border-dashed border-primary/50
             hover:border-primary hover:text-primary/80
