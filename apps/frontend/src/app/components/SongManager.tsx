@@ -140,12 +140,12 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
           {song.key ? ` • ${song.key}` : ''}
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-2 sm:gap-3 text-[11px] tabular-nums text-muted-foreground" aria-label={t('visual.song_activity')}>
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3 text-[11px] tabular-nums text-muted-foreground" role="group" aria-label={t('visual.song_activity')}>
         {[
           { Icon: FileText, value: song.tablatures.length, label: t('library.tab_count', { count: song.tablatures.length }) },
           { Icon: Paperclip, value: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0), label: t('library.file_count', { count: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0) }) },
           { Icon: MessageCircle, value: song.tablatures.some(tab => tab.commentCount === undefined) ? '—' : song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0), label: song.tablatures.some(tab => tab.commentCount === undefined) ? t('library.comments_unavailable') : t('library.comment_count', { count: song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0) }) },
-        ].map(({ Icon, value, label }) => <span key={label} title={label} aria-label={label} className="inline-flex items-center gap-1">
+        ].map(({ Icon, value, label }) => <span key={label} role="img" title={label} aria-label={label} className="inline-flex items-center gap-1">
           <Icon className="size-3 opacity-80" aria-hidden="true" /><span aria-hidden="true">{value}</span>
         </span>)}
       </div>
@@ -1090,7 +1090,7 @@ export function SongManager() {
       <Dialog open={moveCopyDialogProps.isOpen} onOpenChange={isOpen => {
         if (!isTransferring) setMoveCopyDialogProps(prev => ({ ...prev, isOpen }));
       }}>
-        <DialogContent className="bg-card border-border text-foreground sm:max-w-[460px]"
+        <DialogContent className="bg-card border-border text-foreground sm:max-w-[460px] max-h-[calc(100dvh-32px)] overflow-y-auto"
           onEscapeKeyDown={event => { if (isTransferring) event.preventDefault(); }}
           onInteractOutside={event => { if (isTransferring) event.preventDefault(); }}>
           <DialogHeader>

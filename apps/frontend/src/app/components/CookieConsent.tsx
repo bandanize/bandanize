@@ -40,8 +40,8 @@ export function CookieConsent() {
         </div>
         <div className="flex gap-3">
           {purposes.length > 0 ? <>
-            <Button variant="outline" className="flex-1 h-10 rounded-lg border-primary/35 bg-primary/10 text-primary hover:bg-primary/20" onClick={() => all(false)}>{t('consent.reject')}</Button>
-            <Button variant="outline" className="flex-1 h-10 rounded-lg border-primary/35 bg-primary/10 text-primary hover:bg-primary/20" onClick={() => all(true)}>{t('consent.accept')}</Button>
+            <Button variant="outline" className="flex-1 min-w-0 min-h-10 h-auto px-2 py-2 whitespace-normal text-xs sm:text-sm rounded-lg border-primary/35 bg-primary/10 text-primary hover:bg-primary/20" onClick={() => all(false)}>{t('consent.reject')}</Button>
+            <Button variant="outline" className="flex-1 min-w-0 min-h-10 h-auto px-2 py-2 whitespace-normal text-xs sm:text-sm rounded-lg border-primary/35 bg-primary/10 text-primary hover:bg-primary/20" onClick={() => all(true)}>{t('consent.accept')}</Button>
           </> : <Button className="w-full h-10 rounded-lg" onClick={() => all(false)}>{t('consent.understood')}</Button>}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border pt-3 text-xs">

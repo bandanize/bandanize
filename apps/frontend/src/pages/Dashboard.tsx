@@ -314,14 +314,14 @@ export function Dashboard() {
                       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                            <h3 className="text-base font-medium font-poppins text-foreground leading-6 truncate tracking-tight">{project.name}</h3>
                            <p className="text-sm text-muted-foreground leading-5 line-clamp-2 overflow-hidden">
-                               {project.description || 'Sin descripción'}
+                               {project.description || t('visual.no_description')}
                            </p>
                       </div>
                       <div className="flex items-center gap-2 h-[20px]">
                            <div className="flex items-center gap-2 text-foreground">
                                 <Users className="size-4" />
                                 <span className="text-[14px] font-normal font-sans leading-5">
-                                    {project.members.length} {project.members.length === 1 ? 'miembro' : 'miembros'}
+                                    {t('visual.member_count', { count: project.members.length })}
                                 </span>
                            </div>
                            

@@ -273,7 +273,10 @@
     "duplicate_hint": "Keep the original and create an independent copy.",
     "transferring": "Updating playlists…",
     "link_option": "Or use the same song in both playlists",
-    "link_hint": "Linked songs share edits, tabs and files. Duplicates are independent."
+    "link_hint": "Linked songs share edits, tabs and files. Duplicates are independent.",
+    "member_count_one": "{{count}} member",
+    "member_count_other": "{{count}} members",
+    "no_description": "No description yet"
   },
   "move": "Move",
   "duplicate": "Duplicate",
@@ -282,5 +285,9 @@
   "action_error": "Could not update the playlist. Please try again.",
   "song_moved": "Song moved",
   "song_linked": "Song linked",
-  "song_copied": "Independent copy created"
+  "song_copied": "Independent copy created",
+  "add_song": "Add song",
+  "song_singular": "song",
+  "song_plural": "songs",
+  "back_to_lists": "Playlists"
 }

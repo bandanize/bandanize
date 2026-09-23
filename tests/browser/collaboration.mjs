@@ -85,8 +85,8 @@ async function dismiss(page) {
   if (await button.isVisible()) await button.click();
 }
 async function capture(page, name) {
-  const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true });
-  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard'].includes(name))
+  const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true, animations: 'disabled' });
+  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
 const browser = await chromium.launch();
@@ -117,6 +117,27 @@ try {
     assert.deepEqual(errors, []);
     console.log('PASS public legal routes and persistent, reversible consent');
   } finally { await context.close(); }
+
+
+  const narrow = await setup(browser, true, false, true);
+  try {
+    await narrow.context.addCookies([{ name: 'i18next', value: 'es', url: origin }]);
+    await narrow.page.setViewportSize({ width: 320, height: 640 });
+    await narrow.page.goto(origin + '/login');
+    const banner = narrow.page.getByRole('region', { name: 'Cookies y privacidad' });
+    await banner.waitFor();
+    for (const name of ['Aceptar opcionales', 'Rechazar opcionales']) {
+      const button = banner.getByRole('button', { name, exact: true });
+      assert(await button.evaluate(el => el.scrollWidth <= el.clientWidth + 1), 'Cookie actions must not overflow');
+      const box = await button.boundingBox();
+      assert(box.x >= 16 && box.x + box.width <= 304 && box.y + box.height <= 624);
+    }
+    await capture(narrow.page, 'visual-cookie-mobile');
+    await banner.getByRole('button', { name: 'Rechazar opcionales', exact: true }).click();
+    assert.equal(await banner.count(), 0);
+    assert.deepEqual(narrow.errors, []);
+    console.log('PASS Spanish cookie illustration and actions fit a 320px viewport');
+  } finally { await narrow.context.close(); }
 
   const test = await setup(browser);
   try {

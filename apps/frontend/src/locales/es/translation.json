@@ -273,7 +273,10 @@
     "duplicate_hint": "Conserva la original y crea una copia independiente.",
     "transferring": "Actualizando playlists…",
     "link_option": "O usar la misma canción en ambas playlists",
-    "link_hint": "Las canciones vinculadas comparten cambios, tabs y archivos. Las copias son independientes."
+    "link_hint": "Las canciones vinculadas comparten cambios, tabs y archivos. Las copias son independientes.",
+    "member_count_one": "{{count}} miembro",
+    "member_count_other": "{{count}} miembros",
+    "no_description": "Sin descripción"
   },
   "move": "Mover",
   "duplicate": "Duplicar",
@@ -282,5 +285,9 @@
   "action_error": "No se pudo actualizar la playlist. Inténtalo de nuevo.",
   "song_moved": "Canción movida",
   "song_linked": "Canción vinculada",
-  "song_copied": "Copia independiente creada"
+  "song_copied": "Copia independiente creada",
+  "add_song": "Añadir canción",
+  "song_singular": "canción",
+  "song_plural": "canciones",
+  "back_to_lists": "Playlists"
 }
