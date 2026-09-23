@@ -51,7 +51,7 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
     requests.push({ path, url: request.url(), method: request.method(), data: request.postData() });
     if (path.startsWith('/api/uploads/images/')) {
       await route.fulfill({ status: path.endsWith('missing.svg') ? 404 : 200, contentType: 'image/svg+xml',
-        body: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#FF96A5"/><circle cx="40" cy="30" r="14" fill="#243020"/><path d="M12 80a28 28 0 0 1 56 0" fill="#243020"/></svg>' });
+        body: path.endsWith('missing.svg') ? 'not found' : '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#FF96A5"/><circle cx="40" cy="30" r="14" fill="#243020"/><path d="M12 80a28 28 0 0 1 56 0" fill="#243020"/></svg>' });
       return;
     }
     if (/\/songs\/\d+\/(move|replicate|copy)$/.test(path)) {
