@@ -260,5 +260,19 @@
   "fullscreen": "Fullscreen",
   "exit_fullscreen": "Exit fullscreen",
   "increase_font_size": "Increase font size",
-  "decrease_font_size": "Decrease font size"
+  "decrease_font_size": "Decrease font size",
+  "visual": {
+    "drag_song": "Drag {{name}}",
+    "song_actions": "Actions for {{name}}",
+    "song_activity": "Song activity",
+    "drag_hint": "Drag a song onto another playlist to move or duplicate it.",
+    "drop_here": "Drop here",
+    "transfer_title": "Move or duplicate song",
+    "transfer_description": "Choose what to do with this song in the destination playlist.",
+    "move_hint": "Remove it from the current playlist.",
+    "duplicate_hint": "Keep the original and create an independent copy.",
+    "transferring": "Updating playlists…",
+    "link_option": "Or use the same song in both playlists",
+    "link_hint": "Linked songs share edits, tabs and files. Duplicates are independent."
+  }
 }

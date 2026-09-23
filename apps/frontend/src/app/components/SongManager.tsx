@@ -5,7 +5,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical, FileText, Paperclip, MessageCircle } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical, FileText, Paperclip, MessageCircle, ListMusic, ArrowRight, Loader2 } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
 import SongListImage from '@/assets/song-list.svg';
@@ -31,6 +31,8 @@ const ItemType = {
     SONG_LIST: 'SONG_LIST'
 };
 
+interface PlaylistDropResult { targetListId: string }
+
 interface DragItem {
   index: number;
   id: string;
@@ -47,6 +49,7 @@ interface SortableSongRowProps {
   listId: string;
   moveSong: (dragIndex: number, hoverIndex: number) => void;
   onDrop: () => void;
+  onCancelDrag: () => void;
   onSelect: (listId: string, song: Song) => void;
   onDelete: (listId: string, songId: string) => void;
   onEdit: (listId: string, song: Song) => void;
@@ -54,7 +57,7 @@ interface SortableSongRowProps {
   isDuplicate: boolean;
 }
 
-const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate }: SortableSongRowProps) => {
+const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate }: SortableSongRowProps) => {
   const reducedMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -91,7 +94,11 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
     type: ItemType.SONG_ROW,
     item: () => ({ id: song.id, index, type: ItemType.SONG_ROW, sourceListId: listId, name: song.name }),
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-    end: () => { onDrop(); }
+    end: (_item, monitor) => {
+      const result = monitor.getDropResult<PlaylistDropResult>();
+      if (result?.targetListId && result.targetListId !== listId) onCancelDrag();
+      else onDrop();
+    }
   });
 
   const opacity = isDragging ? 0.4 : 1;
@@ -104,16 +111,19 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           ref.current = node;
       }}
       style={{ opacity }}
-      className="group flex items-center gap-3 py-2.5 px-1 hover:bg-card/50 rounded-lg transition-colors select-none"
+      className="group flex items-center gap-2 min-h-14 px-2 py-2 rounded-lg hover:bg-white/[0.035] transition-colors select-none"
+      data-song-id={song.id}
       data-handler-id={handlerId}
     >
       {/* Drag Handle */}
-      <div ref={(node) => { drag(node); }} className="cursor-grab p-1 touch-none">
-           <GripVertical className="size-5 text-muted-foreground/40 group-hover:text-muted-foreground/60" />
-      </div>
+      <button type="button" ref={(node) => { drag(node); }} aria-label={t('visual.drag_song', { name: song.name })}
+        className="cursor-grab active:cursor-grabbing flex h-8 w-6 shrink-0 items-center justify-center touch-none text-muted-foreground/50 hover:text-primary focus-visible:outline focus-visible:outline-primary">
+           <GripVertical className="size-4" />
+      </button>
      
       <div 
-        className="flex-1 min-w-0 cursor-pointer"
+        className="flex-1 min-w-0 cursor-pointer rounded focus-visible:outline focus-visible:outline-primary"
+        role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(listId, song); } }}
         onClick={() => onSelect(listId, song)}
       >
         <div className="flex items-center gap-2">
@@ -129,26 +139,22 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onSelect, onDe
           {(song.bpm !== undefined && song.bpm !== null && song.bpm !== 0) ? ` • ${song.bpm} BPM` : ''}
           {song.key ? ` • ${song.key}` : ''}
         </p>
-        <div className="flex flex-wrap gap-1.5 mt-1.5 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5" title={t('library.tab_count', { count: song.tablatures.length })}>
-            <FileText className="size-3" aria-hidden="true" />{t('library.tab_count', { count: song.tablatures.length })}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5">
-            <Paperclip className="size-3" aria-hidden="true" />{t('library.file_count', { count: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0) })}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5">
-            <MessageCircle className="size-3" aria-hidden="true" />{song.tablatures.some(tab => tab.commentCount === undefined)
-              ? t('library.comments_unavailable')
-              : t('library.comment_count', { count: song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0) })}
-          </span>
-        </div>
-
       </div>
-      
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3 text-[11px] tabular-nums text-muted-foreground" aria-label={t('visual.song_activity')}>
+        {[
+          { Icon: FileText, value: song.tablatures.length, label: t('library.tab_count', { count: song.tablatures.length }) },
+          { Icon: Paperclip, value: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0), label: t('library.file_count', { count: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0) }) },
+          { Icon: MessageCircle, value: song.tablatures.some(tab => tab.commentCount === undefined) ? '—' : song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0), label: song.tablatures.some(tab => tab.commentCount === undefined) ? t('library.comments_unavailable') : t('library.comment_count', { count: song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0) }) },
+        ].map(({ Icon, value, label }) => <span key={label} title={label} aria-label={label} className="inline-flex items-center gap-1">
+          <Icon className="size-3 opacity-80" aria-hidden="true" /><span aria-hidden="true">{value}</span>
+        </span>)}
+      </div>
+
       {/* Actions Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
+            aria-label={t('visual.song_actions', { name: song.name })}
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-colors shrink-0 data-[state=open]:text-foreground"
@@ -240,6 +246,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
                     listId={listId}
                     moveSong={moveSong}
                     onDrop={handleDrop}
+                    onCancelDrag={() => setItems(songs)}
                     onSelect={onSelectSong}
                     onDelete={onDeleteSong} 
                     onEdit={onEditSong}
@@ -272,19 +279,21 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
   const ref = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
 
-    const [{ handlerId, isOver }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null, isOver: boolean }>({
+    const [{ handlerId, isOver }, drop] = useDrop<DragItem, PlaylistDropResult, { handlerId: Identifier | null, isOver: boolean }>({
         accept: [ItemType.SONG_LIST, ItemType.SONG_ROW],
+        canDrop: (item: DragItem) => item.type === ItemType.SONG_LIST || item.sourceListId !== list.id,
         drop(item: DragItem, monitor) {
             if (monitor.getItemType() === ItemType.SONG_ROW) {
                 if (item.sourceListId && item.sourceListId !== list.id) {
                     onSongDropOnList(item.sourceListId, item.id, list.id);
+                    return { targetListId: list.id };
                 }
             }
         },
         collect(monitor) {
             return {
                 handlerId: monitor.getHandlerId(),
-                isOver: monitor.isOver() && monitor.getItemType() === ItemType.SONG_ROW,
+                isOver: monitor.isOver() && monitor.canDrop() && monitor.getItemType() === ItemType.SONG_ROW,
             };
         },
         hover(item: DragItem, monitor) {
@@ -326,12 +335,13 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                 ref.current = node; 
             }} 
             style={{ opacity }} 
-            data-handler-id={handlerId} 
+            data-handler-id={handlerId}
+            data-playlist-id={list.id}
             className={`
-                group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-colors select-none
+                group flex items-center justify-between gap-2 px-3 py-3 rounded-xl cursor-pointer transition-colors select-none
                 ${isSelected 
-                    ? 'bg-card border-2 border-primary' 
-                    : 'bg-card border border-border hover:border-border/80'
+                    ? 'bg-primary/[0.08] border border-primary/35 shadow-[inset_3px_0_0_var(--primary)]' 
+                    : 'bg-transparent border border-transparent hover:bg-card hover:border-border'
                 }
                 ${isOver ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}
             `}
@@ -346,11 +356,12 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
                 >
                     <GripVertical className="size-5 text-muted-foreground/30" />
                 </div>
+                <ListMusic className={`size-4 shrink-0 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} aria-hidden="true" />
                 <span className="font-medium text-sm text-foreground truncate">{list.name}</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-                <span className="text-sm text-muted-foreground">
-                    {list.songs.length} {list.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
+                <span className={`text-xs tabular-nums ${isOver ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {isOver ? t('visual.drop_here') : list.songs.length}
                 </span>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -387,6 +398,21 @@ const SortableListItem = ({ list, index, isSelected, moveList, onDrop, onSelect,
         </motion.div>
     );
 };
+
+function PlaylistDropTarget({ list, onDrop, onSelect }: { list: SongList; onDrop: (source: string, song: string, target: string) => void; onSelect: (id: string) => void }) {
+  const { t } = useTranslation();
+  const [{ isOver }, drop] = useDrop<DragItem, PlaylistDropResult, { isOver: boolean }>({
+    accept: ItemType.SONG_ROW,
+    canDrop: item => !!item.sourceListId && item.sourceListId !== list.id,
+    drop: item => { if (item.sourceListId) { onDrop(item.sourceListId, item.id, list.id); return { targetListId: list.id }; } },
+    collect: monitor => ({ isOver: monitor.isOver() && monitor.canDrop() }),
+  });
+  return <button type="button" ref={node => { drop(node); }} data-mobile-playlist-id={list.id}
+    onClick={() => onSelect(list.id)}
+    className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${isOver ? 'border-primary bg-primary/15 text-primary' : 'border-border bg-card text-muted-foreground'}`}>
+    <ListMusic className="size-3.5" />{isOver ? t('visual.drop_here') + ' · ' : ''}{list.name}
+  </button>;
+}
 
 function DragPreview() {
   const { item, offset, dragging } = useDragLayer(monitor => ({
@@ -574,10 +600,13 @@ export function SongManager() {
       });
   };
 
+  const [isTransferring, setIsTransferring] = useState(false);
+
   const executeMoveCopy = async (action: 'move' | 'copy' | 'replicate') => {
       if (!currentProject) return;
       const { sourceListId, songId, targetListId } = moveCopyDialogProps;
-      if (!targetListId) return; // Prevent if not selected
+      if (!targetListId || isTransferring || targetListId === sourceListId) return;
+      setIsTransferring(true);
       
       try {
           if (action === 'move') {
@@ -594,11 +623,12 @@ export function SongManager() {
               await replicateSongInList(currentProject.id, sourceListId, songId, targetListId);
               toast.success(t('song_copied', 'Canción copiada (duplicada)'));
           }
+          setMoveCopyDialogProps(prev => ({ ...prev, isOpen: false }));
       } catch (error) {
           console.error(error);
           toast.error(t('action_error', 'Ocurrió un error al realizar la acción.'));
       } finally {
-          setMoveCopyDialogProps(prev => ({ ...prev, isOpen: false }));
+          setIsTransferring(false);
       }
   };
 
@@ -765,7 +795,7 @@ export function SongManager() {
       <DragPreview />
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Panel - Song Lists */}
-        <div className={`w-full lg:w-[420px] lg:shrink-0 space-y-4 ${selectedListId ? 'hidden lg:block' : 'block'}`}>
+        <div className={`w-full lg:w-[280px] xl:w-[300px] lg:shrink-0 space-y-4 ${selectedListId ? 'hidden lg:block' : 'block'}`}>
           {/* Header */}
           <div className="flex justify-between items-center">
             <h2 className="text-foreground font-semibold text-base select-none">{t('songs_list', 'Listas de canciones')}</h2>
@@ -802,6 +832,7 @@ export function SongManager() {
             </Dialog>
           </div>
 
+          <p className="hidden lg:block text-xs leading-relaxed text-muted-foreground">{t('visual.drag_hint')}</p>
           {/* Song Lists */}
           {currentProject.songLists.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -810,7 +841,7 @@ export function SongManager() {
               <p className="text-sm">{t('create_first_list', 'Crea tu primera lista de canciones')}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
               {localLists.map((list, index) => (
                 <SortableListItem
                   key={list.id}
@@ -834,8 +865,8 @@ export function SongManager() {
         {/* Right Panel - Song Content */}
         <div className={`flex-1 min-w-0 ${!selectedListId ? 'hidden lg:block' : 'block'}`}>
           {selectedList ? (
-            <Card className="bg-card border-border rounded-xl">
-              <CardContent className="p-6">
+            <Card className="bg-card border-border rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden">
+              <CardContent className="p-3 sm:p-5">
                 {/* Back button (mobile only) */}
                 <Button
                   variant="ghost"
@@ -847,9 +878,17 @@ export function SongManager() {
                   {t('back_to_lists', 'Listas')}
                 </Button>
 
+                {currentProject.songLists.length > 1 && <div className="lg:hidden mb-4">
+                  <p className="text-[11px] text-muted-foreground mb-2">{t('visual.drag_hint')}</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {currentProject.songLists.filter(list => list.id !== selectedListId).map(list =>
+                      <PlaylistDropTarget key={list.id} list={list} onDrop={handleSongDropOnList} onSelect={handleSelectList} />)}
+                  </div>
+                </div>}
+
                 {/* List Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-foreground font-semibold text-base">{selectedList.name}</h3>
+                <div className="flex items-center justify-between gap-3 pb-4 mb-3 border-b border-border">
+                  <h3 className="text-foreground font-poppins font-medium text-xl tracking-tight truncate">{selectedList.name}</h3>
                   <span className="text-sm text-muted-foreground">
                     {selectedList.songs.length} {selectedList.songs.length === 1 ? t('song_singular', 'canción') : t('song_plural', 'canciones')}
                   </span>
@@ -859,7 +898,7 @@ export function SongManager() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full h-9 border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent hover:border-border/60 justify-center mb-4"
+                  className="h-8 border border-primary/20 bg-primary/[0.06] text-primary hover:bg-primary/15 justify-center mb-3 rounded-lg text-xs"
                   onClick={() => {
                     setSongCreationListId(selectedList.id);
                     setOpenSongDialog(true);
@@ -1048,46 +1087,52 @@ export function SongManager() {
       </Dialog>
       
       {/* Move/Copy Dialog */}
-      <Dialog open={moveCopyDialogProps.isOpen} onOpenChange={(isOpen: boolean) => !isOpen && setMoveCopyDialogProps(prev => ({ ...prev, isOpen }))}>
-          <DialogContent className="bg-card border-border text-foreground">
-              <DialogHeader>
-                  <DialogTitle>{t('move_or_copy', 'Mover o Copiar Canción')}</DialogTitle>
-                  <DialogDescription className="text-muted-foreground">
-                      {t('move_or_copy_desc', '¿Deseas mover la canción a la nueva lista o crear una copia?')}
-                  </DialogDescription>
-              </DialogHeader>
-              <div className="mt-4 space-y-4">
-                  {moveCopyDialogProps.targetListId === null && (
-                      <div className="space-y-2">
-                          <Label className="text-foreground">{t('destination_list', 'Lista destino')} <span className="text-destructive">*</span></Label>
-                          <Select onValueChange={(val: string) => setMoveCopyDialogProps(prev => ({...prev, targetListId: val}))}>
-                              <SelectTrigger className="bg-background border-border text-foreground">
-                                  <SelectValue placeholder={t('select_list_placeholder', 'Selecciona la lista destino')} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {currentProject.songLists.filter((l: SongList) => l.id !== moveCopyDialogProps.sourceListId).map((l: SongList) => (
-                                      <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-                                  ))}
-                              </SelectContent>
-                          </Select>
-                      </div>
-                  )}
-
-                  <div className="flex justify-end gap-3 pt-2">
-                      <Button variant="outline" onClick={() => executeMoveCopy('copy')} disabled={!moveCopyDialogProps.targetListId} className="text-foreground border-border hover:bg-accent hover:text-foreground">
-                          {t('link', 'Vincular')}
-                      </Button>
-                      <Button variant="outline" onClick={() => executeMoveCopy('replicate')} disabled={!moveCopyDialogProps.targetListId} className="text-foreground border-border hover:bg-accent hover:text-foreground">
-                          {t('duplicate', 'Duplicar')}
-                      </Button>
-                      <Button onClick={() => executeMoveCopy('move')} disabled={!moveCopyDialogProps.targetListId} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                          {t('move', 'Mover')}
-                      </Button>
-                  </div>
-              </div>
-          </DialogContent>
+      <Dialog open={moveCopyDialogProps.isOpen} onOpenChange={isOpen => {
+        if (!isTransferring) setMoveCopyDialogProps(prev => ({ ...prev, isOpen }));
+      }}>
+        <DialogContent className="bg-card border-border text-foreground sm:max-w-[460px]"
+          onEscapeKeyDown={event => { if (isTransferring) event.preventDefault(); }}
+          onInteractOutside={event => { if (isTransferring) event.preventDefault(); }}>
+          <DialogHeader>
+            <DialogTitle>{t('visual.transfer_title')}</DialogTitle>
+            <DialogDescription>{t('visual.transfer_description')}</DialogDescription>
+          </DialogHeader>
+          <div className="rounded-xl border border-border bg-background/50 p-4 space-y-2 text-sm">
+            <p className="font-medium truncate">{currentProject.songLists.find(list => list.id === moveCopyDialogProps.sourceListId)?.songs.find(song => song.id === moveCopyDialogProps.songId)?.name}</p>
+            <div className="flex items-center gap-2 text-muted-foreground text-xs min-w-0">
+              <span className="truncate">{currentProject.songLists.find(list => list.id === moveCopyDialogProps.sourceListId)?.name}</span>
+              <ArrowRight className="size-3.5 shrink-0 text-primary" />
+              <span className="truncate text-foreground">{currentProject.songLists.find(list => list.id === moveCopyDialogProps.targetListId)?.name || t('destination_list', 'Lista destino')}</span>
+            </div>
+          </div>
+          <Select value={moveCopyDialogProps.targetListId || ''} disabled={isTransferring}
+            onValueChange={targetListId => setMoveCopyDialogProps(prev => ({ ...prev, targetListId }))}>
+            <SelectTrigger aria-label={t('destination_list', 'Lista destino')}><SelectValue placeholder={t('select_list_placeholder', 'Selecciona la lista destino')} /></SelectTrigger>
+            <SelectContent>{currentProject.songLists.filter(list => list.id !== moveCopyDialogProps.sourceListId).map(list =>
+              <SelectItem key={list.id} value={list.id}>{list.name}</SelectItem>)}</SelectContent>
+          </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <Button className="h-auto py-4 flex-col items-start whitespace-normal text-left gap-2"
+              disabled={!moveCopyDialogProps.targetListId || isTransferring} onClick={() => executeMoveCopy('move')}>
+              <span className="flex items-center gap-2"><ArrowRightLeft className="size-4" />{t('move', 'Mover')}</span>
+              <span className="text-xs font-normal opacity-80">{t('visual.move_hint')}</span>
+            </Button>
+            <Button variant="outline" className="h-auto py-4 flex-col items-start whitespace-normal text-left gap-2"
+              disabled={!moveCopyDialogProps.targetListId || isTransferring} onClick={() => executeMoveCopy('replicate')}>
+              <span className="flex items-center gap-2"><Copy className="size-4" />{t('duplicate', 'Duplicar')}</span>
+              <span className="text-xs font-normal text-muted-foreground">{t('visual.duplicate_hint')}</span>
+            </Button>
+          </div>
+          {isTransferring && <p role="status" className="flex items-center gap-2 text-sm text-primary"><Loader2 className="size-4 animate-spin" />{t('visual.transferring')}</p>}
+          <details className="text-xs text-muted-foreground">
+            <summary className="cursor-pointer py-2 hover:text-foreground">{t('visual.link_option')}</summary>
+            <p className="leading-relaxed mb-2">{t('visual.link_hint')}</p>
+            <Button size="sm" variant="outline" disabled={!moveCopyDialogProps.targetListId || isTransferring} onClick={() => executeMoveCopy('copy')}>{t('link', 'Vincular')}</Button>
+          </details>
+          <Button variant="ghost" disabled={isTransferring} onClick={() => setMoveCopyDialogProps(prev => ({ ...prev, isOpen: false }))}>{t('cancel', 'Cancelar')}</Button>
+        </DialogContent>
       </Dialog>
-      
+
       {/* Edit Song Dialog */}
       <Dialog open={isEditSongOpen} onOpenChange={setIsEditSongOpen}>
           <DialogContent className="bg-card border-border text-foreground">

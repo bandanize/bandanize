@@ -16,7 +16,7 @@ const band = {
       content: 'Am C G\n' + ('e|---3---5---7---|' + '-'.repeat(100) + '\n').repeat(35),
       commentCount: 2, files: [{ id: '41', name: 'Notes', type: 'text/plain', url: '/fixture.txt' }] }] },
     { id: 22, name: 'Second song', files: [], tablatures: [] }
-  ] }],
+  ] }, { id: 12, name: 'Live set', songs: [] }],
   chatMessages: [{ id: 51, sender: owner, message: '@Alex #[First song](song:21:11) @Alex', timestamp: '2026-09-23T10:00:00Z' }]
 };
 await mkdir('test-results', { recursive: true });
@@ -44,14 +44,32 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   const requests = [];
+  const fixture = structuredClone(band);
+  const controls = { failNextTransfer: false };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
-    requests.push({ path, method: request.method(), data: request.postData() });
+    requests.push({ path, url: request.url(), method: request.method(), data: request.postData() });
+    if (/\/songs\/\d+\/(move|replicate|copy)$/.test(path)) {
+      if (controls.failNextTransfer) {
+        controls.failNextTransfer = false;
+        await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'Fixture: try again' }) });
+        return;
+      }
+      const id = Number(path.split('/')[3]);
+      const target = fixture.songLists.find(list => String(list.id) === new URL(request.url()).searchParams.get('targetListId'));
+      const source = fixture.songLists.find(list => list.songs.some(song => song.id === id));
+      const song = structuredClone(source.songs.find(song => song.id === id));
+      if (path.endsWith('/move')) source.songs = source.songs.filter(song => song.id !== id);
+      if (path.endsWith('/replicate')) { song.id = 99; song.tablatures = []; }
+      target.songs.push(song);
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(song) });
+      return;
+    }
     let body = [];
     if (path.endsWith('/auth/me')) body = owner;
     else if (path.endsWith('/auth/login')) body = { ...owner, token: 'fixture' };
     else if (path.endsWith('/auth/register') || path.includes('/auth/verify')) body = { message: 'OK' };
-    else if (path.endsWith('/bands/my-bands')) body = [band];
+    else if (path.endsWith('/bands/my-bands')) body = [fixture];
     else if (path.includes('/invite-links/')) body = path.endsWith('/accept') ? { bandId: 1 } : { bandName: 'Rehearsal', expiresAt: '2030-01-01T00:00:00Z' };
     else if (path.endsWith('/calendar-token')) body = 'fixture-calendar-token';
     else if (path.endsWith('/heartbeat')) body = { onlineCount: 1 };
@@ -60,18 +78,25 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
     else if (path.endsWith('/comments')) body = [{ id: 1, message: 'One', sender: owner, timestamp: '2026-09-23T10:00:00Z' }, { id: 2, message: 'Two', sender: owner, timestamp: '2026-09-23T10:00:00Z' }];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });
-  return { context, page, errors, requests };
+  return { context, page, errors, requests, controls };
 }
 async function dismiss(page) {
   const button = page.getByRole('button', { name: 'Understood', exact: true });
   if (await button.isVisible()) await button.click();
 }
-async function capture(page, name) { await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true }); }
+async function capture(page, name) {
+  const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true });
+  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard'].includes(name))
+    console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
+}
 const browser = await chromium.launch();
 try {
   const { context, page, errors } = await setup(browser, false, false, true);
   try {
     await page.goto(origin + '/cookies');
+    await page.getByRole('region', { name: 'Cookies and privacy' }).locator('img').waitFor();
+    assert(await page.getByRole('region', { name: 'Cookies and privacy' }).locator('img').evaluate(img => img.complete && img.naturalWidth > 0));
+    await capture(page, 'visual-cookies');
     await page.getByRole('button', { name: 'Reject optional', exact: true }).click();
     assert.equal(await page.evaluate(() => window.consentCalls.at(-1)['analysis-id']), false);
     await page.reload();
@@ -98,9 +123,9 @@ try {
     const { page, requests, errors } = test;
     await page.goto(origin + '/project/1?tab=songs&listId=11');
     await dismiss(page);
-    await page.getByText('2 comments', { exact: true }).waitFor();
-    assert.equal(await page.getByText('1 tabs', { exact: true }).count(), 1);
-    assert.equal(await page.getByText('1 files', { exact: true }).count(), 1);
+    await page.locator('[aria-label="2 comments"]').waitFor();
+    assert.equal(await page.locator('[aria-label="1 tabs"]').count(), 1);
+    assert.equal(await page.locator('[aria-label="1 files"]').count(), 1);
     const row = page.locator('[data-handler-id]').filter({ has: page.getByText('First song', { exact: true }) });
     const second = page.locator('[data-handler-id]').filter({ has: page.getByText('Second song', { exact: true }) });
     const handle = await row.locator('.cursor-grab').boundingBox(), target = await second.boundingBox();
@@ -128,6 +153,75 @@ try {
     assert.deepEqual(errors, []);
     console.log('PASS song counters, animated drag, mention navigation and calendar link');
   } finally { await test.context.close(); }
+
+
+  // Cross-playlist drops ask before mutation, preserve source on cancel/error, and distinguish copying.
+  for (const mobile of [false, true]) {
+    const test = await setup(browser, mobile);
+    const { page, context, requests, controls } = test;
+    const transfers = () => requests.filter(request => /\/songs\/\d+\/(move|copy|replicate)$/.test(request.path));
+    try {
+      await page.goto(origin + '/project/1?tab=songs&listId=11');
+      await dismiss(page);
+      const row = page.locator('[data-song-id="21"]');
+      await row.waitFor();
+      assert((await row.boundingBox()).height <= 60, 'Song rows stay compact');
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'No horizontal page overflow');
+      await capture(page, mobile ? 'visual-mobile' : 'visual-library');
+      const drop = async () => {
+        const handle = await row.locator('.cursor-grab').boundingBox();
+        const target = await page.locator(mobile ? '[data-mobile-playlist-id="12"]' : '[data-playlist-id="12"]').boundingBox();
+        assert(handle && target);
+        const from = { x: handle.x + handle.width / 2, y: handle.y + handle.height / 2 };
+        const to = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
+        if (mobile) {
+          const session = await context.newCDPSession(page);
+          await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [from] });
+          for (let step = 1; step <= 12; step++) await session.send('Input.dispatchTouchEvent', {
+            type: 'touchMove', touchPoints: [{ x: from.x + (to.x - from.x) * step / 12, y: from.y + (to.y - from.y) * step / 12 }]
+          });
+          await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+          await session.detach();
+        } else {
+          await page.mouse.move(from.x, from.y);
+          await page.mouse.down();
+          await page.mouse.move(to.x, to.y, { steps: 15 });
+          await page.mouse.up();
+        }
+        await page.getByRole('dialog', { name: 'Move or duplicate song' }).waitFor();
+      };
+      await drop();
+      assert.equal(transfers().length, 0, 'Dropping does not change playlists');
+      if (!mobile) await capture(page, 'visual-transfer');
+      await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await page.getByRole('dialog').waitFor({ state: 'detached' });
+      assert.equal(transfers().length, 0);
+      await drop();
+      controls.failNextTransfer = true;
+      await page.getByRole('button', { name: /^Move Remove/ }).click();
+      await page.getByText(/error|try again/i).first().waitFor();
+      assert(await page.getByRole('dialog', { name: 'Move or duplicate song' }).isVisible());
+      await page.getByRole('button', { name: /^Duplicate Keep/ }).click();
+      await page.getByRole('dialog').waitFor({ state: 'detached' });
+      assert.equal(await row.count(), 1, 'Duplicate keeps source');
+      await drop();
+      await page.getByRole('button', { name: /^Move Remove/ }).click();
+      await page.getByRole('dialog').waitFor({ state: 'detached' });
+      assert.equal(await row.count(), 0, 'Move removes source');
+      assert.deepEqual(transfers().map(request => request.path.split('/').at(-1)), ['move', 'replicate', 'move']);
+      await page.goto(origin + '/project/1?tab=songs&listId=12');
+      await page.locator('[data-song-id="21"]').waitFor();
+      assert.equal(await page.locator('[data-song-id="99"]').count(), 1, 'Independent copy and moved song both reach target');
+      if (!mobile) {
+        await page.goto(origin + '/dashboard');
+        await page.getByRole('button').filter({ hasText: 'Rehearsal' }).waitFor();
+        await capture(page, 'visual-dashboard');
+      }
+      assert.deepEqual(test.errors, []);
+      console.log('PASS ' + (mobile ? 'touch mobile' : 'desktop') + ' compact rows, drop cancellation, failed-request retry, duplicate and move');
+    } catch (error) { await capture(page, mobile ? 'mobile-transfer-failure' : 'desktop-transfer-failure'); throw error; }
+    finally { await context.close(); }
+  }
 
   const invite = await setup(browser, false, false);
   try {
