@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+import { PassagePicker } from './PassagePicker';
 import { MediaLibrary } from './MediaLibrary';
 import type { CommentAnchor } from '@/lib/comment-anchor';
 import React, { useState, useRef, useEffect } from 'react';
@@ -120,6 +122,8 @@ export function TabEditor({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [selectionHost, setSelectionHost] = useState<Element | null>(null);
+  const [selectionPosition, setSelectionPosition] = useState<{ left: number; top: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<CommentAnchor | null>(null);
   
@@ -188,20 +192,27 @@ export function TabEditor({
       const container = contentRef.current;
       if (!container) return;
       let start: number, end: number;
+      let bounds: DOMRect | undefined;
       if (viewMode === 'edit' && document.activeElement === textareaRef.current) {
         start = textareaRef.current?.selectionStart || 0; end = textareaRef.current?.selectionEnd || 0;
+        bounds = textareaRef.current?.getBoundingClientRect();
       } else {
         const selected = window.getSelection(); const pre = container.querySelector('pre');
         if (!selected?.rangeCount || !pre) return;
         const range = selected.getRangeAt(0);
-        if (!pre.contains(range.startContainer) || !pre.contains(range.endContainer)) return;
+        if (!pre.contains(range.startContainer) || !pre.contains(range.endContainer)) { setSelection(null); setSelectionPosition(null); return; }
         const before = range.cloneRange(); before.selectNodeContents(pre); before.setEnd(range.startContainer, range.startOffset);
         start = before.toString().length; end = start + range.toString().length;
+        bounds = range.getBoundingClientRect();
       }
+      setSelectionHost(container.closest('[role="dialog"]') || document.body);
+      setSelectionPosition(bounds && bounds.bottom > 0 && bounds.top < window.innerHeight ? { left: Math.max(115, Math.min(window.innerWidth - 115, bounds.left + bounds.width / 2)), top: Math.max(8, bounds.top - 44) } : null);
       setSelection(end > start && end - start <= 2000 ? { start, end, quote: editingContent.slice(start, end) } : null);
     };
     document.addEventListener('selectionchange', capture);
-    return () => document.removeEventListener('selectionchange', capture);
+    window.addEventListener('scroll', capture, true);
+    window.addEventListener('resize', capture);
+    return () => { document.removeEventListener('selectionchange', capture); window.removeEventListener('scroll', capture, true); window.removeEventListener('resize', capture); };
   }, [editingContent, viewMode, isFullscreen]);
 
   useEffect(() => {
@@ -332,7 +343,18 @@ export function TabEditor({
         </div>
       </div>
 
-      {!isFullscreen && onAnnotate && <p className="text-xs text-muted-foreground">{t('workspace.selection_hint')}</p>}
+      {onAnnotate && <div className="flex flex-wrap shrink-0 items-center gap-2 p-1">
+        <PassagePicker content={editingContent} disabled={hasChanges} onChoose={anchor => { setSelection(null); setIsFullscreen(false); onAnnotate(anchor); }} />
+        
+        {hasChanges && <span className="text-xs text-muted-foreground">{t('workspace.save_before_comment')}</span>}
+      </div>}
+
+      {selection && selectionPosition && selectionHost && onAnnotate && !hasChanges && createPortal(
+        <div className="contents"><Button type="button" size="sm" className="fixed z-[100] shadow-lg -translate-x-1/2 pointer-events-auto" style={selectionPosition}
+          onPointerDown={event => event.preventDefault()} onMouseDown={event => event.preventDefault()}
+          onClick={() => { const chosen = selection; setSelection(null); setIsFullscreen(false); onAnnotate(chosen); }}>
+          <MessageSquarePlus className="size-4" />{t('workspace.comment_selection')}
+        </Button></div>, selectionHost)}
       <div ref={contentRef} className={cn("relative", isFullscreen && "flex-1 min-h-0 overflow-hidden")}>
           <div className={cn("absolute top-2 right-2 flex gap-1 z-10", isFullscreen && "hidden")}>
               <Button
@@ -375,12 +397,6 @@ export function TabEditor({
           )}
       </div>
 
-      {selection && onAnnotate && <div className="flex shrink-0 justify-end gap-2 items-center">
-        {hasChanges && <span className="text-xs text-muted-foreground">{t('workspace.save_before_comment')}</span>}
-        <Button size="sm" disabled={hasChanges} onPointerDown={e => e.preventDefault()} onClick={() => { onAnnotate(selection); setSelection(null); setIsFullscreen(false); }}>
-          <MessageSquarePlus className="size-4" />{t('workspace.comment_selection')}
-        </Button>
-      </div>}
       {!isFullscreen && viewMode === 'edit' && <TablatureControls onInsert={handleInsertText} />}
 
       {!isFullscreen && <MediaLibrary files={tab.files || []} title={t('workspace.tab_files')} onUpload={() => onUpload(tab.id)}

@@ -34,6 +34,7 @@ jobs:
           node tests/browser/collaboration.mjs
           node --experimental-strip-types tests/comment-anchor.mjs
           node tests/browser/workspace.mjs
+          node tests/browser/comments.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

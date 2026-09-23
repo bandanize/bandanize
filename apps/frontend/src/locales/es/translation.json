@@ -385,5 +385,18 @@
     "new_activity": "Nueva actividad",
     "selection_hint": "Selecciona un fragmento del texto para comentarlo.",
     "invalid_name": "Escribe un nombre sin caracteres especiales de ruta (#, %, /, \\, ?, etc.) ni dos puntos seguidos."
+  },
+  "comments_ui": {
+    "choose_part": "Comentar una parte",
+    "choose_help": "1. Toca la primera línea. 2. Si quieres varias, toca la última. 3. Pulsa «Comentar estas líneas».",
+    "lines": "Líneas de la tablatura",
+    "line": "Línea {{number}}: {{text}}",
+    "pick_first": "Toca una línea para empezar.",
+    "chosen": "Seleccionadas las líneas {{first}} a {{last}}. Ya puedes escribir tu comentario.",
+    "too_long": "Selecciona menos líneas (máximo 2000 caracteres).",
+    "use_part": "Comentar estas líneas",
+    "mention": "Mencionar a alguien",
+    "part_comment": "Tu comentario quedará unido a las líneas seleccionadas.",
+    "general_comment": "Comenta toda la tablatura aquí. Para señalar líneas, pulsa «Comentar una parte» en la tablatura."
   }
 }

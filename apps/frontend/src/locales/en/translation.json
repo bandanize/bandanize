@@ -385,5 +385,18 @@
     "new_activity": "New activity",
     "selection_hint": "Select a passage in the text to comment on it.",
     "invalid_name": "Enter a name without path characters (#, %, /, \\, ?, etc.) or consecutive dots."
+  },
+  "comments_ui": {
+    "choose_part": "Comment on a passage",
+    "choose_help": "1. Tap the first line. 2. For several lines, tap the last. 3. Choose “Comment on these lines”.",
+    "lines": "Tablature lines",
+    "line": "Line {{number}}: {{text}}",
+    "pick_first": "Tap a line to start.",
+    "chosen": "Lines {{first}} to {{last}} selected. You can now write your comment.",
+    "too_long": "Choose fewer lines (maximum 2000 characters).",
+    "use_part": "Comment on these lines",
+    "mention": "Mention someone",
+    "part_comment": "Your comment will be linked to the selected lines.",
+    "general_comment": "Comment on the whole tablature here. To select lines, use “Comment on a passage” above the tablature."
   }
 }
