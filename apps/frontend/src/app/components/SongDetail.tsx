@@ -3,7 +3,10 @@ import { useProjects, Song } from '@/contexts/ProjectContext';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { uploadFileWithRetry } from '@/services/api';
+import { uploadMedia } from '@/lib/upload-media';
+import { useUploadName } from './UploadNameProvider';
+import type { CommentAnchor } from '@/lib/comment-anchor';
+import '@/styles/song-workspace.css';
 
 // Sub-components
 import { SongHeader } from './song/SongHeader';
@@ -23,6 +26,9 @@ interface SongDetailProps {
 
 export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   const { t } = useTranslation();
+  const requestUploadName = useUploadName();
+  const [pendingAnchor, setPendingAnchor] = useState<{ tabId: string; anchor: CommentAnchor } | null>(null);
+  const [focusedAnchor, setFocusedAnchor] = useState<{ tabId: string; anchor: CommentAnchor } | null>(null);
   const { 
     currentProject, 
     updateSong, 
@@ -141,144 +147,27 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
       }
   };
 
-  // --- File Upload Logic ---
-  // Helper for generating UUID
-  const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  };
-
-  /**
-   * Builds a contextual display name for an uploaded file.
-   * Song files:  "SongName.ext", "SongName_2.ext", ...
-   * Tab files:   "SongName - TabName.ext", "SongName - TabName_2.ext", ...
-   */
-  const buildDisplayName = (originalName: string, tabId?: string): string => {
-    const ext = originalName.includes('.') ? '.' + originalName.split('.').pop() : '';
-    let baseName: string;
-    let existingCount: number;
-
-    if (tabId) {
-      const tab = song.tablatures.find(t => t.id === tabId);
-      const tabLabel = tab?.name || 'Tab';
-      baseName = `${song.name} - ${tabLabel}`;
-      existingCount = tab?.files?.length ?? 0;
-    } else {
-      baseName = song.name;
-      existingCount = song.files?.length ?? 0;
-    }
-
-    const suffix = existingCount > 0 ? `_${existingCount + 1}` : '';
-    return `${baseName}${suffix}${ext}`;
-  };
-
   const handleFileUploadTrigger = (type: 'song' | 'tab', tabId?: string) => {
-      setUploadTarget({ type, tabId });
-      if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-          fileInputRef.current.click();
-      }
+    if (isUploading) return;
+    setUploadTarget({ type, tabId });
+    if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click(); }
   };
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file || !uploadTarget || !currentProject) return;
-
-      setIsUploading(true);
-      setUploadProgress(0);
-      setUploadStatus(t('starting_upload', 'Iniciando subida...'));
-      const toastId = toast.loading(t('calculating_chunks', 'Calculando chunks...'));
-
-      try {
-          let endpointCategory = 'file';
-          if (file.type.startsWith('image/')) endpointCategory = 'image';
-          else if (file.type.startsWith('audio/')) endpointCategory = 'audio';
-          else if (file.type.startsWith('video/')) endpointCategory = 'video';
-
-          const uploadId = generateUUID();
-          const CHUNK_SIZE = 1024 * 1024 * 5; // 5MB chunks
-          const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-          
-          if (file.size === 0) {
-            toast.error(t('empty_file', "El archivo está vacío"));
-            setUploadTarget(null);
-            setIsUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-            return;
-          }
-
-          let finalFilename = '';
-
-          for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-              const start = chunkIndex * CHUNK_SIZE;
-              const end = Math.min(start + CHUNK_SIZE, file.size);
-              const chunk = file.slice(start, end);
-
-              const formData = new FormData();
-              formData.append('file', chunk);
-              formData.append('chunkIndex', chunkIndex.toString());
-              formData.append('totalChunks', totalChunks.toString());
-              formData.append('uploadId', uploadId);
-              formData.append('originalFilename', file.name);
-              formData.append('folder', endpointCategory);
-
-              const currentProgress = Math.round((chunkIndex / totalChunks) * 100);
-              const statusMsg = t('uploading_chunk', `Subiendo parte ${chunkIndex + 1} de ${totalChunks} (${currentProgress}%)...`)
-                .replace('{current}', (chunkIndex + 1).toString())
-                .replace('{total}', totalChunks.toString())
-                .replace('{percent}', currentProgress.toString());
-
-              setUploadStatus(statusMsg);
-              toast.loading(statusMsg, { id: toastId });
-              
-              const response = await uploadFileWithRetry('/upload/chunk', formData);
-              
-              if (chunkIndex === totalChunks - 1) {
-                  finalFilename = response.data;
-              }
-
-              const percentCompleted = Math.round(((chunkIndex + 1) / totalChunks) * 100);
-              setUploadProgress(percentCompleted);
-          }
-
-          let folderName = 'files';
-          if (endpointCategory === 'image') folderName = 'images';
-          if (endpointCategory === 'audio') folderName = 'audio';
-          if (endpointCategory === 'video') folderName = 'videos';
-          
-          const mediaFile = {
-              name: buildDisplayName(file.name, uploadTarget.tabId),
-              type: file.type,
-              url: `/api/uploads/${folderName}/${finalFilename}`
-          };
-
-          if (uploadTarget.type === 'song') {
-              await addSongFile(currentProject.id, listId, song.id, mediaFile);
-          } else if (uploadTarget.type === 'tab' && uploadTarget.tabId) {
-              await addTablatureFile(currentProject.id, listId, song.id, uploadTarget.tabId, mediaFile);
-          }
-          
-          toast.success(t('file_uploaded_success', 'Archivo subido correctamente'), { id: toastId });
-
-      } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-          console.error("Upload error", error);
-          let errorMessage = t('upload_error_generic', 'Error al subir el archivo');
-          if (error.response) {
-             if (error.response.status === 413) {
-                  errorMessage = t('chunk_too_large', 'Chunk demasiado grande (Error inesperado)');
-              } else if (error.response.status === 524) {
-                  errorMessage = t('upload_timeout', 'Timeout en subida de chunk.');
-              }
-          }
-          toast.error(errorMessage, { id: toastId });
-      } finally {
-          setIsUploading(false);
-          setUploadTarget(null);
-          setUploadProgress(0);
-          if (fileInputRef.current) fileInputRef.current.value = '';
-      }
+    const picked = event.target.files?.[0];
+    event.target.value = '';
+    if (!picked || !uploadTarget || !currentProject || isUploading) return;
+    const target = uploadTarget;
+    const file = await requestUploadName(picked);
+    if (!file) return;
+    setIsUploading(true); setUploadProgress(0); setUploadStatus(t('workspace.uploading'));
+    const toastId = toast.loading(t('workspace.uploading'));
+    try {
+      const media = await uploadMedia(file, setUploadProgress);
+      if (target.type === 'song') await addSongFile(currentProject.id, listId, song.id, media);
+      else if (target.tabId) await addTablatureFile(currentProject.id, listId, song.id, target.tabId, media);
+      toast.success(t('workspace.uploaded'), { id: toastId });
+    } catch { toast.error(t('workspace.upload_failed'), { id: toastId }); }
+    finally { setIsUploading(false); setUploadTarget(null); }
   };
 
   return (
@@ -307,43 +196,25 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
         isSaving={isSavingSong}
       />
 
-      {/* Media Section */}
-      <FileList 
-        song={song} 
-        onUpload={() => handleFileUploadTrigger('song')}
-        isUploading={isUploading && uploadTarget?.type === 'song'}
-        uploadStatus={uploadStatus}
-        uploadProgress={uploadProgress}
-        onPreview={setPreviewFile}
-        onDelete={(url) => currentProject && deleteSongFile(currentProject.id, listId, song.id, url)}
-      />
-
-      {/* Tablatures Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <TabList 
-            song={song}
-            selectedTabId={selectedTabId}
-            onSelectTab={setSelectedTabId}
-            onDeleteTab={handleDeleteTab}
-            onCreateTab={handleCreateTab}
-            onUpdateTabDetails={handleUpdateTabDetails}
-        />
-
-        {selectedTab && (
-            <div className="lg:col-span-2 space-y-4">
-                <TabEditor 
-                    key={selectedTab.id}
-                    tab={selectedTab}
-                    songName={song.name}
-                    onSave={handleSaveTabContent}
-                    isSaving={isSavingTab}
-                    onUpload={(tabId) => handleFileUploadTrigger('tab', tabId)}
-                    onDeleteFile={(tabId, url) => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, tabId, url)}
-                    onPreview={setPreviewFile}
-                />
-                <TabComments key={`comments-${selectedTab.id}`} tabId={selectedTab.id} />
-            </div>
-        )}
+      <div className="song-workspace">
+        <div className="song-tabs min-w-0"><TabList song={song} selectedTabId={selectedTabId} onSelectTab={setSelectedTabId}
+          onDeleteTab={handleDeleteTab} onCreateTab={handleCreateTab} onUpdateTabDetails={handleUpdateTabDetails} /></div>
+        <div className="song-score min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4">
+          {selectedTab ? <TabEditor key={selectedTab.id} tab={selectedTab} songName={song.name} onSave={handleSaveTabContent} isSaving={isSavingTab}
+            onUpload={tabId => handleFileUploadTrigger('tab', tabId)} uploading={isUploading && uploadTarget?.type === 'tab'} uploadProgress={uploadProgress}
+            onDeleteFile={(tabId, url) => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, tabId, url)} onPreview={setPreviewFile}
+            focusedAnchor={focusedAnchor?.tabId === selectedTab.id ? focusedAnchor.anchor : null}
+            onAnnotate={anchor => { setPendingAnchor({ tabId: selectedTab.id, anchor }); setTimeout(() => document.getElementById('tab-comment-input')?.focus(), 0); }} />
+            : <div className="min-h-64 flex items-center justify-center text-center text-sm text-muted-foreground p-6">{t('workspace.choose_tab')}</div>}
+        </div>
+        <div className="song-comments min-w-0">
+          {selectedTab && <TabComments key={selectedTab.id} tabId={selectedTab.id} content={selectedTab.content}
+            anchor={pendingAnchor?.tabId === selectedTab.id ? pendingAnchor.anchor : null} onClearAnchor={() => setPendingAnchor(null)}
+            onLocate={anchor => setFocusedAnchor({ tabId: selectedTab.id, anchor })} onPreview={setPreviewFile} />}
+        </div>
+        <div className="song-media min-w-0"><FileList song={song} onUpload={() => handleFileUploadTrigger('song')}
+          isUploading={isUploading && uploadTarget?.type === 'song'} uploadStatus={uploadStatus} uploadProgress={uploadProgress}
+          onPreview={setPreviewFile} onDelete={url => currentProject && deleteSongFile(currentProject.id, listId, song.id, url)} /></div>
       </div>
 
       <MediaPreviewDialog 

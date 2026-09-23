@@ -1,18 +1,19 @@
-import React, { useState, useRef } from 'react';
+import { MediaLibrary } from './MediaLibrary';
+import type { CommentAnchor } from '@/lib/comment-anchor';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { 
-  Guitar, Music2, Music, Save, Download, FileText, Upload, 
-  FileAudio, Image as ImageIcon, File, Trash2, Eye, Pencil, Play, ExternalLink,
+  Guitar, Music2, Music, Save, Download, FileText, MessageSquarePlus, 
+  Eye, Pencil,
   Maximize, Minimize, ZoomIn, ZoomOut
 } from 'lucide-react';
 import { TabRenderer } from './TabRenderer';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Tablature } from '@/contexts/ProjectContext';
-import { getMediaUrl } from '@/services/api';
 import { INSTRUMENTS } from './constants';
 import { cn } from '@/app/components/ui/utils';
 
@@ -92,6 +93,10 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
 }
 
 interface TabEditorProps {
+  onAnnotate?: (anchor: CommentAnchor) => void;
+  focusedAnchor?: CommentAnchor | null;
+  uploading?: boolean;
+  uploadProgress?: number;
   tab: Tablature;
   songName: string;
   onSave: (content: string) => Promise<void>;
@@ -108,13 +113,15 @@ export function TabEditor({
   isSaving, 
   onUpload, 
   onDeleteFile,
-  onPreview
+  onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress
 }: TabEditorProps) {
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [selection, setSelection] = useState<CommentAnchor | null>(null);
   
   const fontSizes = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl'];
   const [fontSizeIndex, setFontSizeIndex] = useState(1); // Default to text-sm
@@ -175,6 +182,36 @@ export function TabEditor({
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
+
+  useEffect(() => {
+    const capture = () => {
+      const container = contentRef.current;
+      if (!container) return;
+      let start: number, end: number;
+      if (viewMode === 'edit' && document.activeElement === textareaRef.current) {
+        start = textareaRef.current?.selectionStart || 0; end = textareaRef.current?.selectionEnd || 0;
+      } else {
+        const selected = window.getSelection(); const pre = container.querySelector('pre');
+        if (!selected?.rangeCount || !pre) return;
+        const range = selected.getRangeAt(0);
+        if (!pre.contains(range.startContainer) || !pre.contains(range.endContainer)) return;
+        const before = range.cloneRange(); before.selectNodeContents(pre); before.setEnd(range.startContainer, range.startOffset);
+        start = before.toString().length; end = start + range.toString().length;
+      }
+      setSelection(end > start && end - start <= 2000 ? { start, end, quote: editingContent.slice(start, end) } : null);
+    };
+    document.addEventListener('selectionchange', capture);
+    return () => document.removeEventListener('selectionchange', capture);
+  }, [editingContent, viewMode, isFullscreen]);
+
+  useEffect(() => {
+    if (!focusedAnchor) return;
+    const timer = setTimeout(() => {
+      if (textareaRef.current) { textareaRef.current.focus(); textareaRef.current.setSelectionRange(focusedAnchor.start, focusedAnchor.end); }
+      else contentRef.current?.querySelector('[data-anchor-line="true"]')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [focusedAnchor]);
 
   const editor = (
     <div 
@@ -295,7 +332,8 @@ export function TabEditor({
         </div>
       </div>
 
-      <div className={cn("relative", isFullscreen && "flex-1 min-h-0 overflow-hidden")}>
+      {!isFullscreen && onAnnotate && <p className="text-xs text-muted-foreground">{t('workspace.selection_hint')}</p>}
+      <div ref={contentRef} className={cn("relative", isFullscreen && "flex-1 min-h-0 overflow-hidden")}>
           <div className={cn("absolute top-2 right-2 flex gap-1 z-10", isFullscreen && "hidden")}>
               <Button
                   variant="ghost"
@@ -313,6 +351,7 @@ export function TabEditor({
           {viewMode === 'view' ? (
             <TabRenderer
               content={editingContent}
+              highlighted={focusedAnchor}
               className={cn(
                 "min-h-[400px]",
                 fontSizes[fontSizeIndex],
@@ -336,84 +375,16 @@ export function TabEditor({
           )}
       </div>
 
+      {selection && onAnnotate && <div className="flex shrink-0 justify-end gap-2 items-center">
+        {hasChanges && <span className="text-xs text-muted-foreground">{t('workspace.save_before_comment')}</span>}
+        <Button size="sm" disabled={hasChanges} onPointerDown={e => e.preventDefault()} onClick={() => { onAnnotate(selection); setSelection(null); setIsFullscreen(false); }}>
+          <MessageSquarePlus className="size-4" />{t('workspace.comment_selection')}
+        </Button>
+      </div>}
       {!isFullscreen && viewMode === 'edit' && <TablatureControls onInsert={handleInsertText} />}
 
-      {!isFullscreen && <div className="mt-8 pt-8 border-t border-border">
-          <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium text-foreground">{t('attached_files', 'Archivos adjuntos')}</h4>
-              <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onUpload(tab.id)}
-                  className="bg-card border-border text-foreground hover:bg-accent"
-              >
-                  <Upload className="size-4 mr-2" />
-                  {t('add_file', 'Añadir archivo')}
-              </Button>
-          </div>
-
-          {tab.files && tab.files.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {tab.files.map((file: { url: string; type: string; name: string }) => (
-                      <div key={file.url} className="flex items-center gap-3 p-3 bg-secondary/10 border border-border rounded-lg group">
-                          {file.type.startsWith('audio') ? (
-                              <FileAudio className="size-5 text-blue-500" />
-                          ) : file.type.startsWith('image') ? (
-                              <ImageIcon className="size-5 text-green-500" />
-                          ) : (
-                              <File className="size-5 text-muted-foreground" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate" title={file.name}>{file.name}</p>
-                          </div>
-                          <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
-                               {(file.type.startsWith('audio') || file.type.startsWith('video') || file.type.startsWith('image') || file.type === 'application/pdf') && (
-                                  <button
-                                    className="p-1.5 sm:p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded-md transition-colors"
-                                    onClick={() => onPreview(file)}
-                                    title={t('view_play', "Reproducir/Ver")}
-                                  >
-                                      {file.type.startsWith('image') || file.type === 'application/pdf' ? <Eye className="size-4" /> : <Play className="size-4" />}
-                                  </button>
-                                )}
-
-                                <a
-                                  href={getMediaUrl(file.url)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-1.5 sm:p-2 hover:bg-accent rounded-md text-muted-foreground transition-colors"
-                                  title={t('open_new_tab', "Abrir en nueva pestaña")}
-                                >
-                                    <ExternalLink className="size-4" />
-                                </a>
-
-                               <a
-                                  href={getMediaUrl(file.url)}
-                                  download
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-1.5 sm:p-2 hover:bg-accent rounded-md text-muted-foreground transition-colors"
-                                  title={t('download', "Descargar")}
-                               >
-                                  <Download className="size-4" />
-                              </a>
-                              <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() => onDeleteFile(tab.id, file.url)}
-                                  title={t('delete', "Eliminar")}
-                              >
-                                  <Trash2 className="size-4" />
-                              </Button>
-                          </div>
-                      </div>
-                  ))}
-              </div>
-          ) : (
-              <p className="text-sm text-muted-foreground/60 italic">{t('no_files_tab', 'No hay archivos en esta tablatura')}</p>
-          )}
-      </div>}
+      {!isFullscreen && <MediaLibrary files={tab.files || []} title={t('workspace.tab_files')} onUpload={() => onUpload(tab.id)}
+        onDelete={url => onDeleteFile(tab.id, url)} onPreview={onPreview} uploading={uploading} progress={uploadProgress} />}
 
     </div>
   );

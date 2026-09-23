@@ -1,3 +1,4 @@
+import { useUploadName } from '@/app/components/UploadNameProvider';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import api, { extractErrorMessage, uploadFile, getMediaUrl } from '@/services/api';
@@ -28,6 +29,7 @@ const RRSS_OPTIONS = [
 ];
 
 export function UserProfile() {
+  const requestUploadName = useUploadName();
   const { user, updateProfile, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -118,8 +120,11 @@ export function UserProfile() {
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const picked = e.target.files?.[0];
+      e.target.value = '';
+      if (!picked) return;
+      const file = await requestUploadName(picked);
+      if (!file) return;
     if (!file.type.startsWith('image/')) {
       toast.error(t('invalid_image', 'Por favor selecciona un archivo de imagen'));
       return;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { getMediaUrl } from '@/services/api';
 
@@ -8,12 +9,14 @@ interface MediaPreviewDialogProps {
 }
 
 export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
+  const { t } = useTranslation();
   if (!file) return null;
 
   return (
     <Dialog open={!!file} onOpenChange={onClose}>
         <DialogContent
-          className="bg-card border-border text-foreground w-[95vw] max-w-4xl rounded-xl p-4 sm:p-6"
+          className="bg-card border-border text-foreground w-[95vw] sm:max-w-4xl rounded-xl p-4 sm:p-6"
+          aria-describedby={undefined}
           onPointerDownOutside={(e) => {
             // Prevent dialog from closing when interacting with media controls
             const target = e.target as HTMLElement;
@@ -33,7 +36,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                         className="max-h-[70vh] w-auto object-contain rounded-md"
                     />
                 ) : file.type.startsWith('video') ? (
-                    <video 
+                    <video playsInline 
                         controls 
                         preload="metadata"
                         className="max-h-[60vh] sm:max-h-[70vh] w-full rounded-md"
@@ -48,7 +51,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                         className="w-full h-[60vh] sm:h-[70vh] rounded-md border-0 bg-white"
                         title={file.name}
                     />
-                ) : (
+                ) : file.type.startsWith('audio/') ? (
                     <div className="w-full py-10 px-4 sm:px-8 bg-secondary/20 rounded-xl flex items-center justify-center">
                         <audio 
                             controls 
@@ -60,7 +63,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                             Your browser does not support the audio element.
                         </audio>
                     </div>
-                )}
+                ) : <a href={getMediaUrl(file.url)} download={file.name} target="_blank" rel="noopener noreferrer" className="text-primary underline py-8">{t('workspace.download')}: {file.name}</a>}
             </div>
         </DialogContent>
     </Dialog>

@@ -154,10 +154,11 @@ try {
     assert.equal(await page.locator('[aria-label="1 files"]').count(), 1);
     const row = page.locator('[data-handler-id]').filter({ has: page.getByText('First song', { exact: true }) });
     const second = page.locator('[data-handler-id]').filter({ has: page.getByText('Second song', { exact: true }) });
-    const handle = await row.locator('.cursor-grab').boundingBox(), target = await second.boundingBox();
+    const handle = await row.boundingBox(), target = await second.boundingBox();
     assert(handle && target);
     await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
     await page.mouse.down();
+    await page.waitForTimeout(50);
     await page.mouse.move(target.x + 20, target.y + target.height * .8, { steps: 15 });
     await page.locator('.fixed.pointer-events-none').filter({ hasText: 'First song' }).waitFor();
     await capture(page, 'drag-preview');
@@ -195,7 +196,7 @@ try {
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'No horizontal page overflow');
       await capture(page, mobile ? 'visual-mobile' : 'visual-library');
       const drop = async () => {
-        const handle = await row.locator('.cursor-grab').boundingBox();
+        const handle = await row.boundingBox();
         const target = await page.locator(mobile ? '[data-mobile-playlist-id="12"]' : '[data-playlist-id="12"]').boundingBox();
         assert(handle && target);
         const from = { x: handle.x + handle.width / 2, y: handle.y + handle.height / 2 };
@@ -352,3 +353,4 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
   } catch (error) { await capture(page, name + '-failure'); throw error; }
   finally { await context.close(); await browser.close(); }
 }
+

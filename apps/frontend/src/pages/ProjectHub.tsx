@@ -1,3 +1,5 @@
+import { ProjectOverview } from '@/app/components/ProjectOverview';
+import { useUploadName } from '@/app/components/UploadNameProvider';
 import { ProjectSwitcher } from '@/app/components/ProjectSwitcher';
 import React, { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
@@ -10,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { ArrowLeft, MessageSquare, Music, Users, LogOut, PenLine, Bell, Calendar } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Music, Users, LogOut, PenLine, Bell, Calendar, LayoutDashboard } from 'lucide-react';
 import { ProjectChat } from '@/app/components/ProjectChat';
 import { SongManager } from '@/app/components/SongManager';
 import { MembersPanel } from '@/app/components/MembersPanel';
@@ -27,6 +29,7 @@ import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { PageLayout } from '@/app/components/PageLayout';
 
 export function ProjectHub() {
+  const requestUploadName = useUploadName();
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { currentProject, projects, updateProject, leaveProject, deleteProject, selectProject, isLoading } = useProjects();
@@ -35,8 +38,8 @@ export function ProjectHub() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Initialize activeTab from URL or default to 'songs'
-  const activeTab = searchParams.get('tab') || 'songs';
+  // Keep existing song links working; new project visits open the overview.
+  const activeTab = searchParams.get('tab') || (['listId', 'songId', 'tabId'].some(key => searchParams.has(key)) ? 'songs' : 'overview');
 
   const setActiveTab = (tab: string) => {
     setSearchParams((prev: URLSearchParams) => {
@@ -156,7 +159,10 @@ export function ProjectHub() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
+      const picked = e.target.files?.[0];
+      e.target.value = '';
+      if (!picked) return;
+      const file = await requestUploadName(picked);
       if (!file) return;
       
       try {
@@ -219,12 +225,12 @@ export function ProjectHub() {
             </Button>
             
             <div className="flex-1 flex items-center gap-3 min-w-0 select-none">
-                <div className="size-10 aspect-square flex-shrink-0 rounded-md overflow-hidden bg-white/5 flex items-center justify-center pointer-events-none">
+                <div className="size-10 aspect-square flex-shrink-0 rounded-md overflow-hidden flex items-center justify-center pointer-events-none">
                     {currentProject.imageUrl ? (
                         <img 
                             src={getMediaUrl(currentProject.imageUrl)} 
                             alt={currentProject.name} 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-contain" 
                         />
                     ) : (
                         <Music className="size-6 text-primary" />
@@ -339,15 +345,16 @@ export function ProjectHub() {
          <div className="max-w-[1216px] w-full mx-auto">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="bg-card/80 border border-border rounded-xl p-1 h-11 flex items-center w-full sm:w-fit max-w-full mx-auto overflow-visible">
+            <TabsTrigger value="overview" aria-label={t('workspace.overview')} className="data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-3 font-normal text-sm"><LayoutDashboard className="size-4 sm:mr-2 shrink-0" /><span className="hidden sm:inline">{t('workspace.overview')}</span></TabsTrigger>
             <TabsTrigger 
-                value="songs"
+                value="songs" aria-label={t('songs')}
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
               <Music className="size-4 sm:mr-2 flex-shrink-0" />
               <span className="hidden sm:inline">{t('songs', 'Canciones')}</span>
             </TabsTrigger>
             <TabsTrigger 
-                value="chat"
+                value="chat" aria-label={t('chat')}
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
             >
               <MessageSquare className="size-4 sm:mr-2 flex-shrink-0" />
@@ -357,21 +364,21 @@ export function ProjectHub() {
               )}
             </TabsTrigger>
             <TabsTrigger 
-                value="members"
+                value="members" aria-label={t('members')}
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
               <Users className="size-4 sm:mr-2 flex-shrink-0" />
               <span className="hidden sm:inline">{t('members', 'Miembros')}</span>
             </TabsTrigger>
             <TabsTrigger 
-                value="calendar"
+                value="calendar" aria-label={t('calendar')}
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
             >
               <Calendar className="size-4 sm:mr-2 flex-shrink-0" />
               <span className="hidden sm:inline">{t('calendar', 'Calendario')}</span>
             </TabsTrigger>
             <TabsTrigger 
-                value="notifications"
+                value="notifications" aria-label={t('notifications')}
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
             >
               <Bell className="size-4 sm:mr-2 flex-shrink-0" />
@@ -386,6 +393,10 @@ export function ProjectHub() {
           </TabsList>
 
           <div className="mt-8">
+            <TabsContent value="overview" className="m-0"><ProjectOverview key={currentProject.id} project={currentProject} unreadCount={unreadCount} onOpen={(tab, song) => {
+              if (song) setSearchParams({ tab, listId: song.listId, songId: song.songId });
+              else handleTabChange(tab);
+            }} /></TabsContent>
             <TabsContent value="songs" className="m-0">
                 <SongManager />
             </TabsContent>

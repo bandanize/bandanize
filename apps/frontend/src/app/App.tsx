@@ -1,3 +1,4 @@
+import { UploadNameProvider } from '@/app/components/UploadNameProvider';
 import React from 'react';
 import { CookiesProvider } from 'react-cookie';
 import { JoinProject } from '@/pages/JoinProject';
@@ -78,7 +79,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <Router>
+    <UploadNameProvider><Router>
       <CookiesProvider><ConsentProvider>
         <ThemeProvider storageKey="vite-ui-theme">
           <AuthProvider>
@@ -93,6 +94,6 @@ export default function App() {
           </AuthProvider>
         </ThemeProvider>
       </ConsentProvider></CookiesProvider>
-    </Router>
+    </Router></UploadNameProvider>
   );
 }

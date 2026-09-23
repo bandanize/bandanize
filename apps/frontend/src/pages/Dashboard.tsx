@@ -1,3 +1,4 @@
+import { useUploadName } from '@/app/components/UploadNameProvider';
 import { ProjectPicker } from '@/app/components/ProjectPicker';
 import { MemberAvatar } from '@/app/components/MemberAvatar';
 import React, { useState, useEffect } from 'react';
@@ -23,6 +24,7 @@ import { PageLayout } from '@/app/components/PageLayout';
 import { Skeleton } from '@/app/components/ui/skeleton';
 
 export function Dashboard() {
+  const requestUploadName = useUploadName();
   const { user, logout } = useAuth();
   const { projects, createProject, selectProject, invitations, isLoading } = useProjects();
   const [open, setOpen] = useState(false);
@@ -86,7 +88,10 @@ export function Dashboard() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
+      const picked = e.target.files?.[0];
+      e.target.value = '';
+      if (!picked) return;
+      const file = await requestUploadName(picked);
       if (!file) return;
       
       try {

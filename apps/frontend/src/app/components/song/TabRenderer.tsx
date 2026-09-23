@@ -1,3 +1,4 @@
+import type { CommentAnchor } from '@/lib/comment-anchor';
 import React, { useMemo } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { CHORD_DB, CHORD_REGEX } from './chordData';
@@ -5,6 +6,7 @@ import { ChordDiagram } from './ChordDiagram';
 import { cn } from '@/app/components/ui/utils';
 
 interface TabRendererProps {
+  highlighted?: CommentAnchor | null;
   content: string;
   className?: string;
 }
@@ -13,11 +15,15 @@ interface TabRendererProps {
  * Renders tab content as read-only monospace text with chord names
  * detected and wrapped in hoverable popovers showing chord diagrams.
  */
-export function TabRenderer({ content, className }: TabRendererProps) {
+export function TabRenderer({ content, className, highlighted }: TabRendererProps) {
   const renderedLines = useMemo(() => {
-    return content.split('\n').map((line, lineIdx) => {
-      return renderLineWithChords(line, lineIdx);
-    });
+    const lines: { parts: React.ReactNode[]; start: number; end: number }[] = [];
+    let offset = 0;
+    for (const [index, line] of content.split('\n').entries()) {
+      lines.push({ parts: renderLineWithChords(line, index), start: offset, end: offset + line.length });
+      offset += line.length + 1;
+    }
+    return lines;
   }, [content]);
 
   return (
@@ -27,10 +33,11 @@ export function TabRenderer({ content, className }: TabRendererProps) {
         className,
       )}
     >
-      {renderedLines.map((lineParts, lineIdx) => (
+      {renderedLines.map((line, lineIdx) => (
         <React.Fragment key={lineIdx}>
           {lineIdx > 0 && '\n'}
-          {lineParts}
+          <span data-anchor-line={!!highlighted && line.start < highlighted.end && line.end > highlighted.start}
+            className={highlighted && line.start < highlighted.end && line.end > highlighted.start ? 'bg-primary/20 rounded-sm outline outline-1 outline-primary/30' : undefined}>{line.parts}</span>
         </React.Fragment>
       ))}
     </pre>
