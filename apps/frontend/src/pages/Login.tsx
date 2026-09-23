@@ -7,8 +7,7 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { useTranslation } from 'react-i18next';
-import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
-import Logo from '@/assets/logo.svg';
+import { AuthLayout } from '@/app/components/AuthLayout';
 
 export function Login() {
   const { t } = useTranslation();
@@ -33,15 +32,12 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
-          <div className="flex justify-end"><LanguageSwitcher /></div>
-        <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
-          <div className="flex items-center justify-center">
-             <img src={Logo} alt="Bandanize Logo" className="size-28 mb-4" />
-          </div>
-          <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">Bandanize</CardTitle>
-          <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
+    <AuthLayout>
+      <Card className="auth-card">
+        <p className="auth-form-kicker">{t('auth.ready_to_play')}</p>
+        <CardHeader className="auth-card-header">
+          <CardTitle className="auth-card-title">{t('auth.welcome_back')}</CardTitle>
+          <CardDescription className="auth-card-description">
             {t('auth.login_description')}
           </CardDescription>
         </CardHeader>
@@ -95,7 +91,7 @@ export function Login() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
+                className="auth-secondary w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
                 onClick={() => setShowRegister(true)}
               >
                 {t('auth.create_account')}
@@ -104,9 +100,7 @@ export function Login() {
           </form>
         </CardContent>
       </Card>
-      
-      {/* Decorative background images simulation based on CSS if possible, but skipping complex absolute positioning without assets */}
-    </div>
+    </AuthLayout>
   );
 }
 
@@ -133,15 +127,11 @@ function Register({ onBack }: { onBack: () => void }) {
 
   if (success) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <Card className="w-full max-w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
-          <div className="flex justify-end"><LanguageSwitcher /></div>
-            <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
-              <div className="flex items-center justify-center">
-                 <img src={Logo} alt="Bandanize Logo" className="size-28 mb-4" />
-              </div>
-              <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">{t('auth.check_email')}</CardTitle>
-              <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
+        <AuthLayout>
+          <Card className="auth-card">
+            <CardHeader className="auth-card-header">
+              <CardTitle className="auth-card-title">{t('auth.check_email')}</CardTitle>
+              <CardDescription className="auth-card-description">
                  {t('auth.verification_sent', { email })}
               </CardDescription>
             </CardHeader>
@@ -153,27 +143,23 @@ function Register({ onBack }: { onBack: () => void }) {
                     <Button 
                         onClick={onBack}
                         variant="outline"
-                        className="w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
+                        className="auth-secondary w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
                     >
                         {t('auth.back_to_login')}
                     </Button>
                </div>
             </CardContent>
           </Card>
-        </div>
+    </AuthLayout>
       );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-[448px] bg-card border-border rounded-[14px] p-6 shadow-none">
-          <div className="flex justify-end"><LanguageSwitcher /></div>
-        <CardHeader className="space-y-4 flex flex-col items-center p-0 mb-8">
-          <div className="flex items-center justify-center">
-             <img src={Logo} alt="Bandanize Logo" className="size-28 mb-4" />
-          </div>
-          <CardTitle className="text-[30px] font-bold text-foreground font-sans text-center leading-8">{t('auth.create_account')}</CardTitle>
-          <CardDescription className="text-[16px] text-muted-foreground text-center font-normal font-sans">
+    <AuthLayout>
+      <Card className="auth-card">
+        <CardHeader className="auth-card-header">
+          <CardTitle className="auth-card-title">{t('auth.create_account')}</CardTitle>
+          <CardDescription className="auth-card-description">
             {t('auth.register_description')}
           </CardDescription>
         </CardHeader>
@@ -241,7 +227,7 @@ function Register({ onBack }: { onBack: () => void }) {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
+                className="auth-secondary w-full bg-card border-border text-foreground hover:bg-accent hover:text-white font-sans text-[14px] h-[40px] rounded-[8px] box-border"
                 onClick={onBack}
               >
                 {t('auth.back_to_login')}
@@ -250,6 +236,6 @@ function Register({ onBack }: { onBack: () => void }) {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </AuthLayout>
   );
 }

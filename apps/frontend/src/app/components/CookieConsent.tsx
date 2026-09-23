@@ -30,8 +30,8 @@ export function CookieConsent() {
   return <>
     {needsChoice && !open && <section role="region" aria-label={t('consent.title')}
       className="fixed bottom-4 left-4 right-4 sm:right-auto sm:w-[400px] z-50 max-h-[calc(100dvh-32px)] overflow-y-auto rounded-[14px] border border-white/10 bg-card shadow-[0_16px_64px_rgba(0,0,0,0.45)]">
-      <div className="flex h-[140px] sm:h-[180px] items-center justify-center overflow-hidden bg-white/5">
-        <img src={CookiesImage} alt="" className="h-full w-full object-cover object-center" />
+      <div className="flex items-center justify-center overflow-hidden bg-white/5">
+        <img src={CookiesImage} alt="" width="1131" height="728" className="block h-auto w-full" />
       </div>
       <div className="p-5 sm:p-6 space-y-4">
         <div className="space-y-2">
