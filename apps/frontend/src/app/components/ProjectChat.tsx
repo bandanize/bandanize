@@ -1,3 +1,4 @@
+import { MemberAvatar } from './MemberAvatar';
 import React, { useState, useRef, useEffect } from 'react';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -249,9 +250,7 @@ export function ProjectChat() {
             const isMe = msg.userId === user?.id;
             return (
               <div key={msg.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
-                 <div className="size-8 rounded-full bg-secondary flex items-center justify-center text-foreground text-xs shrink-0">
-                    {msg.userName.substring(0, 2).toUpperCase()}
-                 </div>
+                 <MemberAvatar name={msg.userName} photo={isMe ? user?.photo || msg.userPhoto : currentProject.members.find(member => member.id === msg.userId)?.photo ?? msg.userPhoto} />
                 
                 <div className={`flex flex-col gap-1 max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
                   <span className="text-sm text-foreground font-medium">{msg.userName}</span>
@@ -294,9 +293,7 @@ export function ProjectChat() {
                             className="w-full text-left px-4 py-2 hover:bg-accent text-sm flex items-center gap-2 text-foreground"
                             onClick={() => handleSelectMention(member.name)}
                             >
-                                <div className="size-6 bg-secondary rounded-full flex items-center justify-center text-xs font-bold text-foreground">
-                                    {member.name.charAt(0)}
-                                </div>
+                                <MemberAvatar name={member.name} photo={member.photo} className="size-6" />
                                 {member.name}
                             </button>
                         ))

@@ -1,3 +1,4 @@
+import { ProjectSwitcher } from '@/app/components/ProjectSwitcher';
 import React, { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -230,7 +231,7 @@ export function ProjectHub() {
                     )}
                 </div>
                <div className="min-w-0">
-                   <h1 className="text-[20px] sm:text-[24px] font-normal font-poppins text-foreground leading-8 truncate">{currentProject.name}</h1>
+                   <ProjectSwitcher />
                    <div className="flex items-center gap-1">
                        <span className="w-[7px] h-[7px] bg-primary rounded-full inline-block"></span>
                        <span className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">

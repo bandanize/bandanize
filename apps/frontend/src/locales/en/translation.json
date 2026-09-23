@@ -289,5 +289,18 @@
   "add_song": "Add song",
   "song_singular": "song",
   "song_plural": "songs",
-  "back_to_lists": "Playlists"
+  "back_to_lists": "Playlists",
+  "projects_ui": {
+    "your_project": "Your musical project",
+    "shared_project": "Shared musical project",
+    "recent": "Recently opened",
+    "description": "A space for your songs, ideas and rehearsals.",
+    "lists_one": "{{count}} playlist",
+    "lists_other": "{{count}} playlists",
+    "songs_one": "{{count}} song",
+    "songs_other": "{{count}} songs",
+    "open": "Open project",
+    "switch": "Switch musical project",
+    "all": "All projects"
+  }
 }

@@ -3,6 +3,7 @@ import api from '@/services/api';
 import { PUBLIC_ROUTES } from '@/services/api';
 
 interface User {
+  photo?: string;
   id: string; 
   email: string;
   name: string;
@@ -64,6 +65,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     verifyToken();
   }, []);
 
+  // Auth responses do not include photos; refresh the current public profile separately.
+  React.useEffect(() => {
+    if (!user?.id) return;
+    const id = user.id;
+    const controller = new AbortController();
+    api.get('/users/' + id, { signal: controller.signal }).then(({ data }) => {
+      if (typeof data.photo !== 'string') return;
+      setUser(previous => {
+        if (!previous || previous.id !== id || previous.photo === data.photo) return previous;
+        const next = { ...previous, photo: data.photo };
+        localStorage.setItem('currentUser', JSON.stringify(next));
+        return next;
+      });
+    }).catch(() => { /* Profile images are optional; a failure must not end the session. */ });
+    return () => controller.abort();
+  }, [user?.id]);
+
   const login = async (username: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { username, password });
@@ -77,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         name,
         city: city || '',
+        photo: response.data.photo || '',
       };
       
       setUser(user);

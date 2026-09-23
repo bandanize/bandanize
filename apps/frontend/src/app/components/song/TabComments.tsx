@@ -1,3 +1,4 @@
+import { MemberAvatar } from '../MemberAvatar';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 
 interface TabComment {
   id: number;
-  sender: { id: number; name: string };
+  sender: { id: number; name: string; photo?: string };
   message: string;
   timestamp: string;
 }
@@ -184,9 +185,7 @@ export function TabComments({ tabId }: TabCommentsProps) {
             const isMe = String(comment.sender.id) === user?.id;
             return (
               <div key={comment.id} className="flex gap-2 group">
-                <div className="size-7 rounded-full bg-secondary flex items-center justify-center text-foreground text-[10px] shrink-0">
-                  {comment.sender.name.substring(0, 2).toUpperCase()}
-                </div>
+                <MemberAvatar name={comment.sender.name} className="size-7" photo={String(comment.sender.id) === user?.id ? user?.photo || comment.sender.photo : currentProject?.members.find(member => member.id === String(comment.sender.id))?.photo ?? comment.sender.photo} />
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
@@ -233,9 +232,7 @@ export function TabComments({ tabId }: TabCommentsProps) {
                   className="w-full text-left px-3 py-2 hover:bg-accent text-sm flex items-center gap-2 text-foreground"
                   onClick={() => handleSelectMention(member.name)}
                 >
-                  <div className="size-5 bg-secondary rounded-full flex items-center justify-center text-[10px] font-bold text-foreground">
-                    {member.name.charAt(0)}
-                  </div>
+                  <MemberAvatar name={member.name} photo={member.photo} className="size-5" />
                   {member.name}
                 </button>
               ))

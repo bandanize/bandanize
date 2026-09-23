@@ -6,10 +6,10 @@ const require = createRequire(process.env.BROWSER_PACKAGE + '/package.json');
 const { chromium, webkit } = require('playwright');
 const origin = 'http://127.0.0.1:4173';
 const token = 'a'.repeat(43);
-const owner = { id: '1', name: 'Owner', username: 'owner', email: 'owner@example.test' };
+const owner = { id: '1', name: 'Owner', username: 'owner', email: 'owner@example.test', photo: '/api/uploads/images/owner.svg' };
 const band = {
   id: 1, name: 'Rehearsal', description: 'Browser fixture', ownerId: 1,
-  members: [owner, { id: 2, name: 'Alex', username: 'alex', email: 'alex@example.test' }],
+  members: [owner, { id: 2, name: 'Alex', username: 'alex', email: 'alex@example.test', photo: '/api/uploads/images/alex.svg' }, { id: 3, name: 'Riley Broken', username: 'riley', email: 'riley@example.test', photo: '/api/uploads/images/missing.svg' }, { id: 4, name: 'Jules', username: 'jules', email: 'jules@example.test' }],
   songLists: [{ id: 11, name: 'Setlist', songs: [
     { id: 21, name: 'First song', files: [], tablatures: [{ id: 31, name: 'Guitar tab',
       instrument: 'Guitar', instrumentIcon: 'guitar', tuning: 'Standard',
@@ -28,7 +28,7 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
     localStorage.setItem('welcome_seen_1', 'true');
     if (auth) {
       localStorage.setItem('token', 'fixture');
-      localStorage.setItem('currentUser', JSON.stringify(owner));
+      localStorage.setItem('currentUser', JSON.stringify({ ...owner, photo: undefined }));
     }
     if (optional) {
       window.consentCalls = [];
@@ -45,10 +45,15 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
   page.on('pageerror', error => errors.push(error.message));
   const requests = [];
   const fixture = structuredClone(band);
-  const controls = { failNextTransfer: false };
+  const controls = { failNextTransfer: false, extraProjects: [] };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     requests.push({ path, url: request.url(), method: request.method(), data: request.postData() });
+    if (path.startsWith('/api/uploads/images/')) {
+      await route.fulfill({ status: path.endsWith('missing.svg') ? 404 : 200, contentType: 'image/svg+xml',
+        body: path.endsWith('missing.svg') ? 'not found' : '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#FF96A5"/><circle cx="40" cy="30" r="14" fill="#243020"/><path d="M12 80a28 28 0 0 1 56 0" fill="#243020"/></svg>' });
+      return;
+    }
     if (/\/songs\/\d+\/(move|replicate|copy)$/.test(path)) {
       if (controls.failNextTransfer) {
         controls.failNextTransfer = false;
@@ -66,10 +71,10 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
       return;
     }
     let body = [];
-    if (path.endsWith('/auth/me')) body = owner;
+    if (path.endsWith('/auth/me') || path.endsWith('/users/1')) body = owner;
     else if (path.endsWith('/auth/login')) body = { ...owner, token: 'fixture' };
     else if (path.endsWith('/auth/register') || path.includes('/auth/verify')) body = { message: 'OK' };
-    else if (path.endsWith('/bands/my-bands')) body = [fixture];
+    else if (path.endsWith('/bands/my-bands')) body = [fixture, ...controls.extraProjects];
     else if (path.includes('/invite-links/')) body = path.endsWith('/accept') ? { bandId: 1 } : { bandName: 'Rehearsal', expiresAt: '2030-01-01T00:00:00Z' };
     else if (path.endsWith('/calendar-token')) body = 'fixture-calendar-token';
     else if (path.endsWith('/heartbeat')) body = { onlineCount: 1 };
@@ -86,7 +91,7 @@ async function dismiss(page) {
 }
 async function capture(page, name) {
   const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true, animations: 'disabled' });
-  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile'].includes(name))
+  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
 const browser = await chromium.launch();
@@ -243,6 +248,53 @@ try {
     } catch (error) { await capture(page, mobile ? 'mobile-transfer-failure' : 'desktop-transfer-failure'); throw error; }
     finally { await context.close(); }
   }
+
+
+  const picker = await setup(browser);
+  try {
+    const { page, controls, errors } = picker;
+    await page.goto(origin + '/dashboard');
+    await dismiss(page);
+    const first = page.locator('[data-project-id="1"]');
+    await first.waitFor();
+    assert((await first.boundingBox()).width > 1000, 'A single project gets a complete featured card');
+    await first.locator('img[alt="Owner"]').waitFor();
+    assert(await first.locator('img[alt="Owner"]').evaluate(img => img.complete && img.naturalWidth > 0));
+    await page.locator('header img[alt="Owner"]').waitFor();
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('currentUser')).photo), owner.photo);
+    await capture(page, 'projects-single');
+    controls.extraProjects = [
+      { ...structuredClone(band), id: 2, name: 'Acoustic sessions', description: 'Ideas for the next set', songLists: [] },
+      { ...structuredClone(band), id: 3, name: 'Studio nights', description: 'Demos and recordings', songLists: [], photo: '/api/uploads/images/cover.svg' }
+    ];
+    await page.reload();
+    await page.locator('[data-project-id="3"]').waitFor();
+    assert.equal(await page.locator('[data-project-id]').count(), 3);
+    assert((await first.boundingBox()).width < 600);
+    await capture(page, 'projects-multiple');
+    await first.click();
+    await page.getByRole('button', { name: 'Switch musical project' }).click();
+    await page.getByRole('menuitem', { name: 'Acoustic sessions', exact: true }).click();
+    await page.waitForURL('**/project/2');
+    await page.getByRole('heading', { name: 'Acoustic sessions', exact: true }).waitFor();
+    await page.goto(origin + '/project/1?tab=members');
+    await page.locator('img[alt="Alex"]').waitFor();
+    assert.equal(await page.locator('img[alt="Riley Broken"]').count(), 0);
+    await page.getByText('RB', { exact: true }).waitFor();
+    await page.getByText('J', { exact: true }).waitFor();
+    await capture(page, 'profile-avatars');
+    await page.goto(origin + '/project/1?tab=chat');
+    await page.locator('img[alt="Owner"]').waitFor();
+    await page.goto(origin + '/project/1?tab=songs&listId=11&songId=21&tabId=31');
+    await page.locator('img[alt="Owner"]').first().waitFor();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(origin + '/dashboard');
+    await page.locator('[data-project-id="3"]').waitFor();
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    await capture(page, 'projects-mobile');
+    assert.deepEqual(errors, []);
+    console.log('PASS one/multiple project layouts, switching, profile photos and failed/missing photo fallbacks');
+  } finally { await picker.context.close(); }
 
   const invite = await setup(browser, false, false);
   try {
