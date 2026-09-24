@@ -9,10 +9,10 @@ export function ProjectSwitcher() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   if (!currentProject) return null;
-  if (projects.length < 2) return <h1 className="text-xl sm:text-2xl font-poppins truncate">{currentProject.name}</h1>;
+  if (projects.length < 2) return <h1 className="text-sm sm:text-lg font-medium font-poppins truncate">{currentProject.name}</h1>;
   return <DropdownMenu>
-    <DropdownMenuTrigger className="flex items-center gap-2 min-w-0 max-w-full rounded-lg text-left hover:text-primary focus-visible:outline focus-visible:outline-primary" aria-label={t('projects_ui.switch')}>
-      <h1 className="text-xl sm:text-2xl font-poppins truncate">{currentProject.name}</h1>
+    <DropdownMenuTrigger className="flex items-center gap-1.5 min-w-0 max-w-full min-h-7 rounded-md text-left hover:bg-accent hover:text-primary focus-visible:outline focus-visible:outline-primary" aria-label={t('projects_ui.switch')}>
+      <h1 className="text-sm sm:text-lg font-medium font-poppins truncate">{currentProject.name}</h1>
       <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
     </DropdownMenuTrigger>
     <DropdownMenuContent align="start" className="w-64 max-w-[calc(100vw-32px)] max-h-[70dvh] overflow-y-auto">

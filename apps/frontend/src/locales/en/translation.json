@@ -412,5 +412,12 @@
     "actions": "Song options",
     "label": "Song",
     "key": "Key"
+  },
+  "app_nav": {
+    "account": "My account",
+    "sections": "Project sections",
+    "team": "Team",
+    "agenda": "Calendar",
+    "alerts": "Alerts"
   }
 }
