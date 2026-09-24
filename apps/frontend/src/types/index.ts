@@ -11,7 +11,7 @@ export type NotificationType =
     | 'SONG_ADDED'
     | 'MEMBER_ADDED'
     | 'MEMBER_REMOVED'
-    | 'CHAT_MENTION' | 'TAB_COMMENT_MENTION'
+    | 'CHAT_MENTION' | 'TAB_COMMENT_MENTION' | 'TAB_COMMENT_ADDED'
     | 'EVENT_CREATED'
     | 'EVENT_MODIFIED'
     | 'FILE_ADDED'

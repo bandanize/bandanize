@@ -37,12 +37,14 @@ public class NotificationService {
                     notification.getActor().getPhoto());
         }
 
+        String type = notification.getType().name();
+        if (notification.getType() == Notification.NotificationType.CHAT_MENTION && notification.getMetadata() != null) {
+            String subtype = notification.getMetadata().get("mentionType");
+            if ("TAB_COMMENT_MENTION".equals(subtype) || "TAB_COMMENT_ADDED".equals(subtype)) type = subtype;
+        }
         return new com.bandanize.backend.dtos.NotificationDTO(
                 notification.getId(),
-                notification.getType() == Notification.NotificationType.CHAT_MENTION
-                        && notification.getMetadata() != null
-                        && "TAB_COMMENT_MENTION".equals(notification.getMetadata().get("mentionType"))
-                        ? Notification.NotificationType.TAB_COMMENT_MENTION.name() : notification.getType().name(),
+                type,
                 notification.getMetadata(),
                 notification.getCreatedAt(),
                 actorDTO,
@@ -126,6 +128,43 @@ public class NotificationService {
         notification.setMetadata(metadata);
         notification.setTitle("New Mention");
         notification.setMessage(actor.getName() + " te mencionó en " + tab.getName());
+        notificationRepository.save(notification);
+    }
+
+
+    public void createTabCommentNotifications(BandModel band, UserModel actor, TablatureModel tab, TabCommentModel comment) {
+        // Keep the established DB enum value; the DTO exposes the comment-specific subtype.
+        Map<Long, UserModel> recipients = new java.util.LinkedHashMap<>();
+        for (UserModel member : band.getUsers()) recipients.put(member.getId(), member);
+        if (band.getOwner() != null) recipients.put(band.getOwner().getId(), band.getOwner());
+        recipients.remove(actor.getId());
+        for (UserModel recipient : recipients.values()) {
+            String name = recipient.getName();
+            boolean mentioned = name != null && !name.isBlank() && java.util.regex.Pattern
+                .compile("(?<![\\p{L}\\p{N}_@])@" + java.util.regex.Pattern.quote(name) + "(?![\\p{L}\\p{N}_])")
+                .matcher(comment.getMessage()).find();
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("mentionType", mentioned ? "TAB_COMMENT_MENTION" : "TAB_COMMENT_ADDED");
+            metadata.put("tabName", tab.getName());
+            metadata.put("tabId", String.valueOf(tab.getId()));
+            metadata.put("songId", String.valueOf(tab.getSong().getId()));
+            metadata.put("commentId", String.valueOf(comment.getId()));
+            Notification notification = new Notification();
+            notification.setBand(band); notification.setActor(actor); notification.setRecipient(recipient);
+            notification.setType(Notification.NotificationType.CHAT_MENTION);
+            notification.setMetadata(metadata);
+            notification.setTitle(mentioned ? "New Mention" : "New Comment");
+            notification.setMessage(mentioned ? "Mention in tablature comment" : "New tablature comment");
+            notificationRepository.save(notification);
+        }
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void markAsRead(Long bandId, Long recipientId, Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+            .filter(n -> n.getBand().getId().equals(bandId) && n.getRecipient().getId().equals(recipientId))
+            .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+        notification.setRead(true);
         notificationRepository.save(notification);
     }
 

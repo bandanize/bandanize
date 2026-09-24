@@ -45,7 +45,7 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
   page.on('pageerror', error => errors.push(error.message));
   const requests = [];
   const fixture = structuredClone(band);
-  const controls = { failNextTransfer: false, extraProjects: [] };
+  const controls = { failNextTransfer: false, extraProjects: [], notifications: [] };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     requests.push({ path, url: request.url(), method: request.method(), data: request.postData() });
@@ -78,7 +78,9 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
     else if (path.includes('/invite-links/')) body = path.endsWith('/accept') ? { bandId: 1 } : { bandName: 'Rehearsal', expiresAt: '2030-01-01T00:00:00Z' };
     else if (path.endsWith('/calendar-token')) body = 'fixture-calendar-token';
     else if (path.endsWith('/heartbeat')) body = { onlineCount: 1 };
-    else if (path.includes('unread-count')) body = 0;
+    else if (/\/notifications\/\d+\/read$/.test(path)) { const item = controls.notifications.find(item => String(item.id) === path.split('/').at(-2)); if (item) item.isRead = true; body = {}; }
+    else if (path.endsWith('/notifications')) body = controls.notifications;
+    else if (path.includes('unread-count')) body = controls.notifications.filter(item => !item.isRead).length;
     else if (path.includes('unread')) body = false;
     else if (path.endsWith('/comments')) body = [{ id: 1, message: 'One', sender: owner, timestamp: '2026-09-23T10:00:00Z' }, { id: 2, message: 'Two', sender: owner, timestamp: '2026-09-23T10:00:00Z' }];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
@@ -346,6 +348,33 @@ try {
     assert.deepEqual(errors, []);
     console.log('PASS compact app navbar, visible mobile sections, language, account keyboard focus and existing deep links');
   } finally { await navbar.context.close(); }
+
+
+  const activity = await setup(browser);
+  try {
+    const { page, controls, requests, errors } = activity;
+    controls.notifications = ['TAB_COMMENT_ADDED','TAB_COMMENT_MENTION'].map((type,index)=>({
+      id:index+81,type,actor:owner,metadata:{tabName:'Guitar',tabId:'31',songId:'21',commentId:'1'},isRead:false,createdAt:'2026-09-23T10:00:00Z'
+    }));
+    await page.goto(origin+'/project/1?tab=notifications'); await dismiss(page);
+    const note = page.locator('[data-notification-id="81"]');
+    await note.waitFor();
+    assert.match(await note.innerText(),/commented on the tablature/);
+    assert.match(await page.locator('[data-notification-id="82"]').innerText(),/mentioned you in a comment/);
+    for (let attempt=0;attempt<2;attempt++) {
+      await note.click();
+      await page.waitForURL(/tabId=31/);
+      await page.locator('[data-tab-comment-id="1"]').waitFor();
+      await page.getByRole('tab',{name:'Notifications',exact:true}).click();
+      await note.waitFor();
+      assert.equal(await note.getAttribute('data-read'),'true');
+      assert.equal(await page.locator('[data-notification-id="82"]').getAttribute('data-read'),'false');
+    }
+    assert.equal(requests.filter(r=>r.path.endsWith('/81/read')).length,1);
+    assert.equal(requests.filter(r=>r.path.endsWith('/mark-read')).length,0);
+    assert.deepEqual(errors,[]);
+    console.log('PASS tab comment notifications link to score, mark only opened item and remain clickable when read');
+  } finally {await activity.context.close();}
 
   const invite = await setup(browser, false, false);
   try {

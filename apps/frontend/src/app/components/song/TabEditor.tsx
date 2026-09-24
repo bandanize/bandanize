@@ -9,7 +9,7 @@ import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { 
   Guitar, Music2, Music, Save, Download, FileText, MessageSquarePlus, 
-  Eye, Pencil,
+  Eye, Pencil, MessageCircle, MessageCircleOff,
   Maximize, Minimize, ZoomIn, ZoomOut
 } from 'lucide-react';
 import type { TabComment } from './TabComments';
@@ -96,6 +96,8 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
 }
 
 interface TabEditorProps {
+  commentsVisible?: boolean;
+  onToggleComments?: () => void;
   hideFiles?: boolean;
   comments?: TabComment[];
   onAnnotate?: (anchor: CommentAnchor) => void;
@@ -118,7 +120,7 @@ export function TabEditor({
   isSaving, 
   onUpload, 
   onDeleteFile,
-  onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress, hideFiles = false, comments = []
+  onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress, hideFiles = false, comments = [], commentsVisible = true, onToggleComments
 }: TabEditorProps) {
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
@@ -226,6 +228,14 @@ export function TabEditor({
     }, 0);
     return () => clearTimeout(timer);
   }, [focusedAnchor]);
+
+  const commentToggle = onToggleComments && <Button type="button" variant="ghost" size="sm"
+    className="h-9 shrink-0 gap-2 text-muted-foreground hover:text-foreground"
+    onClick={onToggleComments} aria-pressed={!commentsVisible}
+    aria-label={t(commentsVisible ? 'reader.hide_comments' : 'reader.show_comments', commentsVisible ? 'Ocultar comentarios' : 'Mostrar comentarios')}>
+    {commentsVisible ? <MessageCircleOff className="size-4" /> : <MessageCircle className="size-4" />}
+    {t(commentsVisible ? 'reader.hide_comments' : 'reader.show_comments', commentsVisible ? 'Ocultar comentarios' : 'Mostrar comentarios')}
+  </Button>;
 
   const editor = (
     <div 
@@ -346,13 +356,14 @@ export function TabEditor({
         </div>
       </div>
 
-      {onAnnotate && <div className="flex flex-wrap shrink-0 items-center gap-2 p-1">
-        <PassagePicker content={editingContent} disabled={hasChanges} onChoose={anchor => { setSelection(null); setIsFullscreen(false); onAnnotate(anchor); }} />
+      {(onAnnotate || onToggleComments) && <div className="flex flex-wrap shrink-0 items-center gap-2 p-1">
+        {commentToggle}
+        {commentsVisible && onAnnotate && <PassagePicker content={editingContent} disabled={hasChanges} onChoose={anchor => { setSelection(null); setIsFullscreen(false); onAnnotate(anchor); }} />}
         
         {hasChanges && <span className="text-xs text-muted-foreground">{t('workspace.save_before_comment')}</span>}
       </div>}
 
-      {selection && selectionPosition && selectionHost && onAnnotate && !hasChanges && createPortal(
+      {commentsVisible && selection && selectionPosition && selectionHost && onAnnotate && !hasChanges && createPortal(
         <div className="contents"><Button type="button" size="sm" className="fixed z-[100] shadow-lg -translate-x-1/2 pointer-events-auto" style={selectionPosition}
           onPointerDown={event => event.preventDefault()} onMouseDown={event => event.preventDefault()}
           onClick={() => { const chosen = selection; setSelection(null); setIsFullscreen(false); onAnnotate(chosen); }}>
@@ -376,8 +387,8 @@ export function TabEditor({
           {viewMode === 'view' ? (
             <TabRenderer
               content={editingContent}
-              highlighted={focusedAnchor}
-              comments={hasChanges ? [] : comments}
+              highlighted={commentsVisible ? focusedAnchor : null}
+              comments={hasChanges || !commentsVisible ? [] : comments}
               className={cn(
                 "min-h-[400px]",
                 fontSizes[fontSizeIndex],

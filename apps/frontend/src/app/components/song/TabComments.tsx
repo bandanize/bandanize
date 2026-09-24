@@ -218,7 +218,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
           comments.map((comment) => {
             const isMe = String(comment.sender.id) === user?.id;
             return (
-              <div key={comment.id} className="flex gap-2 group">
+              <div key={comment.id} data-tab-comment-id={comment.id} tabIndex={-1} className="flex gap-2 group focus-visible:outline focus-visible:outline-primary rounded-md">
                 <MemberAvatar name={comment.sender.name} className="size-7" photo={String(comment.sender.id) === user?.id ? user?.photo || comment.sender.photo : currentProject?.members.find(member => member.id === String(comment.sender.id))?.photo ?? comment.sender.photo} />
                 
                 <div className="flex-1 min-w-0">

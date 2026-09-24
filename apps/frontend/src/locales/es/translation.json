@@ -207,7 +207,9 @@
     "controls": "Controles de lectura",
     "copied": "Copiado al portapapeles",
     "copy_failed": "No se pudo copiar el texto",
-    "font_size": "Tamaño de letra"
+    "font_size": "Tamaño de letra",
+    "hide_comments": "Ocultar comentarios",
+    "show_comments": "Mostrar comentarios"
   },
   "invite": {
     "title": "Invitación a un proyecto",
@@ -419,5 +421,14 @@
     "team": "Equipo",
     "agenda": "Agenda",
     "alerts": "Avisos"
+  },
+  "notification_ui": {
+    "comment": "ha comentado en la tablatura «{{tab}}»",
+    "mention": "te ha mencionado en un comentario de «{{tab}}»",
+    "open": "Abrir notificación",
+    "read": "Leída",
+    "unread": "Sin leer",
+    "failed": "No se pudo marcar como leída",
+    "unknown": "Un miembro"
   }
 }

@@ -195,13 +195,6 @@ export function ProjectHub() {
   }
 
     const handleTabChange = (value: string) => {
-        // If leaving notifications tab, mark as read
-        if (activeTab === 'notifications' && value !== 'notifications' && currentProject && unreadCount > 0) {
-            import('@/services/api').then(m => m.markNotificationsRead(currentProject.id.toString()))
-                .catch(err => console.error("Failed to mark notifications read", err));
-            setUnreadCount(0);
-        }
-        
         // If leaving chat tab, mark as read
         if (activeTab === 'chat' && value !== 'chat' && currentProject && hasUnreadChat) {
              import('@/services/api').then(m => m.markChatAsRead(currentProject.id.toString()))
@@ -215,7 +208,7 @@ export function ProjectHub() {
   return (
     <PageLayout compactHeader
       headerContent={
-        <div className="max-w-[1280px] w-full mx-auto px-4 sm:px-6">
+        <div className="max-w-[1280px] w-full mx-auto px-3 sm:px-5">
             <div className="max-w-[1216px] w-full mx-auto flex items-center gap-2 sm:gap-3">
             <Button 
                 variant="ghost" 
@@ -226,7 +219,7 @@ export function ProjectHub() {
             </Button>
             
             <div className="flex-1 flex items-center gap-2.5 min-w-0 select-none">
-                <div className="hidden sm:flex size-9 aspect-square flex-shrink-0 rounded-lg overflow-hidden items-center justify-center pointer-events-none">
+                <div className="hidden sm:flex size-9 aspect-square flex-shrink-0 rounded-xl bg-primary/[0.07] ring-1 ring-primary/15 overflow-hidden items-center justify-center pointer-events-none">
                     {currentProject.imageUrl ? (
                         <img 
                             src={getMediaUrl(currentProject.imageUrl)} 
@@ -346,7 +339,7 @@ export function ProjectHub() {
       <div className="max-w-[1280px] w-full mx-auto py-6 sm:py-8 px-4 sm:px-6">
          <div className="max-w-[1216px] w-full mx-auto">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList aria-label={t('app_nav.sections')} className="grid grid-cols-6 md:flex bg-card/60 border border-border/70 rounded-xl p-1 h-14 md:h-12 w-full md:w-fit max-w-full mx-auto gap-0.5">
+          <TabsList aria-label={t('app_nav.sections')} className="grid grid-cols-6 lg:flex bg-card/60 border border-border/70 rounded-xl p-1 h-14 lg:h-12 w-full lg:w-fit max-w-full mx-auto gap-1">
             {[
               { value: 'overview', icon: LayoutDashboard, label: t('workspace.overview'), short: t('workspace.overview') },
               { value: 'songs', icon: Music, label: t('songs'), short: t('songs') },
@@ -355,10 +348,10 @@ export function ProjectHub() {
               { value: 'calendar', icon: Calendar, label: t('calendar'), short: t('app_nav.agenda') },
               { value: 'notifications', icon: Bell, label: t('notifications'), short: t('app_nav.alerts') },
             ].map(({ value, icon: Icon, label, short }) => <TabsTrigger key={value} value={value} aria-label={label} title={label}
-              className="relative min-w-0 h-full px-0.5 md:px-3 flex flex-col md:flex-row gap-1 md:gap-2 rounded-lg border-0 text-muted-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none font-normal">
+              className="relative min-w-0 lg:flex-none h-full px-0.5 lg:px-4 flex flex-col lg:flex-row gap-1 lg:gap-2 rounded-lg border-0 text-muted-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none font-normal">
               <Icon className="size-4 shrink-0" />
-              <span className="md:hidden max-w-full truncate text-[9px] leading-3">{short}</span>
-              <span className="hidden md:inline text-xs">{label}</span>
+              <span className="lg:hidden max-w-full truncate text-[9px] leading-3">{short}</span>
+              <span className="hidden lg:inline text-xs">{label}</span>
               {value === 'chat' && hasUnreadChat && <span className="absolute top-1 right-1 size-1.5 bg-primary rounded-full" />}
               {value === 'notifications' && unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>}
             </TabsTrigger>)}
@@ -391,7 +384,7 @@ export function ProjectHub() {
 
             <TabsContent value="notifications" className="m-0">
                 {currentProject && (
-                    <NotificationFeed 
+                    <NotificationFeed onRead={fetchUnreadCount}
                         projectId={currentProject.id.toString()} 
                     />
                 )}

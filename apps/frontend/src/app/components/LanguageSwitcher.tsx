@@ -9,7 +9,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
 
   return (
     <Select value={language} onValueChange={value => { void i18n.changeLanguage(value); }}>
-      <SelectTrigger aria-label="Idioma / Language" className={compact ? "h-10 w-auto min-w-0 gap-1.5 rounded-xl border-transparent bg-transparent px-2 text-xs hover:bg-accent sm:gap-2" : "w-auto min-w-[142px] gap-2 rounded-lg bg-card text-sm"}>
+      <SelectTrigger aria-label="Idioma / Language" className={compact ? "h-10 w-auto min-w-0 gap-1.5 rounded-xl border-border/60 bg-background/30 px-2 text-xs hover:bg-accent sm:gap-2" : "w-auto min-w-[142px] gap-2 rounded-lg bg-card text-sm"}>
         <Languages className={compact ? "hidden sm:block size-4 text-muted-foreground" : "size-4"} aria-hidden="true" />
         {compact ? <><span className="sm:hidden">{language.toUpperCase()}</span><span className="hidden sm:inline"><SelectValue /></span></> : <SelectValue />}
       </SelectTrigger>

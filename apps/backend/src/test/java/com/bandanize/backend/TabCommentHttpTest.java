@@ -93,4 +93,27 @@ class TabCommentHttpTest {
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
     }
 
+
+    @Test void newCommentNotificationCanBeReadIndividuallyAndOpenedAgain() {
+        for (String message : List.of("General", "@Alex revisar")) {
+            client.post().uri("/api/tabs/" + tabId + "/comments").bodyValue(Map.of("message", message)).exchange().expectStatus().isOk();
+        }
+        WebTestClient recipientClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port)
+            .defaultHeader("Authorization", "Bearer " + jwt.generateToken(recipientUsername)).build();
+        var notices = recipientClient.get().uri("/api/projects/" + projectId + "/notifications").exchange().expectStatus().isOk()
+            .expectBodyList(com.bandanize.backend.dtos.NotificationDTO.class).returnResult().getResponseBody();
+        org.junit.jupiter.api.Assertions.assertEquals(2, notices.size());
+        org.junit.jupiter.api.Assertions.assertEquals("TAB_COMMENT_MENTION", notices.get(0).getType());
+        org.junit.jupiter.api.Assertions.assertEquals("TAB_COMMENT_ADDED", notices.get(1).getType());
+        org.junit.jupiter.api.Assertions.assertEquals(String.valueOf(tabId), notices.get(0).getMetadata().get("tabId"));
+        for (int attempt=0; attempt<2; attempt++) {
+            recipientClient.post().uri("/api/projects/" + projectId + "/notifications/" + notices.get(0).getId() + "/read")
+                .exchange().expectStatus().isOk();
+        }
+        recipientClient.get().uri("/api/projects/" + projectId + "/notifications/unread-count")
+            .exchange().expectStatus().isOk().expectBody(Long.class).isEqualTo(1L);
+        recipientClient.get().uri("/api/projects/" + projectId + "/notifications").exchange().expectStatus().isOk().expectBody()
+            .jsonPath("$[0].isRead").isEqualTo(true).jsonPath("$[1].isRead").isEqualTo(false);
+    }
+
 }

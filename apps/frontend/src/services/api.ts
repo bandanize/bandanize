@@ -145,6 +145,10 @@ export const getUnreadNotificationCount = async (projectId: string) => {
 };
 
 
+export const markNotificationRead = async (projectId: string, notificationId: number) => {
+    await api.post(`/projects/${projectId}/notifications/${notificationId}/read`);
+};
+
 export const markNotificationsRead = async (projectId: string) => {
     const response = await api.post(`/projects/${projectId}/notifications/mark-read`);
     return response.data;

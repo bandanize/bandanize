@@ -68,6 +68,7 @@ assert.equal(await page.getByRole('button',{name:'Mencionar a alguien',exact:tru
 assert.equal(await page.getByRole('button',{name:'Comentario general',exact:true}).count(),0);
 await page.locator('#tab-comment-input').fill('@');
 const alex=page.getByRole('option',{name:'Alex',exact:true});await alex.click();assert.equal(await page.locator('#tab-comment-input').inputValue(),'@Alex ');
+await page.waitForFunction(() => { const input = document.querySelector('#tab-comment-input'); return document.activeElement === input && input.selectionStart === 6 && input.selectionEnd === 6; });
 await page.locator('#tab-comment-input').fill('@Alex entra aquí');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);assert.equal(comments.at(-1).message,'@Alex entra aquí');assert(comments.at(-1).quote);
 for(const width of [1440,390]){
  await page.setViewportSize({width,height:900});
@@ -120,5 +121,32 @@ console.log('VISUAL_IMAGE revised-song-header ' + headerShot.toString('base64'))
 await page.locator('[data-comment-marker] button').first().hover();
 const markerShot = await page.screenshot({path:'test-results/comment-marker.png',fullPage:true});
 console.log('VISUAL_IMAGE passage-marker ' + markerShot.toString('base64'));
+
+for (const width of [1440, 390, 320]) {
+ await page.setViewportSize({width,height:900});
+ await page.locator('#tab-comment-input').fill('Borrador conservado');
+ const padding = await page.locator('pre').evaluate(el => parseFloat(getComputedStyle(el).paddingLeft));
+ await page.getByRole('button',{name:'Ocultar comentarios',exact:true}).click();
+ await page.getByRole('button',{name:'Mostrar comentarios',exact:true}).waitFor();
+ assert.equal(await page.locator('[data-comment-marker]').count(),0);
+ assert.equal(await page.locator('#tab-comment-input').isVisible(),false);
+ assert(await page.locator('pre').evaluate(el => parseFloat(getComputedStyle(el).paddingLeft)) < padding);
+ assert.equal(await page.locator('pre').textContent(),content);
+ await page.getByRole('button',{name:'Mostrar comentarios',exact:true}).click();
+ await page.locator('[data-comment-marker] button').first().waitFor();
+ assert.equal(await page.locator('#tab-comment-input').inputValue(),'Borrador conservado');
+ await page.getByRole('button',{name:'Pantalla completa',exact:true}).click();
+ const reader = page.getByRole('dialog');
+ await reader.getByRole('button',{name:'Ocultar comentarios',exact:true}).click();
+ assert.equal(await reader.locator('[data-comment-marker]').count(),0);
+ await reader.getByRole('button',{name:'Salir de pantalla completa',exact:true}).click();
+ await page.getByRole('button',{name:'Mostrar comentarios',exact:true}).waitFor();
+ await page.reload();
+ await page.getByRole('button',{name:'Mostrar comentarios',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Mostrar comentarios',exact:true}).click();
+ await page.locator('[data-comment-marker] button').first().waitFor();
+}
+console.log('PASS hidden comments recover score width, preserve drafts, sync fullscreen and persist after reload');
+
 assert.deepEqual(errors,[]);console.log('PASS floating selection, line picker desktop/mobile/fullscreen, mentions and submitted anchors');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
