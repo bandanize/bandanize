@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import path from 'path'
+import { readdirSync, readFileSync } from 'node:fs'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -7,9 +8,21 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
+    {
+      name: 'pdf-viewer-assets',
+      generateBundle() {
+        for (const folder of ['cmaps', 'standard_fonts', 'wasm']) {
+          const source = path.resolve(__dirname, '../../node_modules/pdfjs-dist', folder);
+          for (const entry of readdirSync(source, { withFileTypes: true })) {
+            if (entry.isFile()) this.emitFile({ type: 'asset', fileName: 'pdf-assets/' + folder + '/' + entry.name, source: readFileSync(path.join(source, entry.name)) });
+          }
+        }
+      },
+    },
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: { globIgnores: ['**/pdf-assets/**', '**/pdf.worker*'] },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'favicon.svg'],
       manifest: {
         name: 'Bandanize',
