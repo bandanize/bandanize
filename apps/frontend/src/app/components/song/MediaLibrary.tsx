@@ -32,7 +32,7 @@ export function MediaLibrary({ songId, activityScope, files, title, onUpload, on
     {(files.length > 3 || filter !== 'all') && <div className="flex gap-1 overflow-x-auto px-3 py-2 border-b border-border" aria-label={t('workspace.filter_files')}>
       {['all','audio','video','image','document'].map(value => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`shrink-0 text-xs px-2 py-1.5 rounded-md ${filter === value ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-accent'}`}>{t('workspace.'+value)}</button>)}
     </div>}
-    <div data-media-items className="max-h-[380px] overflow-y-auto divide-y divide-border">
+    <div data-media-items className={`${active ? 'max-h-[70dvh]' : 'max-h-[380px]'} overflow-y-auto divide-y divide-border`}>
       {!visible.length && <p className="px-4 py-5 text-xs text-muted-foreground">{t(files.length ? 'workspace.no_matching_files' : 'workspace.no_files')}</p>}
       {visible.map(file => {
         const type = kind(file); const playable = type === 'audio' || type === 'video';

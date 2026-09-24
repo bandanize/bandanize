@@ -99,6 +99,10 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   console.log('VIEWER_LAYOUT '+JSON.stringify(await page.evaluate(()=>({inner:innerWidth,visual:visualViewport.width,dialog:getComputedStyle(document.querySelector('[role="dialog"]')).width,section:getComputedStyle(document.querySelector('[data-pdf-viewer]')).width,classes:document.querySelector('[role="dialog"]').className}))));
   const bounds=await pdfViewer.boundingBox();assert(bounds.x>=0 && bounds.x+bounds.width<=321,JSON.stringify(bounds));
   await page.keyboard.press('Escape');
+  await video.getByRole('button',{name:'Pantalla completa',exact:true}).scrollIntoViewIfNeeded();
+  const visibleControls = await video.getByRole('button',{name:'Pantalla completa',exact:true}).boundingBox();
+  const library = await page.locator('[data-media-items]').boundingBox();
+  assert(visibleControls.y >= library.y && visibleControls.y + visibleControls.height <= library.y + library.height + 1);
   await capture('video-mobile');
   await page.getByRole('button',{name:/^Broken.pdf/}).click();
   await page.getByRole('alert').filter({hasText:'No se pudo mostrar este PDF'}).waitFor();
