@@ -20,12 +20,12 @@ const band = {
   chatMessages: [{ id: 51, sender: owner, message: '@Alex #[First song](song:21:11) @Alex', timestamp: '2026-09-23T10:00:00Z' }]
 };
 await mkdir('test-results', { recursive: true });
-async function setup(browser, mobile = false, auth = true, optional = false, timezoneId = 'Europe/Madrid') {
+async function setup(browser, mobile = false, auth = true, optional = false, timezoneId = 'Europe/Madrid', welcomeSeen = true) {
   const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, hasTouch: mobile, isMobile: mobile, timezoneId, serviceWorkers: 'block' });
   await context.addCookies([{ name: 'i18next', value: 'en', url: origin }]);
-  await context.addInitScript(({ owner, auth, optional }) => {
+  await context.addInitScript(({ owner, auth, optional, welcomeSeen }) => {
     localStorage.setItem('i18nextLng', 'en');
-    localStorage.setItem('welcome_seen_1', 'true');
+    if (welcomeSeen) localStorage.setItem('welcome_seen_1', 'true');
     if (auth) {
       localStorage.setItem('token', 'fixture');
       localStorage.setItem('currentUser', JSON.stringify({ ...owner, photo: undefined }));
@@ -38,7 +38,7 @@ async function setup(browser, mobile = false, auth = true, optional = false, tim
         set: values => window.consentCalls.push(values)
       } };
     }
-  }, { owner, auth, optional });
+  }, { owner, auth, optional, welcomeSeen });
   const page = await context.newPage();
   page.setDefaultTimeout(12000);
   const errors = [];
@@ -424,7 +424,7 @@ try {
   }
 
 
-  const usability=await setup(browser);
+  const usability=await setup(browser,false,true,false,'Europe/Madrid',false);
   try {
     const {page,controls,requests,errors}=usability;
     controls.events=[{id:71,name:'Next rehearsal',date:'2027-07-20T20:00:00',startsAt:'2027-07-20T18:00:00Z',timeZone:'Europe/Madrid',type:'ENSAYO',location:'Studio A'}];

@@ -303,7 +303,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                 <div className="inline-flex items-center gap-1 rounded-xl bg-background/60 border border-border p-1">
                   <Button variant="ghost" size="icon" className="size-9 rounded-lg" aria-label={t('calendar_ui.previous')} onClick={() => {setCurrentMonth(subMonths(currentMonth,1));setHighlightedDay(null);}}><ChevronLeft className="size-4" /></Button>
-                  <span aria-live="polite" className="min-w-32 text-center text-sm font-medium capitalize">{format(currentMonth,'MMMM yyyy',{locale})}</span>
+                  <span aria-live="polite" className="w-24 sm:w-36 text-center text-xs sm:text-sm font-medium capitalize truncate">{format(currentMonth,'MMMM yyyy',{locale})}</span>
                   <Button variant="ghost" size="icon" className="size-9 rounded-lg" aria-label={t('calendar_ui.next')} onClick={() => {setCurrentMonth(addMonths(currentMonth,1));setHighlightedDay(null);}}><ChevronRight className="size-4" /></Button>
                   <Button variant="ghost" size="sm" className="h-9 rounded-lg text-xs" onClick={() => {setCurrentMonth(new Date());setHighlightedDay(new Date());}}>{t('today')}</Button>
                 </div>
@@ -334,7 +334,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     return <button key={key} type="button" data-calendar-day={key} aria-pressed={selected}
                       aria-label={format(day,'EEEE, d MMMM yyyy',{locale})+' · '+t('calendar_ui.event_count',{count:items.length})}
                       onClick={()=>setHighlightedDay(day)}
-                      className={`relative min-w-0 min-h-14 sm:min-h-24 p-1.5 sm:p-2 rounded-xl text-left border transition-colors focus-visible:outline focus-visible:outline-primary ${selected?'border-primary bg-primary/10':'border-transparent hover:bg-accent/50'} ${!isSameMonth(day,currentMonth)?'opacity-40':''}`}>
+                      className={`relative min-w-0 min-h-14 sm:min-h-20 p-1.5 sm:p-2 rounded-xl text-left border transition-colors focus-visible:outline focus-visible:outline-primary ${selected?'border-primary bg-primary/10':'border-transparent hover:bg-accent/50'} ${!isSameMonth(day,currentMonth)?'opacity-40':''}`}>
                       <span className={`inline-flex size-6 items-center justify-center rounded-full text-xs ${isToday(day)?'bg-primary text-primary-foreground font-semibold':'text-foreground'}`}>{format(day,'d')}</span>
                       <span className="hidden sm:flex flex-col gap-1 mt-1">{items.slice(0,2).map(event=><span key={event.id} className={`block rounded px-1 text-[10px] truncate ${(EVENT_COLORS[event.type]||EVENT_COLORS.OTRO).bg} ${(EVENT_COLORS[event.type]||EVENT_COLORS.OTRO).text}`}>{format(parseISO(eventDateValue(event)),'HH:mm')} {event.name}</span>)}</span>
                       <span className="flex sm:hidden gap-1 mt-1">{items.slice(0,3).map(event=><span key={event.id} className={`size-1 rounded-full ${(EVENT_COLORS[event.type]||EVENT_COLORS.OTRO).dot}`} />)}</span>
