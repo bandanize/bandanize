@@ -186,4 +186,15 @@ class EventServiceTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> eventService.deleteEvent(99L));
     }
+
+    @Test void rejectsInvalidZonesAndNonexistentDstTimes() {
+        when(bandRepository.findById(10L)).thenReturn(Optional.of(band));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        EventModel invalid = new EventModel(); invalid.setDate(LocalDateTime.of(2026,3,29,2,30)); invalid.setTimeZone("Europe/Madrid");
+        assertThrows(IllegalArgumentException.class,()->eventService.createEvent(10L,1L,invalid));
+        invalid.setTimeZone("Not/AZone");
+        assertThrows(IllegalArgumentException.class,()->eventService.createEvent(10L,1L,invalid));
+        verify(eventRepository,never()).save(any());
+    }
+
 }

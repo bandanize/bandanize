@@ -31,6 +31,8 @@ export interface Notification {
 export type EventType = 'CONCIERTO' | 'ENSAYO' | 'OTRO';
 
 export interface CalendarEvent {
+    timeZone?: string;
+    startsAt?: string;
     id: number;
     name: string;
     description: string;

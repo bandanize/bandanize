@@ -20,8 +20,8 @@ const band = {
   chatMessages: [{ id: 51, sender: owner, message: '@Alex #[First song](song:21:11) @Alex', timestamp: '2026-09-23T10:00:00Z' }]
 };
 await mkdir('test-results', { recursive: true });
-async function setup(browser, mobile = false, auth = true, optional = false) {
-  const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, hasTouch: mobile, isMobile: mobile, serviceWorkers: 'block' });
+async function setup(browser, mobile = false, auth = true, optional = false, timezoneId = 'Europe/Madrid') {
+  const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, hasTouch: mobile, isMobile: mobile, timezoneId, serviceWorkers: 'block' });
   await context.addCookies([{ name: 'i18next', value: 'en', url: origin }]);
   await context.addInitScript(({ owner, auth, optional }) => {
     localStorage.setItem('i18nextLng', 'en');
@@ -45,10 +45,17 @@ async function setup(browser, mobile = false, auth = true, optional = false) {
   page.on('pageerror', error => errors.push(error.message));
   const requests = [];
   const fixture = structuredClone(band);
-  const controls = { failNextTransfer: false, extraProjects: [], notifications: [] };
+  const controls = { failNextTransfer: false, extraProjects: [], notifications: [], events: [] };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     requests.push({ path, url: request.url(), method: request.method(), data: request.postData() });
+    if (path.endsWith('/calendar/fixture-calendar-token.ics')) {
+      await route.fulfill({status:200,contentType:'text/calendar',body:'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n'}); return;
+    }
+    if (path === '/api/bands/1/events') {
+      if (request.method() === 'POST') controls.events.push({id:90,...JSON.parse(request.postData())});
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(request.method()==='POST'?controls.events.at(-1):controls.events)}); return;
+    }
     if (path.startsWith('/api/uploads/images/')) {
       await route.fulfill({ status: path.endsWith('missing.svg') ? 404 : 200, contentType: 'image/svg+xml',
         body: path.endsWith('missing.svg') ? 'not found' : '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#FF96A5"/><circle cx="40" cy="30" r="14" fill="#243020"/><path d="M12 80a28 28 0 0 1 56 0" fill="#243020"/></svg>' });
@@ -375,6 +382,38 @@ try {
     assert.deepEqual(errors,[]);
     console.log('PASS tab comment notifications link to score, mark only opened item and remain clickable when read');
   } finally {await activity.context.close();}
+
+
+  for (const [zone, expected] of [['Europe/Madrid','20:00'],['America/New_York','14:00']]) {
+    const calendar = await setup(browser,false,true,false,zone);
+    try {
+      const {page,controls,requests,errors} = calendar;
+      controls.events = [{id:71,name:'Timezone rehearsal',date:'2027-07-20T20:00:00',startsAt:'2027-07-20T18:00:00Z',timeZone:'Europe/Madrid',type:'ENSAYO',location:'Studio'}];
+      await page.goto(origin+'/project/1?tab=calendar'); await dismiss(page);
+      await page.getByText('Timezone rehearsal',{exact:true}).waitFor();
+      await page.getByText('· '+expected,{exact:true}).waitFor();
+      await page.getByText('Times shown in your zone: '+zone,{exact:true}).waitFor();
+      await page.getByRole('button',{name:'Google Calendar',exact:true}).click();
+      const info = page.getByRole('dialog');
+      await info.getByRole('link',{name:'Open Google Calendar',exact:true}).waitFor();
+      assert.equal(await info.getByRole('link',{name:'Open Google Calendar',exact:true}).getAttribute('href'),'https://calendar.google.com/calendar/u/0/r');
+      assert.match(await info.getByRole('link',{name:'Add for the first time',exact:true}).getAttribute('href'),/fixture-calendar-token/);
+      await info.getByText(/Adding it again does not refresh/).waitFor();
+      await page.keyboard.press('Escape');
+      await page.getByRole('button',{name:'Create event',exact:true}).first().click();
+      const form = page.getByRole('dialog');
+      assert.equal(await form.getByLabel('Event time zone',{exact:true}).inputValue(),zone);
+      await form.getByPlaceholder('Event name',{exact:true}).fill('Local rehearsal');
+      await form.locator('input[type=date]').fill('2027-07-21');
+      await form.locator('input[type=time]').fill('19:30');
+      await form.getByRole('button',{name:'Create event',exact:true}).click();
+      await form.waitFor({state:'detached'});
+      const created=JSON.parse(requests.filter(r=>r.path==='/api/bands/1/events'&&r.method==='POST').at(-1).data);
+      assert.equal(created.date,'2027-07-21T19:30:00'); assert.equal(created.timeZone,zone);
+      assert.deepEqual(errors,[]);
+      console.log('PASS calendar displays viewer timezone and submits explicit event timezone: '+zone);
+    } finally {await calendar.context.close();}
+  }
 
   const invite = await setup(browser, false, false);
   try {

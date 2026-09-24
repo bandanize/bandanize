@@ -19,6 +19,10 @@ public class EventModel {
     @Column(nullable = false)
     private LocalDateTime date;
 
+    private String timeZone;
+    private java.time.Instant updatedAt;
+    private Integer sequence;
+
     @Column(name = "event_type", nullable = false, columnDefinition = "varchar(255) default 'OTRO'")
     private String type = "OTRO"; // CONCIERTO, ENSAYO, OTRO
 
@@ -37,6 +41,18 @@ public class EventModel {
     public EventModel() {
         this.createdAt = LocalDateTime.now();
     }
+
+    @PrePersist
+    void initializeCalendarRevision() { updatedAt = java.time.Instant.now(); sequence = 0; }
+
+    @PreUpdate
+    void updateCalendarRevision() { updatedAt = java.time.Instant.now(); sequence = getSequence() + 1; }
+
+    public String getTimeZone() { return timeZone; }
+    public void setTimeZone(String timeZone) { this.timeZone = timeZone; }
+    public String effectiveTimeZone() { return timeZone == null || timeZone.isBlank() ? "Europe/Madrid" : timeZone; }
+    public java.time.Instant getUpdatedAt() { return updatedAt; }
+    public int getSequence() { return sequence == null ? 0 : sequence; }
 
     // Getters and Setters
     public Long getId() {

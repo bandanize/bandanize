@@ -66,6 +66,8 @@ const EVENT_COLORS: Record<EventType, { bg: string; border: string; text: string
     },
 };
 
+const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid';
+const eventDateValue = (event: CalendarEvent) => event.startsAt || event.date;
 const DAY_NAMES_ES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const DAY_NAMES_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_NAMES_ES_SHORT = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -86,6 +88,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         description: '',
         date: '',
         time: '12:00',
+        timeZone: localTimeZone,
         type: 'OTRO' as EventType,
         location: '',
     });
@@ -139,7 +142,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     const eventsByDay = useMemo(() => {
         const map: Record<string, CalendarEvent[]> = {};
         events.forEach(event => {
-            const dayKey = format(parseISO(event.date), 'yyyy-MM-dd');
+            const dayKey = format(parseISO(eventDateValue(event)), 'yyyy-MM-dd');
             if (!map[dayKey]) map[dayKey] = [];
             map[dayKey].push(event);
         });
@@ -149,13 +152,13 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     const upcomingEvents = useMemo(() => {
         const now = new Date();
         return events
-            .filter(e => isAfter(parseISO(e.date), now) || isSameDay(parseISO(e.date), now))
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .filter(e => isAfter(parseISO(eventDateValue(e)), now) || isSameDay(parseISO(eventDateValue(e)), now))
+            .sort((a, b) => new Date(eventDateValue(a)).getTime() - new Date(eventDateValue(b)).getTime())
             .slice(0, 5);
     }, [events]);
 
     const navigateToEvent = (event: CalendarEvent) => {
-        const eventDate = parseISO(event.date);
+        const eventDate = parseISO(eventDateValue(event));
         setCurrentMonth(startOfMonth(eventDate));
         setHighlightedDay(eventDate);
     };
@@ -167,6 +170,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             description: '',
             date: day ? format(day, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
             time: '12:00',
+        timeZone: localTimeZone,
             type: 'OTRO',
             location: '',
         });
@@ -175,12 +179,12 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
 
     const openEditDialog = (event: CalendarEvent) => {
         setEditingEvent(event);
-        const eventDate = parseISO(event.date);
         setFormData({
             name: event.name,
             description: event.description || '',
-            date: format(eventDate, 'yyyy-MM-dd'),
-            time: format(eventDate, 'HH:mm'),
+            date: event.date.slice(0, 10),
+            time: event.date.slice(11, 16),
+            timeZone: event.timeZone || 'Europe/Madrid',
             type: event.type,
             location: event.location || '',
         });
@@ -189,6 +193,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
 
     const handleSubmit = async () => {
         if (!formData.name.trim()) return;
+        if (!formData.date || !formData.time) return;
+        try { new Intl.DateTimeFormat('en', { timeZone: formData.timeZone }); } catch { toast.error(t('calendar_link.invalid_zone')); return; }
         const dateTime = `${formData.date}T${formData.time}:00`;
 
         try {
@@ -197,6 +203,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     name: formData.name,
                     description: formData.description,
                     date: dateTime,
+                    timeZone: formData.timeZone,
                     type: formData.type,
                     location: formData.location,
                 });
@@ -206,6 +213,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     name: formData.name,
                     description: formData.description,
                     date: dateTime,
+                    timeZone: formData.timeZone,
                     type: formData.type,
                     location: formData.location,
                 });
@@ -215,7 +223,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             fetchEvents();
         } catch (error) {
             console.error('Error saving event:', error);
-            toast.error(editingEvent ? t('event_update_error', 'Error') : t('event_create_error', 'Error'));
+            toast.error(t('calendar_link.save_error'));
         }
     };
 
@@ -231,35 +239,18 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         }
     };
 
-    // iCal static export
-    const exportToICal = () => {
-        const lines = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'PRODID:-//Bandanize//Calendar//EN',
-            'CALSCALE:GREGORIAN',
-        ];
-
-        events.forEach(event => {
-            const dtStart = format(parseISO(event.date), "yyyyMMdd'T'HHmmss");
-            lines.push('BEGIN:VEVENT');
-            lines.push(`DTSTART:${dtStart}`);
-            lines.push(`SUMMARY:${event.name}`);
-            if (event.description) lines.push(`DESCRIPTION:${event.description}`);
-            if (event.location) lines.push(`LOCATION:${event.location}`);
-            lines.push(`CATEGORIES:${event.type}`);
-            lines.push(`UID:${event.id}@bandanize`);
-            lines.push('END:VEVENT');
-        });
-
-        lines.push('END:VCALENDAR');
-        const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `calendar-${projectId}.ics`;
-        a.click();
-        URL.revokeObjectURL(url);
+    // Download the exact same correctly zoned feed used by subscribers.
+    const exportToICal = async () => {
+        if (!subscriptionUrl) return;
+        try {
+            const response = await fetch(subscriptionUrl, { cache: 'no-store' });
+            if (!response.ok) throw new Error('Calendar download failed');
+            const body = await response.text();
+            if (!body.startsWith('BEGIN:VCALENDAR')) throw new Error('Invalid calendar response');
+            const url = URL.createObjectURL(new Blob([body], { type: 'text/calendar;charset=utf-8' }));
+            const link = document.createElement('a'); link.href = url; link.download = 'calendar-' + projectId + '.ics'; link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch { toast.error(t('calendar_link.download_error')); }
     };
 
     const apiBase = new URL(import.meta.env.VITE_API_URL || '/api', window.location.origin).href.replace(/\/$/, '');
@@ -289,8 +280,11 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
               <DialogContent aria-describedby={undefined}>
                 <DialogTitle>{t('calendar_link.title')}</DialogTitle>
                 <p className="text-sm text-muted-foreground">{t('calendar_link.description')}</p>
-                <Button asChild><a href={googleUrl} target="_blank" rel="noopener noreferrer">{t('calendar_link.open')}</a></Button>
+                <Button asChild><a href="https://calendar.google.com/calendar/u/0/r" target="_blank" rel="noopener noreferrer">{t('calendar_link.view')}</a></Button>
+                <p className="text-sm text-muted-foreground">{t('calendar_link.existing')}</p>
+                <Button variant="outline" asChild><a href={googleUrl} target="_blank" rel="noopener noreferrer">{t('calendar_link.open')}</a></Button>
                 <p className="text-sm text-muted-foreground">{t('calendar_link.fallback')}</p>
+                <p className="text-sm text-muted-foreground">{t('calendar_link.delay')}</p>
                 <Input readOnly value={subscriptionUrl} aria-label={t('calendar_link.url')} onFocus={event => event.target.select()} />
                 <Button variant="outline" onClick={copySubscriptionUrl}>{t('invite.copy')}</Button>
                 <a className="text-sm text-primary underline" href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl" target="_blank" rel="noopener noreferrer">{t('calendar_link.manual')}</a>
@@ -341,6 +335,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                                 size="icon"
                                 className="h-8 w-8 rounded-[8px] text-muted-foreground hover:text-foreground hover:bg-white/5"
                                 onClick={exportToICal}
+                                disabled={!subscriptionUrl}
                                 title={t('export_calendar')}
                             >
                                 <Download className="size-4" />
@@ -359,6 +354,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     </div>
                 </div>
 
+                <p className="text-xs text-muted-foreground">{t('calendar_link.display_zone', { zone: localTimeZone })}</p>
                 {/* Legend */}
                 <div className="flex items-center gap-3 sm:gap-4 mt-3 sm:mt-4">
                     {(['CONCIERTO', 'ENSAYO', 'OTRO'] as EventType[]).map(type => (
@@ -476,7 +472,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                                                         <div className="flex items-center gap-1">
                                                             <Clock className={`size-2.5 flex-shrink-0 ${colors.text}`} />
                                                             <span className={`text-[10px] leading-4 ${colors.text}`}>
-                                                                {format(parseISO(event.date), 'HH:mm')}
+                                                                {format(parseISO(eventDateValue(event)), 'HH:mm')}
                                                             </span>
                                                         </div>
                                                     </button>
@@ -537,7 +533,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     ) : (
                         upcomingEvents.map(event => {
                             const colors = EVENT_COLORS[event.type] || EVENT_COLORS.OTRO;
-                            const eventDate = parseISO(event.date);
+                            const eventDate = parseISO(eventDateValue(event));
 
                             return (
                                 <div
@@ -659,6 +655,16 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                                     className="bg-background border-border text-foreground h-9 sm:h-10"
                                 />
                             </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="event-time-zone">{t('calendar_link.zone')}</Label>
+                            <Input id="event-time-zone" list="event-time-zones" value={formData.timeZone}
+                                onChange={event => setFormData(previous => ({ ...previous, timeZone: event.target.value }))}
+                                className="bg-background border-border" />
+                            <datalist id="event-time-zones">
+                                {Array.from(new Set([localTimeZone, 'Europe/Madrid', 'Atlantic/Canary', 'Europe/London', 'America/New_York', 'America/Mexico_City', 'America/Argentina/Buenos_Aires', 'Asia/Tokyo', 'Australia/Sydney', 'UTC'])).map(zone => <option key={zone} value={zone} />)}
+                            </datalist>
+                            <p className="text-xs text-muted-foreground">{t('calendar_link.zone_help')}</p>
                         </div>
                         <div className="space-y-1.5">
                             <Label className="text-foreground text-[13px] sm:text-[14px]">{t('event_type')}</Label>
