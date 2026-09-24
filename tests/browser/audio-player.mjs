@@ -125,7 +125,11 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   assert(await page.locator('[data-global-audio]').evaluate(a=>a.src.endsWith('/bass.wav')));
   // Seek with the actual range control.
   await panel.getByRole('slider',{name:'Posición del audio'}).focus();
-  await page.keyboard.press('End');
+  await panel.getByRole('slider',{name:'Posición del audio'}).evaluate(input => {
+   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input, String(Number(input.max)-0.5));
+   input.dispatchEvent(new Event('input',{bubbles:true}));
+   input.dispatchEvent(new Event('change',{bubbles:true}));
+  });
   await page.waitForFunction(()=>document.querySelector('[data-global-audio]').ended);
   await page.locator('.floating-audio-player[data-playback="ended"]').waitFor();
   assert.equal(await panel.locator('[data-mascot="waiting"]').count(),1);
