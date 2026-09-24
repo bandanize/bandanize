@@ -439,5 +439,72 @@
     "unread": "Sin leer",
     "failed": "No se pudo marcar como leída",
     "unknown": "Un miembro"
+  },
+  "guide_ui": {
+    "menu": "Guía de Bandanize",
+    "title": "Tu guía de Bandanize",
+    "welcome": "Tu música, en buena compañía",
+    "eyebrow": "Guía rápida",
+    "description": "Del primer proyecto al próximo ensayo, todo en el mismo sitio.",
+    "topics": "Secciones de la guía",
+    "step": "Paso {{current}} de {{total}}",
+    "reopen": "Puedes volver aquí cuando quieras desde tu cuenta → Guía de Bandanize.",
+    "later": "Ahora no",
+    "back": "Anterior",
+    "next": "Siguiente",
+    "start": "Empezar",
+    "done": "Cerrar guía",
+    "intro": {
+      "title": "Un espacio para hacer música",
+      "body": "Reúne tus canciones, ideas y personas sin perderte entre mensajes y archivos.",
+      "tip1": "Funciona tanto para proyectos en solitario como para bandas.",
+      "tip2": "Empieza con un proyecto y añade lo que necesites a tu ritmo."
+    },
+    "project": {
+      "title": "Crea tu proyecto e invita",
+      "body": "Desde “Tus proyectos”, crea un proyecto musical con su nombre e imagen. Será el punto de encuentro del grupo.",
+      "tip1": "Invita a tus compañeros desde Miembros, también mediante un enlace.",
+      "tip2": "Si tienes varios proyectos, cambia entre ellos desde el nombre de la cabecera."
+    },
+    "songs": {
+      "title": "Dale orden al repertorio",
+      "body": "Crea listas para un directo, un disco o tus próximas ideas. Dentro de cada lista, añade las canciones.",
+      "tip1": "Guarda el BPM, la tonalidad y los archivos de cada canción.",
+      "tip2": "Arrastra para ordenar; entre listas puedes elegir mover o duplicar."
+    },
+    "tabs": {
+      "title": "Trabaja cada parte de la canción",
+      "body": "Añade tablaturas por instrumento y deja comentarios sobre un fragmento concreto.",
+      "tip1": "Menciona a tus compañeros para pedirles que revisen una parte.",
+      "tip2": "Usa pantalla completa, ajusta la letra u oculta comentarios para leer con comodidad."
+    },
+    "team": {
+      "title": "Preparad el próximo ensayo",
+      "body": "Usa el chat para hablar, las notificaciones para seguir novedades y el calendario para ensayos y conciertos.",
+      "tip1": "Cada persona ve los eventos en su hora local.",
+      "tip2": "Puedes añadir el calendario a Google; sus actualizaciones no son inmediatas."
+    }
+  },
+  "calendar_ui": {
+    "subtitle": "Ensayos, conciertos y próximos planes.",
+    "previous": "Mes anterior",
+    "next": "Mes siguiente",
+    "options": "Opciones del calendario",
+    "copy_link": "Copiar enlace de suscripción",
+    "load_error": "No se pudieron cargar los eventos.",
+    "retry": "Reintentar",
+    "month_view": "Vista mensual",
+    "agenda": "Agenda",
+    "event_count_one": "{{count}} evento",
+    "event_count_other": "{{count}} eventos",
+    "upcoming": "Próximos",
+    "empty_day": "Este día está libre",
+    "empty_help": "Encuentra un hueco para vuestro próximo plan.",
+    "plan": "Planificar un evento",
+    "time": "Hora",
+    "google_intro": "Tus ensayos y conciertos, también en Google Calendar.",
+    "google_timing": "Google recoge los eventos nuevos, los cambios y los borrados cuando vuelve a consultar este calendario. La actualización no es inmediata.",
+    "google_add": "Añadir a Google Calendar",
+    "google_once": "Solo tienes que añadirlo una vez. Volver a pulsar no fuerza una actualización."
   }
 }

@@ -20,12 +20,12 @@ const band = {
   chatMessages: [{ id: 51, sender: owner, message: '@Alex #[First song](song:21:11) @Alex', timestamp: '2026-09-23T10:00:00Z' }]
 };
 await mkdir('test-results', { recursive: true });
-async function setup(browser, mobile = false, auth = true, optional = false, timezoneId = 'Europe/Madrid') {
+async function setup(browser, mobile = false, auth = true, optional = false, timezoneId = 'Europe/Madrid', welcomeSeen = true) {
   const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, hasTouch: mobile, isMobile: mobile, timezoneId, serviceWorkers: 'block' });
   await context.addCookies([{ name: 'i18next', value: 'en', url: origin }]);
-  await context.addInitScript(({ owner, auth, optional }) => {
+  await context.addInitScript(({ owner, auth, optional, welcomeSeen }) => {
     localStorage.setItem('i18nextLng', 'en');
-    localStorage.setItem('welcome_seen_1', 'true');
+    if (welcomeSeen) localStorage.setItem('welcome_seen_1', 'true');
     if (auth) {
       localStorage.setItem('token', 'fixture');
       localStorage.setItem('currentUser', JSON.stringify({ ...owner, photo: undefined }));
@@ -38,7 +38,7 @@ async function setup(browser, mobile = false, auth = true, optional = false, tim
         set: values => window.consentCalls.push(values)
       } };
     }
-  }, { owner, auth, optional });
+  }, { owner, auth, optional, welcomeSeen });
   const page = await context.newPage();
   page.setDefaultTimeout(12000);
   const errors = [];
@@ -55,6 +55,12 @@ async function setup(browser, mobile = false, auth = true, optional = false, tim
     if (path === '/api/bands/1/events') {
       if (request.method() === 'POST') controls.events.push({id:90,...JSON.parse(request.postData())});
       await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(request.method()==='POST'?controls.events.at(-1):controls.events)}); return;
+    }
+    if (/^\/api\/events\/\d+$/.test(path)) {
+      const id=Number(path.split('/').at(-1)), item=controls.events.find(event=>event.id===id);
+      if(request.method()==='DELETE') controls.events=controls.events.filter(event=>event.id!==id);
+      if(request.method()==='PUT'&&item) Object.assign(item,JSON.parse(request.postData()));
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(item||{})}); return;
     }
     if (path.startsWith('/api/uploads/images/')) {
       await route.fulfill({ status: path.endsWith('missing.svg') ? 404 : 200, contentType: 'image/svg+xml',
@@ -100,7 +106,7 @@ async function dismiss(page) {
 }
 async function capture(page, name) {
   const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true, animations: 'disabled' });
-  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone'].includes(name))
+  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone', 'calendar-refresh', 'calendar-mobile', 'guide-desktop', 'guide-mobile'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
 const browser = await chromium.launch();
@@ -391,14 +397,14 @@ try {
       controls.events = [{id:71,name:'Timezone rehearsal',date:'2027-07-20T20:00:00',startsAt:'2027-07-20T18:00:00Z',timeZone:'Europe/Madrid',type:'ENSAYO',location:'Studio'}];
       await page.goto(origin+'/project/1?tab=calendar'); await dismiss(page);
       await page.getByText('Timezone rehearsal',{exact:true}).waitFor();
-      await page.getByText('· '+expected,{exact:true}).waitFor();
+      await page.locator('[data-calendar-event="71"]').filter({hasText:expected}).waitFor();
       await page.getByText('Times shown in your zone: '+zone,{exact:true}).waitFor();
       await page.getByRole('button',{name:'Google Calendar',exact:true}).click();
       const info = page.getByRole('dialog');
-      await info.getByRole('link',{name:'Open Google Calendar',exact:true}).waitFor();
-      assert.equal(await info.getByRole('link',{name:'Open Google Calendar',exact:true}).getAttribute('href'),'https://calendar.google.com/calendar/u/0/r');
-      assert.match(await info.getByRole('link',{name:'Add for the first time',exact:true}).getAttribute('href'),/fixture-calendar-token/);
-      await info.getByText(/Adding it again does not refresh/).waitFor();
+      await info.getByRole('link',{name:'Add to Google Calendar',exact:true}).waitFor();
+      assert.equal(await info.getByRole('link').count(),1,'One clear Google Calendar action');
+      assert.match(await info.getByRole('link',{name:'Add to Google Calendar',exact:true}).getAttribute('href'),/fixture-calendar-token/);
+      await info.getByText(/Clicking again does not force a refresh/).waitFor();
       await page.setViewportSize({width:390,height:844});
       if(zone==='Europe/Madrid') await capture(page,'calendar-timezone');
       await page.keyboard.press('Escape');
@@ -416,6 +422,76 @@ try {
       console.log('PASS calendar displays viewer timezone and submits explicit event timezone: '+zone);
     } finally {await calendar.context.close();}
   }
+
+
+  const usability=await setup(browser,false,true,false,'Europe/Madrid',false);
+  try {
+    const {page,controls,requests,errors}=usability;
+    controls.events=[{id:71,name:'Next rehearsal',date:'2027-07-20T20:00:00',startsAt:'2027-07-20T18:00:00Z',timeZone:'Europe/Madrid',type:'ENSAYO',location:'Studio A'}];
+    await page.goto(origin+'/project/1?tab=calendar'); await dismiss(page);
+    await page.locator('[data-calendar-event="71"]').waitFor();
+    await capture(page,'calendar-refresh');
+    const initial=await page.locator('[data-calendar-day]').first().getAttribute('data-calendar-day');
+    await page.getByRole('button',{name:'Next month',exact:true}).click();
+    await page.waitForFunction(previous=>document.querySelector('[data-calendar-day]')?.getAttribute('data-calendar-day')!==previous,initial);
+    await page.getByRole('button',{name:'Previous month',exact:true}).click();
+    await page.waitForFunction(previous=>document.querySelector('[data-calendar-day]')?.getAttribute('data-calendar-day')===previous,initial);
+    await page.locator('[data-calendar-day]').first().click();
+    assert.equal(await page.getByRole('dialog').count(),0,'Selecting a day shows its agenda rather than creating an event');
+    await page.getByText('This day is free',{exact:true}).waitFor();
+    await page.getByRole('button',{name:'Upcoming',exact:true}).click();
+    await page.locator('[data-calendar-event="71"]').click();
+    const editor=page.getByRole('dialog');
+    assert.equal(await editor.getByLabel('Event time zone',{exact:true}).inputValue(),'Europe/Madrid');
+    assert.equal(await editor.getByLabel('Time',{exact:true}).inputValue(),'20:00');
+    page.once('dialog',dialog=>dialog.dismiss());
+    await editor.getByRole('button',{name:'Delete event',exact:true}).click();
+    assert(await editor.isVisible(),'Cancel deletion keeps the edit dialog open');
+    assert.equal(requests.filter(r=>r.method==='DELETE').length,0);
+    await page.keyboard.press('Escape');
+    for(const width of [390,320]){
+      await page.setViewportSize({width,height:740});
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+      await page.locator('[data-calendar-day]').first().click();
+      await page.getByText('This day is free',{exact:true}).waitFor();
+      if(width===390) await capture(page,'calendar-mobile');
+      await page.getByRole('button',{name:'Upcoming',exact:true}).click();
+    }
+    await page.setViewportSize({width:1280,height:900});
+    await page.goto(origin+'/dashboard');
+    await page.evaluate(()=>localStorage.removeItem('welcome_seen_1'));
+    await page.reload();
+    const welcome=page.getByRole('dialog',{name:'Your music, in good company',exact:true});
+    await welcome.waitFor();
+    await welcome.locator('img').evaluate(img=>img.decode());
+    await capture(page,'guide-desktop');
+    for(let step=1;step<5;step++) {
+      await welcome.getByRole('button',{name:'Next',exact:true}).click();
+      await welcome.getByText('Step '+(step+1)+' of 5',{exact:true}).waitFor();
+    }
+    await welcome.getByRole('button',{name:'Get started',exact:true}).click();
+    await welcome.waitFor({state:'detached'});
+    await page.reload();
+    assert.equal(await page.getByRole('dialog').count(),0);
+    await page.getByRole('button',{name:'My account',exact:true}).click();
+    await page.getByRole('menuitem',{name:'Bandanize guide',exact:true}).click();
+    const guide=page.getByRole('dialog',{name:'Your Bandanize guide',exact:true});
+    await guide.getByText('Step 1 of 5',{exact:true}).waitFor();
+    await page.setViewportSize({width:320,height:568});
+    await guide.getByRole('button',{name:'Work on each part of the song',exact:true}).click();
+    await guide.getByText('Step 4 of 5',{exact:true}).waitFor();
+    assert(await guide.evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+    const bounds=await guide.boundingBox();assert(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=321&&bounds.y+bounds.height<=569);
+    await capture(page,'guide-mobile');
+    await page.keyboard.press('Escape'); await guide.waitFor({state:'detached'});
+    await page.goto(origin+'/project/1?tab=calendar');
+    await page.getByRole('button',{name:'My account',exact:true}).click();
+    await page.getByRole('menuitem',{name:'Bandanize guide',exact:true}).click();
+    await page.getByRole('dialog',{name:'Your Bandanize guide',exact:true}).waitFor();
+    await page.keyboard.press('Escape');
+    assert.deepEqual(errors,[]);
+    console.log('PASS calendar agenda/month navigation, single Google action, delete cancellation, first welcome and reusable guide at 320px');
+  } finally {await usability.context.close();}
 
   const invite = await setup(browser, false, false);
   try {

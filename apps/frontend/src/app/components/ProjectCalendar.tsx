@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { CalendarEvent, EventType } from '@/types';
 import { getProjectEvents, createProjectEvent, updateProjectEvent, deleteProjectEvent, getCalendarToken } from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
-import { ChevronLeft, ChevronRight, Plus, Music, Clock, MapPin, Calendar as CalendarIcon, Download, Trash2, Pencil, Link2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, MapPin, Download, Trash2, MoreHorizontal, Link2, CalendarDays } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import CalendarImage from '@/assets/calendar.svg';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu';
 import {
     format,
     startOfMonth,
@@ -77,6 +79,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     const { t, i18n } = useTranslation();
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [googleOpen, setGoogleOpen] = useState(false);
     const [calendarToken, setCalendarToken] = useState<string | null>(null);
     const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -101,8 +105,10 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         try {
             const data = await getProjectEvents(projectId);
             setEvents(data);
+            setLoadError(false);
         } catch (error) {
             console.error('Failed to load events', error);
+            setLoadError(true);
         } finally {
             setLoading(false);
         }
@@ -154,14 +160,10 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         return events
             .filter(e => isAfter(parseISO(eventDateValue(e)), now) || isSameDay(parseISO(eventDateValue(e)), now))
             .sort((a, b) => new Date(eventDateValue(a)).getTime() - new Date(eventDateValue(b)).getTime())
-            .slice(0, 5);
+            .slice(0, 8);
     }, [events]);
 
-    const navigateToEvent = (event: CalendarEvent) => {
-        const eventDate = parseISO(eventDateValue(event));
-        setCurrentMonth(startOfMonth(eventDate));
-        setHighlightedDay(eventDate);
-    };
+    const agendaEvents = highlightedDay ? eventsByDay[format(highlightedDay, 'yyyy-MM-dd')] || [] : upcomingEvents;
 
     const openCreateDialog = (day?: Date) => {
         setEditingEvent(null);
@@ -192,11 +194,12 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     };
 
     const handleSubmit = async () => {
-        if (!formData.name.trim()) return;
+        if (saving || !formData.name.trim()) return;
         if (!formData.date || !formData.time) return;
         try { new Intl.DateTimeFormat('en', { timeZone: formData.timeZone }); } catch { toast.error(t('calendar_link.invalid_zone')); return; }
         const dateTime = `${formData.date}T${formData.time}:00`;
 
+        setSaving(true);
         try {
             if (editingEvent) {
                 await updateProjectEvent(editingEvent.id, {
@@ -224,18 +227,20 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         } catch (error) {
             console.error('Error saving event:', error);
             toast.error(t('calendar_link.save_error'));
-        }
+        } finally { setSaving(false); }
     };
 
     const handleDelete = async (eventId: number) => {
-        if (!window.confirm(t('confirm_delete_event'))) return;
+        if (!window.confirm(t('confirm_delete_event'))) return false;
         try {
             await deleteProjectEvent(eventId);
             toast.success(t('event_deleted'));
             fetchEvents();
+            return true;
         } catch (error) {
             console.error('Error deleting event:', error);
             toast.error(t('delete_error', 'Error'));
+            return false;
         }
     };
 
@@ -274,343 +279,91 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         );
     }
 
+
     return (
-        <Card className="bg-card border-border rounded-[14px]">
+        <Card className="bg-card border-border rounded-2xl gap-0 overflow-hidden">
             <Dialog open={googleOpen} onOpenChange={setGoogleOpen}>
-              <DialogContent aria-describedby={undefined} className="max-h-[calc(100dvh-32px)] overflow-y-auto">
-                <DialogTitle>{t('calendar_link.title')}</DialogTitle>
-                <p className="text-sm text-muted-foreground">{t('calendar_link.description')}</p>
-                <Button asChild><a href="https://calendar.google.com/calendar/u/0/r" target="_blank" rel="noopener noreferrer">{t('calendar_link.view')}</a></Button>
-                <p className="text-sm text-muted-foreground">{t('calendar_link.existing')}</p>
-                <Button variant="outline" asChild><a href={googleUrl} target="_blank" rel="noopener noreferrer">{t('calendar_link.open')}</a></Button>
-                <p className="text-sm text-muted-foreground">{t('calendar_link.fallback')}</p>
-                <p className="text-sm text-muted-foreground">{t('calendar_link.delay')}</p>
-                <Input readOnly value={subscriptionUrl} aria-label={t('calendar_link.url')} onFocus={event => event.target.select()} />
-                <Button variant="outline" onClick={copySubscriptionUrl}>{t('invite.copy')}</Button>
-                <a className="text-sm text-primary underline" href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl" target="_blank" rel="noopener noreferrer">{t('calendar_link.manual')}</a>
+              <DialogContent className="max-h-[calc(100dvh-32px)] overflow-y-auto sm:max-w-md">
+                <DialogHeader>
+                  <div className="size-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2"><CalendarDays className="size-5" /></div>
+                  <DialogTitle>Google Calendar</DialogTitle>
+                  <DialogDescription>{t('calendar_ui.google_intro')}</DialogDescription>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t('calendar_ui.google_timing')}</p>
+                <Button asChild className="w-full"><a href={googleUrl} target="_blank" rel="noopener noreferrer">{t('calendar_ui.google_add')}</a></Button>
+                <p className="text-xs text-muted-foreground">{t('calendar_ui.google_once')}</p>
               </DialogContent>
             </Dialog>
-            {/* Card Header */}
-            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
-                {/* Title row with navigation — stacks on mobile */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
-                    <CardTitle className="text-[16px] font-normal text-foreground">
-                        {t('calendar')}
-                    </CardTitle>
-                    <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                        <Button
-                            size="sm"
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[8px] h-8 px-2 sm:px-3 text-[13px] sm:text-[14px] font-semibold"
-                            onClick={() => { setCurrentMonth(new Date()); setHighlightedDay(null); }}
-                        >
-                            {t('today')}
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-[8px] hover:bg-white/5"
-                            onClick={() => { setCurrentMonth(prev => subMonths(prev, 1)); setHighlightedDay(null); }}
-                        >
-                            <ChevronLeft className="size-4 text-foreground" />
-                        </Button>
-                        <div className="min-w-[100px] sm:min-w-[140px] text-center">
-                            <span className="text-[14px] sm:text-[16px] font-bold text-foreground capitalize">
-                                {format(currentMonth, 'MMMM yyyy', { locale })}
-                            </span>
-                        </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-[8px] hover:bg-white/5"
-                            onClick={() => { setCurrentMonth(prev => addMonths(prev, 1)); setHighlightedDay(null); }}
-                        >
-                            <ChevronRight className="size-4 text-foreground" />
-                        </Button>
-                        <Button variant="outline" size="sm" disabled={!subscriptionUrl}
-                            onClick={() => setGoogleOpen(true)}>Google Calendar</Button>
-                        {/* Export & Subscribe buttons */}
-                        <div className="flex gap-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-[8px] text-muted-foreground hover:text-foreground hover:bg-white/5"
-                                onClick={exportToICal}
-                                disabled={!subscriptionUrl}
-                                title={t('export_calendar')}
-                            >
-                                <Download className="size-4" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-[8px] text-muted-foreground hover:text-foreground hover:bg-white/5"
-                                disabled={!subscriptionUrl}
-                                onClick={copySubscriptionUrl}
-                                title={t('subscribe_calendar', 'Suscribirse al calendario')}
-                            >
-                                <Link2 className="size-4" />
-                            </Button>
-                        </div>
-                    </div>
+
+            <div className="p-4 sm:p-6 border-b border-border">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div><h2 className="text-lg font-semibold">{t('calendar')}</h2><p className="text-sm text-muted-foreground mt-1">{t('calendar_ui.subtitle')}</p></div>
+                <Button onClick={() => openCreateDialog(highlightedDay || undefined)} className="h-10 rounded-xl"><Plus className="size-4" />{t('create_event')}</Button>
+              </div>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                <div className="inline-flex items-center gap-1 rounded-xl bg-background/60 border border-border p-1">
+                  <Button variant="ghost" size="icon" className="size-9 rounded-lg" aria-label={t('calendar_ui.previous')} onClick={() => {setCurrentMonth(subMonths(currentMonth,1));setHighlightedDay(null);}}><ChevronLeft className="size-4" /></Button>
+                  <span aria-live="polite" className="w-24 sm:w-36 text-center text-xs sm:text-sm font-medium capitalize truncate">{format(currentMonth,'MMMM yyyy',{locale})}</span>
+                  <Button variant="ghost" size="icon" className="size-9 rounded-lg" aria-label={t('calendar_ui.next')} onClick={() => {setCurrentMonth(addMonths(currentMonth,1));setHighlightedDay(null);}}><ChevronRight className="size-4" /></Button>
+                  <Button variant="ghost" size="sm" className="h-9 rounded-lg text-xs" onClick={() => {setCurrentMonth(new Date());setHighlightedDay(new Date());}}>{t('today')}</Button>
                 </div>
-
-                <p className="text-xs text-muted-foreground">{t('calendar_link.display_zone', { zone: localTimeZone })}</p>
-                {/* Legend */}
-                <div className="flex items-center gap-3 sm:gap-4 mt-3 sm:mt-4">
-                    {(['CONCIERTO', 'ENSAYO', 'OTRO'] as EventType[]).map(type => (
-                        <div key={type} className="flex items-center gap-1.5">
-                            <div
-                                className="w-3 h-3 rounded-[4px] flex-shrink-0"
-                                style={{
-                                    background: EVENT_COLORS[type].legendBg,
-                                    border: `1px solid ${EVENT_COLORS[type].legendBorder}`,
-                                }}
-                            />
-                            <span className="text-[11px] sm:text-[12px] text-muted-foreground leading-4">
-                                {t(type.toLowerCase())}
-                            </span>
-                        </div>
-                    ))}
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="sm" className="rounded-lg" disabled={!subscriptionUrl} onClick={() => setGoogleOpen(true)}><CalendarDays className="size-4" />Google Calendar</Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="size-9" aria-label={t('calendar_ui.options')}><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem disabled={!subscriptionUrl} onSelect={() => {void exportToICal();}}><Download className="size-4 mr-2" />{t('export_calendar')}</DropdownMenuItem>
+                      <DropdownMenuItem disabled={!subscriptionUrl} onSelect={() => {void copySubscriptionUrl();}}><Link2 className="size-4 mr-2" />{t('calendar_ui.copy_link')}</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-            </CardHeader>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">{t('calendar_link.display_zone',{zone:localTimeZone})}</p>
+            </div>
 
-            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 sm:space-y-8">
-                {/* Calendar Grid */}
-                <div className="flex flex-col gap-1 sm:gap-2">
-                    {/* Day headers */}
-                    <div className="grid grid-cols-7 gap-1 sm:gap-2">
-                        {dayNames.map((day, i) => (
-                            <div key={day} className="py-1 sm:py-2 text-center">
-                                {/* Full name on desktop, single letter on mobile */}
-                                <span className="hidden sm:inline text-[14px] font-bold text-muted-foreground">
-                                    {day}
-                                </span>
-                                <span className="sm:hidden text-[12px] font-bold text-muted-foreground">
-                                    {dayNamesShort[i]}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Week rows */}
-                    {weeks.map((week, weekIdx) => (
-                        <div key={weekIdx} className="grid grid-cols-7 gap-1 sm:gap-2">
-                            {week.map(day => {
-                                const dayKey = format(day, 'yyyy-MM-dd');
-                                const dayEvents = eventsByDay[dayKey] || [];
-                                const isCurrentMonth = isSameMonth(day, currentMonth);
-                                const todayDay = isToday(day);
-                                const isHighlighted = highlightedDay && isSameDay(day, highlightedDay);
-
-                                return (
-                                    <div
-                                        key={dayKey}
-                                        onClick={() => {
-                                            // On mobile, tapping a day opens create dialog
-                                            if (window.innerWidth < 640 && isCurrentMonth) {
-                                                if (dayEvents.length === 0) {
-                                                    openCreateDialog(day);
-                                                }
-                                            }
-                                        }}
-                                        className={`
-                                            flex flex-col rounded-[8px] sm:rounded-[10px]
-                                            p-1 sm:p-2
-                                            min-h-[44px] sm:min-h-[80px]
-                                            ${isHighlighted
-                                                ? 'bg-[rgba(250,204,21,0.10)] border-2 sm:border-[3px] border-[#FACC15] ring-1 ring-[#FACC15]/40'
-                                                : todayDay
-                                                    ? 'bg-[rgba(163,230,53,0.15)] border-2 sm:border-[3px] border-primary'
-                                                    : 'border border-border'
-                                            }
-                                            ${!isCurrentMonth ? 'opacity-30' : ''}
-                                            transition-all duration-300 cursor-pointer sm:cursor-default
-                                        `}
-                                    >
-                                        {/* Day header */}
-                                        <div className="flex items-center justify-between">
-                                            <span className={`text-[12px] sm:text-[14px] ${todayDay ? 'text-foreground font-bold' : 'text-muted-foreground'}`}>
-                                                {format(day, 'd')}
-                                            </span>
-                                            {/* Add button only visible on desktop */}
-                                            {isCurrentMonth && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        openCreateDialog(day);
-                                                    }}
-                                                    className="hidden sm:flex w-5 h-5 items-center justify-center rounded-[6px] hover:bg-white/10 transition-colors"
-                                                >
-                                                    <Plus className="size-3 text-foreground" />
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        {/* Desktop: event chips */}
-                                        <div className="hidden sm:flex flex-col gap-1 flex-1 overflow-hidden mt-1">
-                                            {dayEvents.slice(0, 2).map(event => {
-                                                const colors = EVENT_COLORS[event.type] || EVENT_COLORS.OTRO;
-                                                return (
-                                                    <button
-                                                        key={event.id}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            openEditDialog(event);
-                                                        }}
-                                                        className={`
-                                                            ${colors.bg} border ${colors.border}
-                                                            rounded-[4px] px-1.5 py-0.5 text-left
-                                                            hover:opacity-80 transition-opacity w-full
-                                                        `}
-                                                    >
-                                                        <div className="flex items-center gap-1">
-                                                            <span className={`text-[11px] leading-4 truncate flex-1 ${colors.text}`}>
-                                                                {event.name}
-                                                            </span>
-                                                            <Music className={`size-2.5 flex-shrink-0 ${colors.text}`} />
-                                                        </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <Clock className={`size-2.5 flex-shrink-0 ${colors.text}`} />
-                                                            <span className={`text-[10px] leading-4 ${colors.text}`}>
-                                                                {format(parseISO(eventDateValue(event)), 'HH:mm')}
-                                                            </span>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                            {dayEvents.length > 2 && (
-                                                <span className="text-[10px] text-muted-foreground text-center">
-                                                    +{dayEvents.length - 2}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* Mobile: colored dots */}
-                                        {dayEvents.length > 0 && (
-                                            <div className="flex sm:hidden gap-0.5 mt-1 justify-center flex-wrap">
-                                                {dayEvents.slice(0, 3).map(event => {
-                                                    const colors = EVENT_COLORS[event.type] || EVENT_COLORS.OTRO;
-                                                    return (
-                                                        <div
-                                                            key={event.id}
-                                                            className={`w-1.5 h-1.5 rounded-full ${colors.dot}`}
-                                                        />
-                                                    );
-                                                })}
-                                                {dayEvents.length > 3 && (
-                                                    <span className="text-[8px] text-muted-foreground leading-none">+</span>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ))}
+            {loadError && <div role="alert" className="m-4 p-3 rounded-xl border border-destructive/30 text-sm">{t('calendar_ui.load_error')} <Button variant="ghost" size="sm" onClick={fetchEvents}>{t('calendar_ui.retry')}</Button></div>}
+            <div className="grid lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)]">
+              <section aria-label={t('calendar_ui.month_view')} className="min-w-0 p-3 sm:p-5">
+                <div className="grid grid-cols-7 mb-2">
+                  {dayNames.map((name,index)=><span key={name} className="text-center text-xs text-muted-foreground py-2"><span className="hidden sm:inline">{name}</span><span className="sm:hidden">{dayNamesShort[index]}</span></span>)}
                 </div>
-
-                {/* Upcoming Events Section */}
-                <div className="flex flex-col gap-3 sm:gap-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-[14px] sm:text-[16px] font-normal text-foreground">
-                            {t('upcoming_events')}
-                        </h3>
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 px-2 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-[8px] sm:hidden"
-                            onClick={() => openCreateDialog()}
-                        >
-                            <Plus className="size-4 mr-1" />
-                            <span className="text-[12px]">{t('create_event')}</span>
-                        </Button>
-                    </div>
-
-                    {upcomingEvents.length === 0 ? (
-                        <div className="text-center text-sm text-muted-foreground py-6 sm:py-8">
-                            {t('no_events')}
-                        </div>
-                    ) : (
-                        upcomingEvents.map(event => {
-                            const colors = EVENT_COLORS[event.type] || EVENT_COLORS.OTRO;
-                            const eventDate = parseISO(eventDateValue(event));
-
-                            return (
-                                <div
-                                    key={event.id}
-                                    className={`${colors.bg} border ${colors.border} rounded-[10px] p-3 sm:p-4 cursor-pointer hover:opacity-90 transition-opacity`}
-                                    onClick={() => navigateToEvent(event)}
-                                >
-                                    <div className="flex items-start justify-between gap-2 sm:gap-3">
-                                        <div className="flex-1 flex flex-col gap-1 min-w-0">
-                                            {/* Title + type badge */}
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <h4 className={`text-[14px] sm:text-[16px] font-bold ${colors.text} truncate`}>
-                                                    {event.name}
-                                                </h4>
-                                                <Music className={`size-3.5 sm:size-4 flex-shrink-0 ${colors.text}`} />
-                                            </div>
-
-                                            {/* Details */}
-                                            <div className="flex flex-col gap-0.5 sm:gap-1 mt-1">
-                                                <div className="flex items-center gap-1.5">
-                                                    <CalendarIcon className={`size-3 sm:size-3.5 flex-shrink-0 ${colors.text}`} />
-                                                    <span className={`text-[12px] sm:text-[14px] ${colors.text}`}>
-                                                        {format(eventDate, 'd MMM yyyy', { locale })}
-                                                    </span>
-                                                    <span className={`text-[12px] sm:text-[14px] ${colors.text}`}>
-                                                        · {format(eventDate, 'HH:mm')}
-                                                    </span>
-                                                </div>
-                                                {event.location && (
-                                                    <div className="flex items-center gap-1.5">
-                                                        <MapPin className={`size-3 sm:size-3.5 flex-shrink-0 ${colors.text}`} />
-                                                        <span className={`text-[12px] sm:text-[14px] ${colors.text} truncate`}>
-                                                            {event.location}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Description — hidden on very small screens */}
-                                            {event.description && (
-                                                <p className={`hidden sm:block text-[14px] ${colors.text} opacity-80 mt-1 line-clamp-2`}>
-                                                    {event.description}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        {/* Type badge + actions */}
-                                        <div className="flex flex-col items-end gap-1 sm:gap-2 flex-shrink-0">
-                                            <span className={`${colors.badgeBg} ${colors.badgeText} text-[10px] sm:text-[12px] font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-[4px]`}>
-                                                {t(event.type.toLowerCase())}
-                                            </span>
-                                            <div className="flex gap-0.5 sm:gap-1">
-                                                <button
-                                                    onClick={() => openEditDialog(event)}
-                                                    className={`p-1 sm:p-1.5 rounded-[4px] hover:bg-white/10 transition-colors ${colors.text}`}
-                                                >
-                                                    <Pencil className="size-3 sm:size-3.5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(event.id)}
-                                                    className={`p-1 sm:p-1.5 rounded-[4px] hover:bg-white/10 transition-colors ${colors.text}`}
-                                                >
-                                                    <Trash2 className="size-3 sm:size-3.5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })
-                    )}
+                <div className="space-y-1">
+                  {weeks.map((week,index)=><div key={index} className="grid grid-cols-7 gap-1">{week.map(day=>{
+                    const key=format(day,'yyyy-MM-dd'), items=eventsByDay[key]||[];
+                    const selected=!!highlightedDay && isSameDay(day,highlightedDay);
+                    return <button key={key} type="button" data-calendar-day={key} aria-pressed={selected}
+                      aria-label={format(day,'EEEE, d MMMM yyyy',{locale})+' · '+t('calendar_ui.event_count',{count:items.length})}
+                      onClick={()=>setHighlightedDay(day)}
+                      className={`relative min-w-0 min-h-14 sm:min-h-20 p-1.5 sm:p-2 rounded-xl text-left border transition-colors focus-visible:outline focus-visible:outline-primary ${selected?'border-primary bg-primary/10':'border-transparent hover:bg-accent/50'} ${!isSameMonth(day,currentMonth)?'opacity-40':''}`}>
+                      <span className={`inline-flex size-6 items-center justify-center rounded-full text-xs ${isToday(day)?'bg-primary text-primary-foreground font-semibold':'text-foreground'}`}>{format(day,'d')}</span>
+                      <span className="hidden sm:flex flex-col gap-1 mt-1">{items.slice(0,2).map(event=><span key={event.id} className={`block rounded px-1 text-[10px] truncate ${(EVENT_COLORS[event.type]||EVENT_COLORS.OTRO).bg} ${(EVENT_COLORS[event.type]||EVENT_COLORS.OTRO).text}`}>{format(parseISO(eventDateValue(event)),'HH:mm')} {event.name}</span>)}</span>
+                      <span className="flex sm:hidden gap-1 mt-1">{items.slice(0,3).map(event=><span key={event.id} className={`size-1 rounded-full ${(EVENT_COLORS[event.type]||EVENT_COLORS.OTRO).dot}`} />)}</span>
+                      {items.length>2&&<span className="hidden sm:block text-[10px] text-muted-foreground mt-1">+{items.length-2}</span>}
+                    </button>;
+                  })}</div>)}
                 </div>
-            </CardContent>
+                <div className="mt-4 flex flex-wrap gap-3 text-[11px] text-muted-foreground">{(['CONCIERTO','ENSAYO','OTRO'] as EventType[]).map(type=><span key={type} className="inline-flex items-center gap-1.5"><span className={`size-1.5 rounded-full ${EVENT_COLORS[type].dot}`} />{t(type.toLowerCase())}</span>)}</div>
+              </section>
+              <section aria-label={t('calendar_ui.agenda')} className="min-w-0 border-t lg:border-t-0 lg:border-l border-border bg-background/30 p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <h3 aria-live="polite" className="text-sm font-semibold capitalize">{highlightedDay?format(highlightedDay,'EEEE, d MMMM',{locale}):t('upcoming_events')}</h3>
+                  {highlightedDay&&<Button variant="ghost" size="sm" className="text-xs shrink-0" onClick={()=>setHighlightedDay(null)}>{t('calendar_ui.upcoming')}</Button>}
+                </div>
+                {agendaEvents.length? <div className="space-y-2">{agendaEvents.map(event=>{
+                  const colors=EVENT_COLORS[event.type]||EVENT_COLORS.OTRO;
+                  return <button key={event.id} type="button" data-calendar-event={event.id} onClick={()=>openEditDialog(event)} className="w-full text-left rounded-xl border border-border bg-card p-3 hover:border-primary/40 hover:bg-accent/30 focus-visible:outline focus-visible:outline-primary transition-colors">
+                    <span className="flex justify-between items-center gap-2"><span className="text-xs text-muted-foreground">{format(parseISO(eventDateValue(event)),'d MMM',{locale})} · {format(parseISO(eventDateValue(event)),'HH:mm')}</span><span className={`text-[10px] rounded-full px-2 py-0.5 ${colors.bg} ${colors.text}`}>{t(event.type.toLowerCase())}</span></span>
+                    <span className="block text-sm font-medium mt-2 break-words">{event.name}</span>
+                    {event.location&&<span className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground"><MapPin className="size-3 shrink-0" /><span className="truncate">{event.location}</span></span>}
+                    {event.description&&<span className="block text-xs text-muted-foreground mt-2 line-clamp-2">{event.description}</span>}
+                  </button>;
+                })}</div>:<div className="py-5 text-center"><img src={CalendarImage} alt="" className="size-24 mx-auto object-contain mb-4" /><p className="text-sm font-medium">{t(highlightedDay?'calendar_ui.empty_day':'no_events')}</p><p className="text-xs text-muted-foreground mt-2 mb-4">{t('calendar_ui.empty_help')}</p><Button variant="outline" size="sm" onClick={()=>openCreateDialog(highlightedDay||undefined)}>{t('calendar_ui.plan')}</Button></div>}
+              </section>
+            </div>
 
             {/* Create/Edit Event Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="bg-card border-border text-foreground max-w-[95vw] sm:max-w-lg">
+                <DialogContent className="bg-card border-border text-foreground max-w-[95vw] sm:max-w-lg max-h-[calc(100dvh-32px)] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-foreground">
                             {editingEvent ? t('edit_event') : t('create_event')}
@@ -618,18 +371,18 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     </DialogHeader>
                     <div className="space-y-3 sm:space-y-4 mt-2">
                         <div className="space-y-1.5">
-                            <Label className="text-foreground text-[13px] sm:text-[14px]">{t('event_name')}</Label>
+                            <Label htmlFor="event-name" className="text-foreground text-[13px] sm:text-[14px]">{t('event_name')}</Label>
                             <Input
-                                value={formData.name}
+                                id="event-name" value={formData.name}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(p => ({ ...p, name: e.target.value }))}
                                 placeholder={t('event_name')}
                                 className="bg-background border-border text-foreground h-9 sm:h-10"
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-foreground text-[13px] sm:text-[14px]">{t('event_description')}</Label>
+                            <Label htmlFor="event-description" className="text-foreground text-[13px] sm:text-[14px]">{t('event_description')}</Label>
                             <Textarea
-                                value={formData.description}
+                                id="event-description" value={formData.description}
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData(p => ({ ...p, description: e.target.value }))}
                                 placeholder={t('event_description')}
                                 className="bg-background border-border text-foreground"
@@ -638,18 +391,18 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                         </div>
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-foreground text-[13px] sm:text-[14px]">{t('event_date')}</Label>
+                                <Label htmlFor="event-date" className="text-foreground text-[13px] sm:text-[14px]">{t('event_date')}</Label>
                                 <Input
-                                    type="date"
+                                    id="event-date" type="date"
                                     value={formData.date}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(p => ({ ...p, date: e.target.value }))}
                                     className="bg-background border-border text-foreground h-9 sm:h-10"
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-foreground text-[13px] sm:text-[14px]">{t('event_date')}</Label>
+                                <Label htmlFor="event-time" className="text-foreground text-[13px] sm:text-[14px]">{t('calendar_ui.time')}</Label>
                                 <Input
-                                    type="time"
+                                    id="event-time" type="time"
                                     value={formData.time}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(p => ({ ...p, time: e.target.value }))}
                                     className="bg-background border-border text-foreground h-9 sm:h-10"
@@ -698,9 +451,9 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                             </Select>
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-foreground text-[13px] sm:text-[14px]">{t('event_location')}</Label>
+                            <Label htmlFor="event-location" className="text-foreground text-[13px] sm:text-[14px]">{t('event_location')}</Label>
                             <Input
-                                value={formData.location}
+                                id="event-location" value={formData.location}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(p => ({ ...p, location: e.target.value }))}
                                 placeholder={t('event_location')}
                                 className="bg-background border-border text-foreground h-9 sm:h-10"
@@ -712,9 +465,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                                 <Button
                                     variant="destructive"
                                     className="bg-destructive/20 text-destructive hover:bg-destructive/40 border border-destructive/50 text-[13px]"
-                                    onClick={() => {
-                                        handleDelete(editingEvent.id);
-                                        setDialogOpen(false);
+                                    onClick={async () => {
+                                        if (await handleDelete(editingEvent.id)) setDialogOpen(false);
                                     }}
                                 >
                                     <Trash2 className="size-4 mr-1.5" />
@@ -724,9 +476,10 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                             )}
                             <Button
                                 className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 text-[13px] sm:text-[14px]"
+                                disabled={saving || !formData.name.trim() || !formData.date || !formData.time}
                                 onClick={handleSubmit}
                             >
-                                {editingEvent ? t('save_changes') : t('create_event')}
+                                {saving ? t('saving') : editingEvent ? t('save_changes') : t('create_event')}
                             </Button>
                         </div>
                     </div>
