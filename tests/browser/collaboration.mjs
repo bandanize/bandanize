@@ -300,7 +300,7 @@ try {
     // Returning from a song picks up server-side edits/comments without losing the selected sort.
     await page.locator('[data-song-id="21"] [role="button"]').click();
     await page.getByRole('button',{name:'Back to songs',exact:true}).waitFor();
-    fixture.songLists[0].songs[0].updatedAt='2026-09-25T10:00:00Z';
+    fixture.songLists[0].songs[0].updatedAt=new Date(Date.now()-60000).toISOString();
     await page.getByRole('button',{name:'Back to songs',exact:true}).click();
     await page.waitForFunction(()=>document.querySelector('[data-song-id]')?.getAttribute('data-song-id')==='21');
     await expectOrder(['21','22','23']);
@@ -321,6 +321,7 @@ try {
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
       await page.getByRole('combobox',{name:'Sort songs',exact:true}).click();
       await page.getByRole('option',{name:'Recent changes',exact:true}).click();
+      await expectOrder(['21','22','23']);
       for (const row of await page.locator('[data-song-id]').all()) {
         assert((await row.boundingBox()).height <= 58, 'Activity must keep rows compact');
         assert(await row.evaluate(el=>el.scrollWidth<=el.clientWidth+1));
