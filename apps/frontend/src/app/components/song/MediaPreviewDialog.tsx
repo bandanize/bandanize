@@ -23,7 +23,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
     <Dialog open={!!file} onOpenChange={onClose}>
         <DialogContent
           className="bg-card border-border text-foreground w-[95vw] min-w-0 grid-cols-[minmax(0,1fr)] max-h-[calc(100dvh-1rem)] overflow-y-auto sm:max-w-4xl rounded-xl p-4 sm:p-6"
-          style={{ width: 'min(56rem, calc(100vw - 2rem))', maxWidth: 'calc(100vw - 2rem)', gridTemplateColumns: 'minmax(0, 1fr)' }}
+          style={{ width: 'min(56rem, calc(100vw - 2rem))', maxWidth: 'calc(100vw - 2rem)', gridTemplateColumns: 'minmax(0, 1fr)', transitionProperty: 'opacity, transform' }}
           aria-describedby={undefined}
           onPointerDownOutside={(e) => {
             // Prevent dialog from closing when interacting with media controls
