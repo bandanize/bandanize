@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/bandanize/bandanize/compare/api@v1.13.0...api@v1.13.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* force release please ([66ada31](https://github.com/bandanize/bandanize/commit/66ada311d3d23b6d94e5b9b916d869271cfe9ac9))
+
 ## [1.13.0](https://github.com/bandanize/bandanize/compare/api@v1.12.1...api@v1.13.0) (2026-09-24)
 
 
