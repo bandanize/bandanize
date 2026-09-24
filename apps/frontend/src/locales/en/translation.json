@@ -513,5 +513,10 @@
     "recent": "Recent changes",
     "artist": "Artist",
     "refresh_error": "Recent changes could not be refreshed."
+  },
+  "song_activity": {
+    "exact": "Last activity: {{date}}",
+    "unknown": "No date",
+    "unknown_hint": "No activity date has been recorded yet."
   }
 }

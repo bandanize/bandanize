@@ -286,6 +286,12 @@ try {
     };
     await page.locator('[data-song-id="23"]').waitFor();
     await expectOrder(['21','22','23']);
+    const activity=page.locator('[data-song-id="21"] time');
+    assert.equal(await activity.getAttribute('datetime'),'2026-09-20T18:00:00.000Z');
+    assert.match(await activity.getAttribute('aria-label'),/^Last activity:/);
+    assert((await activity.innerText()).length>0);
+    assert.equal(await page.locator('[data-song-id="23"] time').count(),0);
+    await page.locator('[data-song-id="23"]').getByText('No date',{exact:true}).waitFor();
     await select('Artist');
     await expectOrder(['22','21','23']);
     await select('Recent changes');
@@ -294,7 +300,7 @@ try {
     // Returning from a song picks up server-side edits/comments without losing the selected sort.
     await page.locator('[data-song-id="21"] [role="button"]').click();
     await page.getByRole('button',{name:'Back to songs',exact:true}).waitFor();
-    fixture.songLists[0].songs[0].updatedAt='2026-09-25T10:00:00Z';
+    fixture.songLists[0].songs[0].updatedAt=new Date(Date.now()-60000).toISOString();
     await page.getByRole('button',{name:'Back to songs',exact:true}).click();
     await page.waitForFunction(()=>document.querySelector('[data-song-id]')?.getAttribute('data-song-id')==='21');
     await expectOrder(['21','22','23']);
@@ -315,9 +321,19 @@ try {
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
       await page.getByRole('combobox',{name:'Sort songs',exact:true}).click();
       await page.getByRole('option',{name:'Recent changes',exact:true}).click();
+      await expectOrder(['21','22','23']);
+      for (const row of await page.locator('[data-song-id]').all()) {
+        assert((await row.boundingBox()).height <= 58, 'Activity must keep rows compact');
+        assert(await row.evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+      }
       if(width===390) await capture(page,'song-sort-mobile');
     }
+    await page.getByRole('combobox',{name:'Idioma / Language'}).click();
+    await page.getByRole('option',{name:'Español',exact:true}).click();
+    await page.locator('[data-song-id="21"] time[aria-label^="Última actividad:"]').waitFor();
+    await page.locator('[data-song-id="23"]').getByText('Sin fecha',{exact:true}).waitFor();
     assert.deepEqual(errors,[]);
+    console.log('PASS song activity timestamps, localized exact dates, missing-date fallback and compact mobile rows');
     console.log('PASS song sorts preserve manual order, put unknown artists/dates last, survive navigation/reload and refresh recent changes');
   } catch(error) {
     console.log('SORT_DIAGNOSTIC',sorting.page.url(),await sorting.page.locator('[data-song-id]').evaluateAll(rows=>rows.map(row=>({id:row.getAttribute('data-song-id'),text:row.innerText}))),sorting.requests.filter(r=>r.path.endsWith('my-bands')).length);
