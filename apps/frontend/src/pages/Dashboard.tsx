@@ -1,6 +1,6 @@
 import { useUploadName } from '@/app/components/UploadNameProvider';
 import { ProjectPicker } from '@/app/components/ProjectPicker';
-import { MemberAvatar } from '@/app/components/MemberAvatar';
+import { AccountMenu } from '@/app/components/AccountMenu';
 import React, { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,11 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { LogOut, Plus, Settings, Mail } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { WelcomeModal } from '@/app/components/WelcomeModal';
 import { getUnreadNotificationCount } from '@/services/api';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/app/components/ui/dropdown-menu';
 import { uploadFile, getMediaUrl } from '@/services/api';
 import { toast } from 'sonner';
 import EmptyProjectsImage from '@/assets/empty-projects.svg';
@@ -25,8 +24,8 @@ import { Skeleton } from '@/app/components/ui/skeleton';
 
 export function Dashboard() {
   const requestUploadName = useUploadName();
-  const { user, logout } = useAuth();
-  const { projects, createProject, selectProject, invitations, isLoading } = useProjects();
+  const { user } = useAuth();
+  const { projects, createProject, selectProject, isLoading } = useProjects();
   const [open, setOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
@@ -114,61 +113,25 @@ export function Dashboard() {
   };
 
   return (
-    <PageLayout
+    <PageLayout compactHeader
       headerContent={
         <div className="max-w-[1280px] w-full mx-auto px-4 sm:px-6">
           <div className="max-w-[1216px] w-full flex justify-between items-center mx-auto">
             {/* Logo Section */}
-            <div className="flex items-center gap-3 select-none">
+            <div className="flex items-center gap-2.5 min-w-0 select-none">
               <div className="flex items-center justify-center">
                    <img src="/favicon.svg" alt="Bandanize" className="size-10 pointer-events-none" />
               </div>
-              <div>
-                <h1 className="text-[24px] font-normal font-poppins text-foreground leading-8">Bandanize</h1>
-                <p className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">{t('Welcome')}, {user?.name?.split(' ')[0]}</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-medium font-poppins text-foreground leading-6">Bandanize</h1>
+                <p className="text-xs text-muted-foreground leading-5 truncate max-w-40">{t('Welcome')}, {user?.name?.split(' ')[0]}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4">
-               <LanguageSwitcher />
+            <div className="flex items-center gap-2 shrink-0">
+               <LanguageSwitcher compact />
 
-               {/* User Button */}
-               <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="w-9 sm:min-w-[148px] sm:w-auto h-[36px] bg-card border-border rounded-[8px] text-foreground text-[14px] font-normal font-sans hover:bg-accent hover:text-white px-0 sm:px-4"
-                    >
-                      <MemberAvatar name={user?.name || ''} photo={user?.photo} className="size-6 sm:mr-1" />
-                      <span className="truncate max-w-[80px] hidden sm:inline">{user?.username}</span>
-                      {(invitations?.length || 0) > 0 && (
-                        <span className="ml-2 bg-destructive text-white text-xs rounded-full px-2 py-0.5 hidden sm:inline">
-                          {invitations.length}
-                        </span>
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-card border-border text-foreground">
-                    <DropdownMenuItem onClick={() => navigate('/profile')} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
-                      <Settings className="size-4 mr-2" />
-                      {t('my_profile')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/invitations')} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
-                      <Mail className="size-4 mr-2" />
-                      {t('invitations')}
-                      {(invitations?.length || 0) > 0 && (
-                        <span className="ml-auto bg-destructive/20 text-destructive-foreground text-xs rounded-full px-2 py-0.5">
-                          {invitations.length}
-                        </span>
-                      )}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-border" />
-                    <DropdownMenuItem onClick={logout} className="focus:bg-white/5 focus:text-foreground cursor-pointer">
-                      <LogOut className="size-4 mr-2" />
-                      {t('logout')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-               </DropdownMenu>
+               <AccountMenu />
             </div>
           </div>
         </div>

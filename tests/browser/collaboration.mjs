@@ -91,7 +91,7 @@ async function dismiss(page) {
 }
 async function capture(page, name) {
   const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true, animations: 'disabled' });
-  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars'].includes(name))
+  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
 const browser = await chromium.launch();
@@ -288,7 +288,7 @@ try {
     await page.getByText('J', { exact: true }).waitFor();
     await capture(page, 'profile-avatars');
     await page.goto(origin + '/project/1?tab=chat');
-    await page.locator('img[alt="Owner"]').waitFor();
+    await page.locator('img[alt="Owner"]').first().waitFor();
     await page.goto(origin + '/project/1?tab=songs&listId=11&songId=21&tabId=31');
     await page.locator('img[alt="Owner"]').first().waitFor();
     await page.setViewportSize({ width: 390, height: 844 });
@@ -299,6 +299,53 @@ try {
     assert.deepEqual(errors, []);
     console.log('PASS one/multiple project layouts, switching, profile photos and failed/missing photo fallbacks');
   } finally { await picker.context.close(); }
+
+
+  const navbar = await setup(browser);
+  try {
+    const { page, errors } = navbar;
+    await page.goto(origin + '/project/1?tab=songs&listId=11');
+    await dismiss(page);
+    const sections = page.getByRole('tablist', { name: 'Project sections' });
+    await sections.waitFor();
+    assert.equal(await sections.getByRole('tab').count(), 6);
+    assert((await page.locator('header').boundingBox()).height <= 80, 'Header stays compact');
+    for (const [name, value] of [['Chat', 'chat'], ['Songs', 'songs']]) {
+      await sections.getByRole('tab', { name, exact: true }).click();
+      await page.waitForURL(new RegExp('tab=' + value));
+      await sections.getByRole('tab', { name, exact: true }).and(page.locator('[aria-selected="true"]')).waitFor();
+      assert.equal(new URL(page.url()).searchParams.get('listId'), '11');
+    }
+    await page.getByRole('button', { name: 'My account', exact: true }).click();
+    await page.getByRole('menuitem', { name: /Invitations/ }).waitFor();
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'My account');
+    await capture(page, 'app-navbar-desktop');
+    for (const width of [768, 640, 390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Navbar must fit narrow screens');
+      assert(await sections.evaluate(el => el.scrollWidth <= el.clientWidth + 1));
+      for (const tab of await sections.getByRole('tab').all()) {
+        const box = await tab.boundingBox();
+        assert(box.x >= 0 && box.x + box.width <= width && box.height >= (width >= 768 ? 36 : 44));
+        assert((await tab.innerText()).trim().length > 0, 'Mobile tabs retain readable labels');
+      }
+      await page.getByRole('combobox', { name: 'Idioma / Language' }).click();
+      await page.getByRole('option', { name: 'Español', exact: true }).click();
+      await page.getByRole('tablist', { name: 'Secciones del proyecto' }).waitFor();
+      await page.getByRole('button', { name: 'Mi cuenta', exact: true }).click();
+      await page.keyboard.press('Escape');
+      if (width === 390) await capture(page, 'app-navbar-mobile');
+      await page.getByRole('combobox', { name: 'Idioma / Language' }).click();
+      await page.getByRole('option', { name: 'English', exact: true }).click();
+      await sections.waitFor();
+    }
+    await page.getByRole('button', { name: 'Back to Dashboard', exact: true }).click();
+    await page.waitForURL('**/dashboard');
+    await page.getByRole('button', { name: 'My account', exact: true }).waitFor();
+    assert.deepEqual(errors, []);
+    console.log('PASS compact app navbar, visible mobile sections, language, account keyboard focus and existing deep links');
+  } finally { await navbar.context.close(); }
 
   const invite = await setup(browser, false, false);
   try {

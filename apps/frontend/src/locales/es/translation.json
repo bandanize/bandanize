@@ -412,5 +412,12 @@
     "actions": "Opciones de la canción",
     "label": "Canción",
     "key": "Tonalidad"
+  },
+  "app_nav": {
+    "account": "Mi cuenta",
+    "sections": "Secciones del proyecto",
+    "team": "Equipo",
+    "agenda": "Agenda",
+    "alerts": "Avisos"
   }
 }

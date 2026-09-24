@@ -1,5 +1,6 @@
 import { ProjectOverview } from '@/app/components/ProjectOverview';
 import { useUploadName } from '@/app/components/UploadNameProvider';
+import { AccountMenu } from '@/app/components/AccountMenu';
 import { ProjectSwitcher } from '@/app/components/ProjectSwitcher';
 import React, { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
@@ -212,20 +213,20 @@ export function ProjectHub() {
     };
 
   return (
-    <PageLayout
+    <PageLayout compactHeader
       headerContent={
         <div className="max-w-[1280px] w-full mx-auto px-4 sm:px-6">
-            <div className="max-w-[1216px] w-full mx-auto flex items-center gap-2 sm:gap-4">
+            <div className="max-w-[1216px] w-full mx-auto flex items-center gap-2 sm:gap-3">
             <Button 
                 variant="ghost" 
                 onClick={() => navigate('/dashboard')} 
-                className="w-[40px] h-[36px] bg-transparent hover:bg-white/5 rounded-[8px] p-0"
+                aria-label={t('back_to_dashboard')} title={t('back_to_dashboard')} className="size-10 shrink-0 bg-transparent hover:bg-accent rounded-xl p-0"
             >
               <ArrowLeft className="size-4 text-foreground" />
             </Button>
             
-            <div className="flex-1 flex items-center gap-3 min-w-0 select-none">
-                <div className="size-10 aspect-square flex-shrink-0 rounded-md overflow-hidden flex items-center justify-center pointer-events-none">
+            <div className="flex-1 flex items-center gap-2.5 min-w-0 select-none">
+                <div className="hidden sm:flex size-9 aspect-square flex-shrink-0 rounded-lg overflow-hidden items-center justify-center pointer-events-none">
                     {currentProject.imageUrl ? (
                         <img 
                             src={getMediaUrl(currentProject.imageUrl)} 
@@ -240,23 +241,23 @@ export function ProjectHub() {
                    <ProjectSwitcher />
                    <div className="flex items-center gap-1">
                        <span className="w-[7px] h-[7px] bg-primary rounded-full inline-block"></span>
-                       <span className="text-[14px] font-normal font-poppins text-muted-foreground leading-5">
+                       <span className="text-[11px] text-muted-foreground leading-4">
                            {onlineCount} {t('online', 'Online')}
                        </span>
                    </div>
                </div>
             </div>
 
-            <div className="flex gap-2 items-center ml-auto">
-             <LanguageSwitcher />
+            <div className="flex gap-1.5 sm:gap-2 items-center ml-auto shrink-0">
+             <LanguageSwitcher compact />
 
             {currentProject.ownerId === user?.id ? (
               <>
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={openEditDialog} className="bg-card border border-border text-foreground hover:bg-accent font-sans text-[14px] font-normal flex h-[36px] w-9 sm:min-w-[148px] sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center">
-                    <PenLine className="size-4 sm:mr-2" />
-                    <span className="hidden sm:inline">{t('edit_project', 'Editar proyecto')}</span>
+                  <Button onClick={openEditDialog} aria-label={t('edit_project')} title={t('edit_project')} className="bg-transparent border border-border/60 text-muted-foreground hover:bg-accent hover:text-foreground text-xs font-normal flex size-10 lg:w-auto px-0 lg:px-3 rounded-xl justify-center">
+                    <PenLine className="size-4" />
+                    <span className="hidden lg:inline">{t('edit_project', 'Editar proyecto')}</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-card border-border text-foreground">
@@ -331,11 +332,12 @@ export function ProjectHub() {
               
               </>
             ) : (
-                <Button variant="destructive" onClick={handleLeaveProject} className="h-[36px] w-9 sm:min-w-[148px] sm:w-auto px-0 sm:px-4 rounded-[8px] justify-center bg-red-900/20 text-red-500 hover:bg-red-900/40 border border-red-900/50">
-                    <LogOut className="size-4 sm:mr-2" />
-                    <span className="hidden sm:inline">{t('leave_project', 'Abandonar')}</span>
+                <Button variant="ghost" onClick={handleLeaveProject} aria-label={t('leave_project')} title={t('leave_project')} className="size-10 lg:w-auto px-0 lg:px-3 rounded-xl text-muted-foreground hover:text-destructive">
+                    <LogOut className="size-4" />
+                    <span className="hidden lg:inline">{t('leave_project', 'Abandonar')}</span>
                 </Button>
             )}
+            <AccountMenu />
             </div>
         </div>
         </div>
@@ -344,55 +346,25 @@ export function ProjectHub() {
       <div className="max-w-[1280px] w-full mx-auto py-6 sm:py-8 px-4 sm:px-6">
          <div className="max-w-[1216px] w-full mx-auto">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="bg-card/80 border border-border rounded-xl p-1 h-11 flex items-center w-full sm:w-fit max-w-full mx-auto overflow-visible">
-            <TabsTrigger value="overview" aria-label={t('workspace.overview')} className="data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-3 font-normal text-sm"><LayoutDashboard className="size-4 sm:mr-2 shrink-0" /><span className="hidden sm:inline">{t('workspace.overview')}</span></TabsTrigger>
-            <TabsTrigger 
-                value="songs" aria-label={t('songs')}
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
-            >
-              <Music className="size-4 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">{t('songs', 'Canciones')}</span>
-            </TabsTrigger>
-            <TabsTrigger 
-                value="chat" aria-label={t('chat')}
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
-            >
-              <MessageSquare className="size-4 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">{t('chat', 'Chat')}</span>
-              {hasUnreadChat && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 w-[8px] h-[8px] rounded-full border border-card shadow-sm z-10" />
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-                value="members" aria-label={t('members')}
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
-            >
-              <Users className="size-4 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">{t('members', 'Miembros')}</span>
-            </TabsTrigger>
-            <TabsTrigger 
-                value="calendar" aria-label={t('calendar')}
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px]"
-            >
-              <Calendar className="size-4 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">{t('calendar', 'Calendario')}</span>
-            </TabsTrigger>
-            <TabsTrigger 
-                value="notifications" aria-label={t('notifications')}
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-border data-[state=active]:shadow-none text-muted-foreground rounded-lg h-8 flex-1 sm:flex-none px-4 font-sans font-normal text-[14px] relative overflow-visible"
-            >
-              <Bell className="size-4 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">{t('notifications', 'Notificaciones')}</span>
-              {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center border border-card shadow-sm z-10 gap-0.5">
-                      <Bell className="size-[10px]" />
-                      <span>{unreadCount > 99 ? '99+' : unreadCount}</span>
-                  </span>
-              )}
-            </TabsTrigger>
+          <TabsList aria-label={t('app_nav.sections')} className="grid grid-cols-6 md:flex bg-card/60 border border-border/70 rounded-xl p-1 h-14 md:h-12 w-full md:w-fit max-w-full mx-auto gap-0.5">
+            {[
+              { value: 'overview', icon: LayoutDashboard, label: t('workspace.overview'), short: t('workspace.overview') },
+              { value: 'songs', icon: Music, label: t('songs'), short: t('songs') },
+              { value: 'chat', icon: MessageSquare, label: t('chat'), short: t('chat') },
+              { value: 'members', icon: Users, label: t('members'), short: t('app_nav.team') },
+              { value: 'calendar', icon: Calendar, label: t('calendar'), short: t('app_nav.agenda') },
+              { value: 'notifications', icon: Bell, label: t('notifications'), short: t('app_nav.alerts') },
+            ].map(({ value, icon: Icon, label, short }) => <TabsTrigger key={value} value={value} aria-label={label} title={label}
+              className="relative min-w-0 h-full px-0.5 md:px-3 flex flex-col md:flex-row gap-1 md:gap-2 rounded-lg border-0 text-muted-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none font-normal">
+              <Icon className="size-4 shrink-0" />
+              <span className="md:hidden max-w-full truncate text-[9px] leading-3">{short}</span>
+              <span className="hidden md:inline text-xs">{label}</span>
+              {value === 'chat' && hasUnreadChat && <span className="absolute top-1 right-1 size-1.5 bg-primary rounded-full" />}
+              {value === 'notifications' && unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+            </TabsTrigger>)}
           </TabsList>
 
-          <div className="mt-8">
+          <div className="mt-5 sm:mt-6">
             <TabsContent value="overview" className="m-0"><ProjectOverview key={currentProject.id} project={currentProject} unreadCount={unreadCount} onOpen={(tab, song) => {
               if (song) setSearchParams({ tab, listId: song.listId, songId: song.songId });
               else handleTabChange(tab);
