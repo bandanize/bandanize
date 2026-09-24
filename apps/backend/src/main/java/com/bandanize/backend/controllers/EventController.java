@@ -76,8 +76,9 @@ public class EventController {
         BandModel band = bandService.getBandByCalendarToken(token);
         List<EventModel> events = eventService.getEventsByBand(band.getId());
         return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, max-age=0, must-revalidate")
                 .header("Content-Disposition", "attachment; filename=\"calendar.ics\"")
-                .body(generateIcal(band.getName(), events));
+                .body(com.bandanize.backend.services.CalendarFeedWriter.write(band.getName(), events));
     }
 
     /**
@@ -117,48 +118,9 @@ public class EventController {
         }
 
         return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, max-age=0, must-revalidate")
                 .header("Content-Disposition", "attachment; filename=\"calendar.ics\"")
-                .body(generateIcal(bandName, events));
+                .body(com.bandanize.backend.services.CalendarFeedWriter.write(bandName, events));
     }
 
-    private String generateIcal(String bandName, List<EventModel> events) {
-        StringBuilder ical = new StringBuilder();
-        ical.append("BEGIN:VCALENDAR\r\n");
-        ical.append("VERSION:2.0\r\n");
-        if (bandName == null || bandName.isEmpty())
-            bandName = "Bandanize";
-        ical.append("PRODID:-//Bandanize//").append(escapeIcal(bandName)).append("//EN\r\n");
-        ical.append("CALSCALE:GREGORIAN\r\n");
-        ical.append("METHOD:PUBLISH\r\n");
-        ical.append("X-WR-CALNAME:").append(escapeIcal(bandName)).append("\r\n");
-        ical.append("REFRESH-INTERVAL;VALUE=DURATION:PT15M\r\n");
-        ical.append("X-PUBLISHED-TTL:PT15M\r\n");
-
-        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
-
-        for (EventModel event : events) {
-            ical.append("BEGIN:VEVENT\r\n");
-            ical.append("UID:").append(event.getId()).append("@bandanize\r\n");
-            ical.append("DTSTART:").append(event.getDate().format(dtf)).append("\r\n");
-            ical.append("SUMMARY:").append(escapeIcal(event.getName())).append("\r\n");
-            if (event.getDescription() != null && !event.getDescription().isEmpty()) {
-                ical.append("DESCRIPTION:").append(escapeIcal(event.getDescription())).append("\r\n");
-            }
-            if (event.getLocation() != null && !event.getLocation().isEmpty()) {
-                ical.append("LOCATION:").append(escapeIcal(event.getLocation())).append("\r\n");
-            }
-            ical.append("CATEGORIES:").append(event.getType()).append("\r\n");
-            if (event.getCreatedAt() != null) {
-                ical.append("CREATED:").append(event.getCreatedAt().format(dtf)).append("\r\n");
-            }
-            ical.append("END:VEVENT\r\n");
-        }
-
-        ical.append("END:VCALENDAR\r\n");
-        return ical.toString();
-    }
-
-    private String escapeIcal(String text) {
-        return text.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", "\\n");
-    }
 }

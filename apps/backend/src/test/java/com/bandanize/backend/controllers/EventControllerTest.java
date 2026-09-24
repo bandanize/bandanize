@@ -85,7 +85,7 @@ public class EventControllerTest {
                     assertThat(body).contains("BEGIN:VCALENDAR");
                     assertThat(body).contains("X-WR-CALNAME:Test Band");
                     assertThat(body).contains("SUMMARY:Concert");
-                    assertThat(body).contains("DTSTART:20260520T200000");
+                    assertThat(body).contains("DTSTART:20260520T180000Z");
                     assertThat(body).contains("END:VCALENDAR");
                 });
     }
@@ -125,4 +125,23 @@ public class EventControllerTest {
                     assertThat(body).contains("SUMMARY:ConcertLegacy");
                 });
     }
+
+    @Test public void sameSubscriptionUrlReflectsNewChangedAndDeletedEvents() {
+        UserModel user = new UserModel(); user.setUsername("live"); user.setEmail("live@example.test"); user = userRepository.save(user);
+        BandModel band = new BandModel(); band.setName("Live"); band.setOwner(user); band.setCalendarToken(UUID.randomUUID().toString()); band = bandRepository.save(band);
+        String path = "/api/calendar/" + band.getCalendarToken() + ".ics";
+        String empty = webClient.get().uri(path).exchange().expectStatus().isOk().expectHeader().valueEquals("Cache-Control","no-cache, max-age=0, must-revalidate").expectBody(String.class).returnResult().getResponseBody();
+        assertThat(empty).doesNotContain("BEGIN:VEVENT");
+        EventModel event = new EventModel(); event.setName("New rehearsal"); event.setBand(band); event.setCreator(user);
+        event.setDate(LocalDateTime.of(2026,7,20,20,0)); event.setTimeZone("Europe/Madrid"); event = eventRepository.save(event);
+        String first = webClient.get().uri(path).exchange().expectStatus().isOk().expectBody(String.class).returnResult().getResponseBody();
+        assertThat(first).contains("DTSTART:20260720T180000Z", "SEQUENCE:0", "UID:" + event.getId() + "@bandanize");
+        event.setName("Changed rehearsal"); event.setDate(LocalDateTime.of(2026,7,20,21,0)); event = eventRepository.save(event);
+        String changed = webClient.get().uri(path).exchange().expectStatus().isOk().expectBody(String.class).returnResult().getResponseBody();
+        assertThat(changed).contains("DTSTART:20260720T190000Z", "SEQUENCE:1", "SUMMARY:Changed rehearsal", "UID:" + event.getId() + "@bandanize").doesNotContain("SUMMARY:New rehearsal");
+        eventRepository.deleteById(event.getId());
+        String deleted = webClient.get().uri(path).exchange().expectStatus().isOk().expectBody(String.class).returnResult().getResponseBody();
+        assertThat(deleted).doesNotContain("BEGIN:VEVENT");
+    }
+
 }

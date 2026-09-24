@@ -38,6 +38,8 @@ public class EventService {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        validateCalendarDate(eventDetails.getDate(), eventDetails.effectiveTimeZone());
+        eventDetails.setTimeZone(eventDetails.effectiveTimeZone());
         eventDetails.setBand(band);
         eventDetails.setCreator(user);
 
@@ -57,6 +59,10 @@ public class EventService {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        String timeZone = eventDetails.getTimeZone() == null ? event.effectiveTimeZone() : eventDetails.getTimeZone();
+        validateCalendarDate(eventDetails.getDate() == null ? event.getDate() : eventDetails.getDate(), timeZone);
+        event.setTimeZone(timeZone);
+
         if (eventDetails.getName() != null)
             event.setName(eventDetails.getName());
         if (eventDetails.getDescription() != null)
@@ -74,6 +80,15 @@ public class EventService {
         notificationService.createEventNotification(event.getBand(), user, updatedEvent, true);
 
         return updatedEvent;
+    }
+
+    private void validateCalendarDate(java.time.LocalDateTime date, String timeZone) {
+        if (date == null) throw new IllegalArgumentException("Event date is required.");
+        java.time.ZoneId zone;
+        try { zone = java.time.ZoneId.of(timeZone); }
+        catch (java.time.DateTimeException | NullPointerException ex) { throw new IllegalArgumentException("Invalid time zone."); }
+        if (zone.getRules().getValidOffsets(date).isEmpty())
+            throw new IllegalArgumentException("This time does not exist because of the daylight-saving change.");
     }
 
     @org.springframework.transaction.annotation.Transactional

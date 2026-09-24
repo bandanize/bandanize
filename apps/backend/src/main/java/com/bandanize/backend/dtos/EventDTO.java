@@ -7,6 +7,12 @@ public class EventDTO {
     private String name;
     private String description;
     private LocalDateTime date;
+    private java.time.Instant startsAt;
+    public java.time.Instant getStartsAt() { return startsAt; }
+    public void setStartsAt(java.time.Instant startsAt) { this.startsAt = startsAt; }
+    private String timeZone;
+    public String getTimeZone() { return timeZone; }
+    public void setTimeZone(String timeZone) { this.timeZone = timeZone; }
     private String type;
     private String location;
     private Long creatorId;
@@ -103,7 +109,7 @@ public class EventDTO {
     }
 
     public static EventDTO fromModel(com.bandanize.backend.models.EventModel event) {
-        return new EventDTO(
+        EventDTO dto = new EventDTO(
                 event.getId(),
                 event.getName(),
                 event.getDescription(),
@@ -113,5 +119,8 @@ public class EventDTO {
                 event.getCreator() != null ? event.getCreator().getId() : null,
                 event.getCreator() != null ? event.getCreator().getName() : null,
                 event.getCreatedAt());
+        dto.setTimeZone(event.effectiveTimeZone());
+        dto.setStartsAt(event.getDate().atZone(java.time.ZoneId.of(event.effectiveTimeZone())).toInstant());
+        return dto;
     }
 }
