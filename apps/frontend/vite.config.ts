@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import path from 'path'
+import { createRequire } from 'node:module'
 import { readdirSync, readFileSync } from 'node:fs'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -12,7 +13,7 @@ export default defineConfig({
       name: 'pdf-viewer-assets',
       generateBundle() {
         for (const folder of ['cmaps', 'standard_fonts', 'wasm']) {
-          const source = path.resolve(__dirname, '../../node_modules/pdfjs-dist', folder);
+          const source = path.join(path.dirname(createRequire(import.meta.url).resolve('pdfjs-dist/package.json')), folder);
           for (const entry of readdirSync(source, { withFileTypes: true })) {
             if (entry.isFile()) this.emitFile({ type: 'asset', fileName: 'pdf-assets/' + folder + '/' + entry.name, source: readFileSync(path.join(source, entry.name)) });
           }
