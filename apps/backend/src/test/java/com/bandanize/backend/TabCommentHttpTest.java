@@ -19,6 +19,10 @@ class TabCommentHttpTest {
     @Autowired UserRepository users;
     @Autowired BandRepository bands;
     @Autowired SongRepository songs;
+    @Autowired SongListRepository lists;
+    @Autowired com.bandanize.backend.services.SongService songService;
+    Long songId;
+    Long listId;
     @Autowired TablatureRepository tabs;
     @Autowired JwtService jwt;
     @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
@@ -38,11 +42,59 @@ class TabCommentHttpTest {
         recipient.setUsername(recipientUsername); recipient.setEmail(recipientUsername + "@example.test");
         recipient.setName("Alex"); recipient.setDisabled(false); recipient = users.save(recipient); recipientId = recipient.getId();
         BandModel band = new BandModel(); band.setName("Comment Test"); band.setOwner(user); band.setUsers(new java.util.ArrayList<>(List.of(user, recipient))); band = bands.save(band); projectId = band.getId();
-        SongModel song = new SongModel(); song.setName("Song"); song.setBand(band); song = songs.save(song);
+        SongModel song = new SongModel(); song.setName("Song"); song.setBand(band); song = songs.save(song); songId = song.getId();
+        SongListModel list = new SongListModel(); list.setName("Set"); list.setBand(band); list.setSongs(new java.util.ArrayList<>(List.of(song))); listId = lists.save(list).getId();
         TablatureModel tab = new TablatureModel(); tab.setSong(song); tab.setName("Tab"); tab.setContent("Am\nUna melodía\nC"); tabId = tabs.save(tab).getId();
         });
         client = WebTestClient.bindToServer().baseUrl("http://localhost:" + port).defaultHeader("Authorization", "Bearer " + jwt.generateToken(name)).build();
     }
+
+    private void resetSongActivity() {
+        jdbc.update("UPDATE song_model SET updated_at = ? WHERE id = ?",
+            java.sql.Timestamp.from(java.time.Instant.parse("2000-01-01T00:00:00Z")), songId);
+    }
+    private void assertSongActivityChanged() {
+        org.junit.jupiter.api.Assertions.assertTrue(songs.findById(songId).orElseThrow().getUpdatedAt()
+            .isAfter(java.time.Instant.parse("2020-01-01T00:00:00Z")));
+    }
+    @Test void recentSongActivityPersistsForEditsFilesTabsAndCommentsButNotReordering() {
+        org.junit.jupiter.api.Assertions.assertNotNull(songs.findById(songId).orElseThrow().getUpdatedAt());
+        resetSongActivity();
+        songService.updateSong(songId, Map.of("name", "Updated"));
+        assertSongActivityChanged();
+        resetSongActivity();
+        TablatureModel edit = new TablatureModel(); edit.setContent("New score");
+        songService.updateTablature(tabId, edit);
+        assertSongActivityChanged();
+        resetSongActivity();
+        songService.addFileToSong(songId, new MediaFile("notes.txt", "text/plain", "/api/uploads/files/notes.txt"));
+        assertSongActivityChanged();
+        resetSongActivity();
+        songService.addFileToTablature(tabId, new MediaFile("score.txt", "text/plain", "/api/uploads/files/score.txt"));
+        assertSongActivityChanged();
+        resetSongActivity();
+        TablatureModel extra = new TablatureModel(); extra.setName("Bass");
+        Long extraId = songService.addTablature(songId, extra).getId();
+        assertSongActivityChanged();
+        resetSongActivity();
+        songService.deleteTablature(extraId);
+        assertSongActivityChanged();
+        resetSongActivity();
+        var comment = client.post().uri("/api/tabs/" + tabId + "/comments").bodyValue(Map.of("message", "New idea"))
+            .exchange().expectStatus().isOk().expectBody(Map.class).returnResult().getResponseBody();
+        assertSongActivityChanged();
+        resetSongActivity();
+        client.delete().uri("/api/tabs/" + tabId + "/comments/" + comment.get("id")).exchange().expectStatus().isOk();
+        assertSongActivityChanged();
+        client.get().uri("/api/bands/my-bands").exchange().expectStatus().isOk().expectBody()
+            .jsonPath("$[0].songLists[0].songs[0].updatedAt").isNotEmpty();
+        resetSongActivity();
+        client.put().uri("/api/songlists/" + listId + "/reorder").bodyValue(List.of(songId))
+            .exchange().expectStatus().isOk();
+        org.junit.jupiter.api.Assertions.assertEquals(java.time.Instant.parse("2000-01-01T00:00:00Z"),
+            songs.findById(songId).orElseThrow().getUpdatedAt());
+    }
+
     @Test void plainCommentSurvivesHttpAndDatabaseRoundTrip() {
         client.post().uri("/api/tabs/" + tabId + "/comments").bodyValue(Map.of("message", "Comentario general"))
             .exchange().expectStatus().isOk().expectBody().jsonPath("$.message").isEqualTo("Comentario general");

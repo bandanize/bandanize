@@ -11,11 +11,11 @@ const band = {
   id: 1, name: 'Rehearsal', description: 'Browser fixture', ownerId: 1,
   members: [owner, { id: 2, name: 'Alex', username: 'alex', email: 'alex@example.test', photo: '/api/uploads/images/alex.svg' }, { id: 3, name: 'Riley Broken', username: 'riley', email: 'riley@example.test', photo: '/api/uploads/images/missing.svg' }, { id: 4, name: 'Jules', username: 'jules', email: 'jules@example.test' }],
   songLists: [{ id: 11, name: 'Setlist', songs: [
-    { id: 21, name: 'First song', files: [], tablatures: [{ id: 31, name: 'Guitar tab',
+    { id: 21, name: 'First song', originalBand: 'Zulu', updatedAt: '2026-09-20T18:00:00Z', files: [], tablatures: [{ id: 31, name: 'Guitar tab',
       instrument: 'Guitar', instrumentIcon: 'guitar', tuning: 'Standard',
       content: 'Am C G\n' + ('e|---3---5---7---|' + '-'.repeat(100) + '\n').repeat(35),
       commentCount: 2, files: [{ id: '41', name: 'Notes', type: 'text/plain', url: '/fixture.txt' }] }] },
-    { id: 22, name: 'Second song', files: [], tablatures: [] }
+    { id: 22, name: 'Second song', originalBand: 'Álvaro', updatedAt: '2026-09-24T10:00:00Z', files: [], tablatures: [] }
   ] }, { id: 12, name: 'Live set', songs: [] }],
   chatMessages: [{ id: 51, sender: owner, message: '@Alex #[First song](song:21:11) @Alex', timestamp: '2026-09-23T10:00:00Z' }]
 };
@@ -98,7 +98,7 @@ async function setup(browser, mobile = false, auth = true, optional = false, tim
     else if (path.endsWith('/comments')) body = [{ id: 1, message: 'One', sender: owner, timestamp: '2026-09-23T10:00:00Z' }, { id: 2, message: 'Two', sender: owner, timestamp: '2026-09-23T10:00:00Z' }];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });
-  return { context, page, errors, requests, controls };
+  return { context, page, errors, requests, controls, fixture };
 }
 async function dismiss(page) {
   const button = page.getByRole('button', { name: 'Understood', exact: true });
@@ -106,7 +106,7 @@ async function dismiss(page) {
 }
 async function capture(page, name) {
   const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true, animations: 'disabled' });
-  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone', 'calendar-refresh', 'calendar-mobile', 'guide-desktop', 'guide-mobile'].includes(name))
+  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone', 'calendar-refresh', 'calendar-mobile', 'guide-desktop', 'guide-mobile', 'song-sort-desktop', 'song-sort-mobile'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
 const browser = await chromium.launch();
@@ -268,6 +268,61 @@ try {
     finally { await context.close(); }
   }
 
+
+
+  const sorting = await setup(browser);
+  try {
+    const {page, fixture, requests, errors} = sorting;
+    fixture.songLists[0].songs.push({id:23,name:'No artist yet',files:[],tablatures:[]});
+    await page.goto(origin+'/project/1?tab=songs&listId=11'); await dismiss(page);
+    const order=()=>page.locator('[data-song-id]').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-song-id')));
+    const expectOrder=async expected=>{
+      await page.waitForFunction(ids=>JSON.stringify([...document.querySelectorAll('[data-song-id]')].map(row=>row.getAttribute('data-song-id')))===JSON.stringify(ids),expected);
+      assert.deepEqual(await order(),expected);
+    };
+    const select=async name=>{
+      await page.getByRole('combobox',{name:'Sort songs',exact:true}).click();
+      await page.getByRole('option',{name,exact:true}).click();
+    };
+    await page.locator('[data-song-id="23"]').waitFor();
+    await expectOrder(['21','22','23']);
+    await select('Artist');
+    await expectOrder(['22','21','23']);
+    await select('Recent changes');
+    await page.waitForFunction(()=>document.querySelector('[data-song-id]')?.getAttribute('data-song-id')==='22');
+    await expectOrder(['22','21','23']);
+    // Returning from a song picks up server-side edits/comments without losing the selected sort.
+    await page.locator('[data-song-id="21"] [role="button"]').click();
+    await page.getByRole('button',{name:'Back to songs',exact:true}).waitFor();
+    fixture.songLists[0].songs[0].updatedAt='2026-09-25T10:00:00Z';
+    await page.getByRole('button',{name:'Back to songs',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelector('[data-song-id]')?.getAttribute('data-song-id')==='21');
+    await expectOrder(['21','22','23']);
+    await select('Established order');
+    await expectOrder(['21','22','23']);
+    assert.equal(requests.filter(r=>r.path.endsWith('/reorder')).length,0);
+    await select('Artist'); await capture(page,'song-sort-desktop');
+    await page.reload(); await page.locator('[data-song-id="23"]').waitFor();
+    await expectOrder(['22','21','23']);
+    // In-list dragging must not persist a different manual order while using a computed sort.
+    const first=await page.locator('[data-song-id="22"]').boundingBox(),last=await page.locator('[data-song-id="21"]').boundingBox();
+    await page.mouse.move(first.x+50,first.y+first.height/2);await page.mouse.down();await page.waitForTimeout(70);
+    await page.mouse.move(last.x+50,last.y+last.height-2,{steps:12});await page.mouse.up();
+    await expectOrder(['22','21','23']);
+    assert.equal(requests.filter(r=>r.path.endsWith('/reorder')).length,0);
+    for(const width of [390,320]){
+      await page.setViewportSize({width,height:844});
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+      await page.getByRole('combobox',{name:'Sort songs',exact:true}).click();
+      await page.getByRole('option',{name:'Recent changes',exact:true}).click();
+      if(width===390) await capture(page,'song-sort-mobile');
+    }
+    assert.deepEqual(errors,[]);
+    console.log('PASS song sorts preserve manual order, put unknown artists/dates last, survive navigation/reload and refresh recent changes');
+  } catch(error) {
+    console.log('SORT_DIAGNOSTIC',sorting.page.url(),await sorting.page.locator('[data-song-id]').evaluateAll(rows=>rows.map(row=>({id:row.getAttribute('data-song-id'),text:row.innerText}))),sorting.requests.filter(r=>r.path.endsWith('my-bands')).length);
+    throw error;
+  } finally {await sorting.context.close();}
 
   const picker = await setup(browser);
   try {

@@ -55,9 +55,10 @@ interface SortableSongRowProps {
   onEdit: (listId: string, song: Song) => void;
   onMoveCopy: (listId: string, song: Song) => void;
   isDuplicate: boolean;
+  canReorder: boolean;
 }
 
-const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate }: SortableSongRowProps) => {
+const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate, canReorder }: SortableSongRowProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const blockDrag = useRef(false);
   const lastDrag = useRef(0);
@@ -71,7 +72,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
       };
     },
     hover(item: DragItem, monitor) {
-      if (!ref.current || item.sourceListId !== listId) return;
+      if (!canReorder || !ref.current || item.sourceListId !== listId) return;
       const dragIndex = item.index;
       const hoverIndex = index;
 
@@ -211,9 +212,10 @@ interface SortableSongListProps {
     onEditSong: (listId: string, song: Song) => void;
     onMoveCopySong: (listId: string, song: Song) => void;
     duplicateSongIds: Set<string>;
+    canReorder: boolean;
 }
 
-const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong, onMoveCopySong, duplicateSongIds }: SortableSongListProps) => {
+const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong, onMoveCopySong, duplicateSongIds, canReorder }: SortableSongListProps) => {
     const [items, setItems] = useState<Song[]>(songs);
 
     useEffect(() => {
@@ -230,12 +232,13 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
     }, []);
 
     const handleDrop = useCallback(() => {
+        if (!canReorder) return;
         const ids = items.map(s => s.id);
         const currentIds = songs.map(s => s.id);
         if (JSON.stringify(ids) !== JSON.stringify(currentIds)) {
              onReorder(listId, ids);
         }
-    }, [items, listId, onReorder, songs]);
+    }, [items, listId, onReorder, songs, canReorder]);
 
     return (
         <div className="flex flex-col">
@@ -253,6 +256,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
                     onEdit={onEditSong}
                     onMoveCopy={onMoveCopySong}
                     isDuplicate={duplicateSongIds.has(song.id)}
+                    canReorder={canReorder}
                 />
             ))}
         </div>
@@ -433,16 +437,45 @@ function DragPreview() {
 // --- Main SongManager Component ---
 
 export function SongManager() {
-  const { currentProject, createSongList, updateSongList, deleteSongList, duplicateSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong, moveSongToList, copySongToList, replicateSongInList } = useProjects();
+  const { currentProject, refreshProjects, createSongList, updateSongList, deleteSongList, duplicateSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong, moveSongToList, copySongToList, replicateSongInList } = useProjects();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [openListDialog, setOpenListDialog] = useState(false);
   const [openSongDialog, setOpenSongDialog] = useState(false);
   
+  // Presentation only: sorting never overwrites the band's shared manual order.
+  const sortMode = searchParams.get('songSort') || 'manual';
+  const { i18n } = useTranslation();
+  const selectedSongs = currentProject?.songLists.find(list => list.id === searchParams.get('listId'))?.songs;
+  const sortedSongs = React.useMemo(() => {
+    const songs = [...(selectedSongs || [])];
+    if (sortMode === 'recent') {
+      const time = (song: Song) => {
+        const value = Date.parse(song.updatedAt || '');
+        return Number.isFinite(value) ? value : 0;
+      };
+      songs.sort((a, b) => time(b) - time(a));
+    } else if (sortMode === 'artist') {
+      const collator = new Intl.Collator(i18n.language, { sensitivity: 'base', numeric: true });
+      songs.sort((a, b) => {
+        const artistA = a.originalBand?.trim() || '', artistB = b.originalBand?.trim() || '';
+        if (!artistA || !artistB) return Number(!artistA) - Number(!artistB);
+        return collator.compare(artistA, artistB) || collator.compare(a.name, b.name);
+      });
+    }
+    return songs;
+  }, [selectedSongs, sortMode, i18n.language]);
+
   // State derived from URL
   const selectedListId = searchParams.get('listId');
   const selectedSongId = searchParams.get('songId');
+  useEffect(() => {
+    if (sortMode === 'recent' && !selectedSongId) {
+      // Read server timestamps after returning from edits, files or comments.
+      void refreshProjects().catch(() => toast.error(t('song_sort.refresh_error')));
+    }
+  }, [sortMode, selectedSongId, refreshProjects, t]);
 
   const handleSelectList = useCallback((listId: string) => {
       setSearchParams(prev => {
@@ -895,11 +928,12 @@ export function SongManager() {
                   </span>
                 </div>
 
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 {/* Add Song Button */}
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 border border-primary/20 bg-primary/[0.06] text-primary hover:bg-primary/15 justify-center mb-3 rounded-lg text-xs"
+                  className="h-8 border border-primary/20 bg-primary/[0.06] text-primary hover:bg-primary/15 justify-center rounded-lg text-xs"
                   onClick={() => {
                     setSongCreationListId(selectedList.id);
                     setOpenSongDialog(true);
@@ -909,11 +943,30 @@ export function SongManager() {
                   {t('add_song', 'Añadir canción')}
                 </Button>
 
+                <Select value={['recent', 'artist'].includes(sortMode) ? sortMode : 'manual'}
+                  onValueChange={value => setSearchParams(previous => {
+                    if (value === 'manual') previous.delete('songSort');
+                    else previous.set('songSort', value);
+                    return previous;
+                  }, { replace: true })}>
+                  <SelectTrigger aria-label={t('song_sort.label')} className="h-8 w-auto min-w-[168px] max-w-full rounded-lg text-xs gap-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual">{t('song_sort.manual')}</SelectItem>
+                    <SelectItem value="recent">{t('song_sort.recent')}</SelectItem>
+                    <SelectItem value="artist">{t('song_sort.artist')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                </div>
+
                 {/* Song List */}
                 {selectedList.songs.length > 0 && (
-                  <SortableSongList 
+                  <SortableSongList
+                      key={`${selectedList.id}:${sortMode}`}
                       listId={selectedList.id}
-                      songs={selectedList.songs}
+                      songs={sortedSongs}
+                      canReorder={!['recent', 'artist'].includes(sortMode)}
                       onReorder={handleReorder}
                       onSelectSong={handleSelectSong}
                       onDeleteSong={handleDeleteSong}

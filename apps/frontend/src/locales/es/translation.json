@@ -506,5 +506,12 @@
     "google_timing": "Google recoge los eventos nuevos, los cambios y los borrados cuando vuelve a consultar este calendario. La actualización no es inmediata.",
     "google_add": "Añadir a Google Calendar",
     "google_once": "Solo tienes que añadirlo una vez. Volver a pulsar no fuerza una actualización."
+  },
+  "song_sort": {
+    "label": "Ordenar canciones",
+    "manual": "Orden establecido",
+    "recent": "Cambios recientes",
+    "artist": "Artista",
+    "refresh_error": "No se han podido actualizar los cambios recientes."
   }
 }

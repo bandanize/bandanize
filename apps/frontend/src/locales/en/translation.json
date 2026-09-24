@@ -506,5 +506,12 @@
     "google_timing": "Google picks up new events, changes and deletions when it checks this calendar again. Updates are not immediate.",
     "google_add": "Add to Google Calendar",
     "google_once": "Add it just once. Clicking again does not force a refresh."
+  },
+  "song_sort": {
+    "label": "Sort songs",
+    "manual": "Established order",
+    "recent": "Recent changes",
+    "artist": "Artist",
+    "refresh_error": "Recent changes could not be refreshed."
   }
 }

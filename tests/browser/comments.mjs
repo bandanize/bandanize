@@ -69,7 +69,7 @@ assert.equal(await page.getByRole('button',{name:'Comentario general',exact:true
 await page.locator('#tab-comment-input').fill('@');
 const alex=page.getByRole('option',{name:'Alex',exact:true});await alex.click();assert.equal(await page.locator('#tab-comment-input').inputValue(),'@Alex ');
 await page.waitForFunction(() => { const input = document.querySelector('#tab-comment-input'); return document.activeElement === input && input.selectionStart === 6 && input.selectionEnd === 6; });
-await page.locator('#tab-comment-input').fill('@Alex entra aquí');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);assert.equal(comments.at(-1).message,'@Alex entra aquí');assert(comments.at(-1).quote);
+await page.locator('#tab-comment-input').pressSequentially('entra aquí');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);assert.equal(comments.at(-1).message,'@Alex entra aquí');assert(comments.at(-1).quote);
 for(const width of [1440,390]){
  await page.setViewportSize({width,height:900});
  await page.getByRole('button',{name:'Comentar una parte',exact:true}).click();const picker=page.getByRole('dialog',{name:'Comentar una parte',exact:true});
@@ -147,6 +147,25 @@ for (const width of [1440, 390, 320]) {
  await page.locator('[data-comment-marker] button').first().waitFor();
 }
 console.log('PASS hidden comments recover score width, preserve drafts, sync fullscreen and persist after reload');
+
+
+comments=[{id:901,sender:owner,message:'Esta parte necesita un poco más de espacio.\n@Alex ¿Probamos otra entrada?',timestamp:new Date().toISOString(),anchorStart:18,anchorEnd:40,quote:'Una melodía para volver',attachments:[{name:'Audio del ensayo.wav',type:'audio/wav',url:'/api/uploads/audio/demo.wav'}]},...Array.from({length:8},(_,index)=>({id:902+index,sender:owner,message:'Otra idea para el próximo ensayo.',timestamp:new Date().toISOString(),attachments:[]}))];
+for(const width of [1440,390]){
+ await page.setViewportSize({width,height:900});await page.reload();
+ const panel=page.locator('.tab-comments-panel'),scroller=panel.locator('.tab-comments-scroll').first();
+ await panel.locator('[data-tab-comment-id="901"]').waitFor();
+ await scroller.evaluate(el=>{el.style.scrollBehavior='auto';el.scrollTop=0;});
+ assert(await scroller.evaluate(el=>el.scrollHeight>el.clientHeight&&el.clientHeight>256));
+ assert.equal(await scroller.evaluate(el=>getComputedStyle(el).scrollbarWidth),'thin');
+ assert.notEqual(await scroller.evaluate(el=>getComputedStyle(el).scrollbarColor),'auto');
+ const note=panel.locator('[data-tab-comment-id="901"]');
+ assert.equal(await note.locator('img').count(),0);
+ assert(await panel.evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+ await panel.scrollIntoViewIfNeeded();
+ const shot=await panel.screenshot({path:'test-results/comments-room-'+width+'.png',animations:'disabled'});
+ console.log('VISUAL_IMAGE comments-room-'+width+' '+shot.toString('base64'));
+}
+console.log('PASS roomy comment layout and branded scrollbars at desktop/mobile widths');
 
 assert.deepEqual(errors,[]);console.log('PASS floating selection, line picker desktop/mobile/fullscreen, mentions and submitted anchors');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

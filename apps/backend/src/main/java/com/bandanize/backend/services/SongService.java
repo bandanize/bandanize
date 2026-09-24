@@ -125,6 +125,7 @@ public class SongService {
             song.setOriginalBand((String) updates.get("originalBand"));
         }
 
+        song.touch();
         return songRepository.saveAndFlush(song);
     }
 
@@ -344,13 +345,16 @@ public class SongService {
     }
 
     // --- Tablature ---
+    @org.springframework.transaction.annotation.Transactional
     public TablatureModel addTablature(Long songId, TablatureModel tab) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
         tab.setSong(song);
+        song.touch();
         return tablatureRepository.save(tab);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public TablatureModel updateTablature(Long tabId, TablatureModel details) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
@@ -367,10 +371,12 @@ public class SongService {
         if (details.getFiles() != null) {
             tab.setFiles(details.getFiles());
         }
+        tab.getSong().touch();
         logger.debug("Saving tab update to DB for tabId: {}", tabId);
         return tablatureRepository.saveAndFlush(tab);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteTablature(Long tabId) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
@@ -380,26 +386,32 @@ public class SongService {
             deleteFileFromStorage(file.getUrl());
         }
 
+        tab.getSong().touch();
         tablatureRepository.delete(tab);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public SongModel addFileToSong(Long songId, MediaFile file) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
         song.getFiles().add(file);
+        song.touch();
         return songRepository.save(song);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public TablatureModel addFileToTablature(Long tabId, MediaFile file) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
         tab.getFiles().add(file);
+        tab.getSong().touch();
         return tablatureRepository.save(tab);
     }
 
     @Autowired
     private StorageService storageService;
 
+    @org.springframework.transaction.annotation.Transactional
     public SongModel removeFileFromSong(Long songId, String fileUrl) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
@@ -414,9 +426,11 @@ public class SongService {
 
         // Remove from DB
         song.getFiles().remove(fileToRemove);
+        song.touch();
         return songRepository.save(song);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public TablatureModel removeFileFromTablature(Long tabId, String fileUrl) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
@@ -431,6 +445,7 @@ public class SongService {
 
         // Remove from DB
         tab.getFiles().remove(fileToRemove);
+        tab.getSong().touch();
         return tablatureRepository.save(tab);
     }
 
