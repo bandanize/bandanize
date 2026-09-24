@@ -543,5 +543,19 @@
     "retry": "Reintentar audio",
     "open": "Reproducir en el reproductor",
     "listen_as_audio": "Escuchar como audio"
+  },
+  "media_viewer": {
+    "seek": "Posición del vídeo",
+    "fullscreen": "Pantalla completa",
+    "exit_fullscreen": "Salir de pantalla completa",
+    "previous_page": "Página anterior",
+    "next_page": "Página siguiente",
+    "page": "Página",
+    "zoom_in": "Acercar",
+    "zoom_out": "Alejar",
+    "fit_width": "Ajustar al ancho",
+    "open_original": "Abrir original",
+    "pdf_failed": "No se pudo mostrar este PDF. Prueba a abrir o descargar el original con los botones de arriba.",
+    "protected_pdf": "Este PDF necesita una contraseña. Abre el original para desbloquearlo."
   }
 }

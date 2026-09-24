@@ -543,5 +543,19 @@
     "retry": "Retry audio",
     "open": "Play in the audio player",
     "listen_as_audio": "Listen as audio"
+  },
+  "media_viewer": {
+    "seek": "Video position",
+    "fullscreen": "Full screen",
+    "exit_fullscreen": "Exit full screen",
+    "previous_page": "Previous page",
+    "next_page": "Next page",
+    "page": "Page",
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out",
+    "fit_width": "Fit to width",
+    "open_original": "Open original",
+    "pdf_failed": "This PDF could not be displayed. Try opening or downloading the original using the buttons above.",
+    "protected_pdf": "This PDF needs a password. Open the original to unlock it."
   }
 }
