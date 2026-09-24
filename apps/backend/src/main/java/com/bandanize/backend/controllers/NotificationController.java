@@ -31,6 +31,14 @@ public class NotificationController {
         return notificationService.getUnreadCount(projectId, user.getId());
     }
 
+    @PostMapping("/{notificationId}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long projectId, @PathVariable Long notificationId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        var user = userService.getUserByUsername(userDetails.getUsername());
+        notificationService.markAsRead(projectId, user.getId(), notificationId);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/mark-read")
     public ResponseEntity<Void> markAllAsRead(@PathVariable Long projectId,
             @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {

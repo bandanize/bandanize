@@ -73,26 +73,7 @@ public class TabCommentService {
 
         TabCommentModel saved = tabCommentRepository.save(comment);
 
-        // Detect @mentions and send notifications
-        if (message.contains("@")) {
-            // Navigate up: tablature -> song -> band
-            SongModel song = tablature.getSong();
-            if (song != null && song.getBand() != null) {
-                BandModel band = song.getBand();
-                if (band != null) {
-                    for (UserModel member : band.getUsers()) {
-                        if (member.getId().equals(sender.getId()))
-                            continue;
-
-                        String mention = "@" + member.getName();
-                        if (message.contains(mention)) {
-                            notificationService.createTabCommentMentionNotification(
-                                    band, sender, member, tablature);
-                        }
-                    }
-                }
-            }
-        }
+        notificationService.createTabCommentNotifications(tablature.getSong().getBand(), sender, tablature, saved);
 
         return saved;
     }

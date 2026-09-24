@@ -115,20 +115,20 @@ export function Dashboard() {
   return (
     <PageLayout compactHeader
       headerContent={
-        <div className="max-w-[1280px] w-full mx-auto px-4 sm:px-6">
+        <div className="max-w-[1280px] w-full mx-auto px-3 sm:px-5">
           <div className="max-w-[1216px] w-full flex justify-between items-center mx-auto">
             {/* Logo Section */}
-            <div className="flex items-center gap-2.5 min-w-0 select-none">
-              <div className="flex items-center justify-center">
-                   <img src="/favicon.svg" alt="Bandanize" className="size-10 pointer-events-none" />
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 select-none">
+              <div className="flex items-center justify-center rounded-xl bg-primary/[0.07] ring-1 ring-primary/15 p-1.5">
+                   <img src="/favicon.svg" alt="Bandanize" className="size-7 pointer-events-none" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-medium font-poppins text-foreground leading-6">Bandanize</h1>
+                <h1 className="text-base sm:text-lg font-semibold font-poppins text-foreground leading-6">Bandanize</h1>
                 <p className="text-xs text-muted-foreground leading-5 truncate max-w-40">{t('Welcome')}, {user?.name?.split(' ')[0]}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                <LanguageSwitcher compact />
 
                <AccountMenu />

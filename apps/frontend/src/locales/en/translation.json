@@ -207,7 +207,9 @@
     "controls": "Reading controls",
     "copied": "Copied to clipboard",
     "copy_failed": "Could not copy the text",
-    "font_size": "Font size"
+    "font_size": "Font size",
+    "hide_comments": "Hide comments",
+    "show_comments": "Show comments"
   },
   "invite": {
     "title": "Project invitation",
@@ -419,5 +421,14 @@
     "team": "Team",
     "agenda": "Calendar",
     "alerts": "Alerts"
+  },
+  "notification_ui": {
+    "comment": "commented on the tablature “{{tab}}”",
+    "mention": "mentioned you in a comment on “{{tab}}”",
+    "open": "Open notification",
+    "read": "Read",
+    "unread": "Unread",
+    "failed": "Could not mark as read",
+    "unknown": "A member"
   }
 }

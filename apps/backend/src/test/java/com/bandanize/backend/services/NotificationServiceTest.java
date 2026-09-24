@@ -169,4 +169,38 @@ class NotificationServiceTest {
 
         verify(notificationRepository).markAllAsRead(10L, 2L);
     }
+
+    @Test void commentsNotifyMembersAndOwnerOnceWithMentionPrecedence() {
+        band.setOwner(recipient2);
+        band.setUsers(new ArrayList<>(List.of(actor, recipient1, recipient1)));
+        SongModel song = new SongModel(); song.setId(20L); song.setBand(band);
+        TablatureModel tab = new TablatureModel(); tab.setId(30L); tab.setName("Guitar"); tab.setSong(song);
+        TabCommentModel comment = new TabCommentModel(); comment.setId(40L); comment.setMessage("@User Two revisar");
+        notificationService.createTabCommentNotifications(band, actor, tab, comment);
+        verify(notificationRepository,times(2)).save(notificationCaptor.capture());
+        var saved = notificationCaptor.getAllValues();
+        assertEquals("TAB_COMMENT_MENTION", saved.get(0).getMetadata().get("mentionType"));
+        assertEquals(recipient1, saved.get(0).getRecipient());
+        assertEquals("TAB_COMMENT_ADDED", saved.get(1).getMetadata().get("mentionType"));
+        assertEquals(recipient2, saved.get(1).getRecipient());
+        assertEquals("30", saved.get(0).getMetadata().get("tabId"));
+        assertEquals("40", saved.get(0).getMetadata().get("commentId"));
+        when(notificationRepository.findByBandIdAndRecipientIdOrderByCreatedAtDesc(10L,2L)).thenReturn(List.of(saved.get(0)));
+        assertEquals("TAB_COMMENT_MENTION",notificationService.getProjectNotifications(10L,2L).get(0).getType());
+        when(notificationRepository.findByBandIdAndRecipientIdOrderByCreatedAtDesc(10L,3L)).thenReturn(List.of(saved.get(1)));
+        assertEquals("TAB_COMMENT_ADDED",notificationService.getProjectNotifications(10L,3L).get(0).getType());
+    }
+
+    @Test void markReadIsScopedToRecipientAndProjectAndRepeatable() {
+        Notification note = new Notification(); note.setBand(band); note.setRecipient(recipient1);
+        when(notificationRepository.findById(99L)).thenReturn(java.util.Optional.of(note));
+        assertThrows(com.bandanize.backend.exceptions.ResourceNotFoundException.class,()->notificationService.markAsRead(10L,3L,99L));
+        assertThrows(com.bandanize.backend.exceptions.ResourceNotFoundException.class,()->notificationService.markAsRead(11L,2L,99L));
+        assertFalse(note.isRead());
+        verify(notificationRepository,never()).save(any());
+        notificationService.markAsRead(10L,2L,99L);
+        notificationService.markAsRead(10L,2L,99L);
+        assertTrue(note.isRead());
+    }
+
 }

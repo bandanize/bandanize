@@ -28,6 +28,16 @@ interface SongDetailProps {
 export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   const { t } = useTranslation();
   const requestUploadName = useUploadName();
+  const [commentsVisible, setCommentsVisible] = useState(() => {
+    try { return localStorage.getItem('bandanize.reader.comments') !== 'hidden'; } catch { return true; }
+  });
+  const toggleComments = () => {
+    setCommentsVisible(visible => {
+      try { localStorage.setItem('bandanize.reader.comments', visible ? 'hidden' : 'visible'); } catch { /* Storage may be unavailable. */ }
+      return !visible;
+    });
+    setFocusedAnchor(null);
+  };
   const [pendingAnchor, setPendingAnchor] = useState<{ tabId: string; anchor: CommentAnchor } | null>(null);
   const [focusedAnchor, setFocusedAnchor] = useState<{ tabId: string; anchor: CommentAnchor } | null>(null);
   const { 
@@ -50,6 +60,17 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   const selectedTab = song.tablatures.find(t => t.id === selectedTabId) || null;
 
   const [tabComments, setTabComments] = useState<{ tabId: string | null; comments: TabComment[] }>({ tabId: null, comments: [] });
+  const linkedCommentId = searchParams.get('commentId');
+  useEffect(() => {
+    if (!linkedCommentId || tabComments.tabId !== selectedTabId || !tabComments.comments.some(comment => String(comment.id) === linkedCommentId)) return;
+    setCommentsVisible(true);
+    const frame = requestAnimationFrame(() => {
+      const target = Array.from(document.querySelectorAll<HTMLElement>('[data-tab-comment-id]')).find(el => el.dataset.tabCommentId === linkedCommentId);
+      target?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      target?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [linkedCommentId, selectedTabId, tabComments]);
   const receiveComments = useCallback((comments: TabComment[]) => setTabComments({ tabId: selectedTabId, comments }), [selectedTabId]);
   useEffect(() => {
     if (!focusedAnchor) return;
@@ -219,18 +240,18 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
           onDeleteTab={handleDeleteTab} onCreateTab={handleCreateTab} onUpdateTabDetails={handleUpdateTabDetails} /></div>
         <div className="song-score min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4">
           {selectedTab ? <TabEditor key={selectedTab.id} tab={selectedTab} songName={song.name} onSave={handleSaveTabContent} isSaving={isSavingTab}
-            hideFiles
+            hideFiles commentsVisible={commentsVisible} onToggleComments={toggleComments}
             comments={tabComments.tabId === selectedTab.id ? tabComments.comments : []}
             onUpload={tabId => handleFileUploadTrigger('tab', tabId)} uploading={isUploading && uploadTarget?.type === 'tab'} uploadProgress={uploadProgress}
             onDeleteFile={(tabId, url) => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, tabId, url)} onPreview={setPreviewFile}
             focusedAnchor={focusedAnchor?.tabId === selectedTab.id ? focusedAnchor.anchor : null}
-            onAnnotate={anchor => { setPendingAnchor({ tabId: selectedTab.id, anchor }); setTimeout(() => { const input = document.getElementById('tab-comment-input'); input?.scrollIntoView({ block: 'center', behavior: 'smooth' }); input?.focus({ preventScroll: true }); }, 150); }} />
+            onAnnotate={anchor => { setCommentsVisible(true); setPendingAnchor({ tabId: selectedTab.id, anchor }); setTimeout(() => { const input = document.getElementById('tab-comment-input'); input?.scrollIntoView({ block: 'center', behavior: 'smooth' }); input?.focus({ preventScroll: true }); }, 150); }} />
             : <div className="min-h-64 flex items-center justify-center text-center text-sm text-muted-foreground p-6">{t('workspace.choose_tab')}</div>}
         </div>
         <div className="song-comments min-w-0 space-y-4">
-          {selectedTab && <TabComments onCommentsChange={receiveComments} key={selectedTab.id} tabId={selectedTab.id} content={selectedTab.content}
+          {selectedTab && <div hidden={!commentsVisible}><TabComments onCommentsChange={receiveComments} key={selectedTab.id} tabId={selectedTab.id} content={selectedTab.content}
             anchor={pendingAnchor?.tabId === selectedTab.id ? pendingAnchor.anchor : null} onClearAnchor={() => setPendingAnchor(null)}
-            onLocate={anchor => setFocusedAnchor({ tabId: selectedTab.id, anchor })} onPreview={setPreviewFile} />}
+            onLocate={anchor => setFocusedAnchor({ tabId: selectedTab.id, anchor })} onPreview={setPreviewFile} /></div>}
           {selectedTab && <div className="song-tab-media"><MediaLibrary files={selectedTab.files || []} title={t('workspace.tab_files')}
             onUpload={() => handleFileUploadTrigger('tab', selectedTab.id)} uploading={isUploading && uploadTarget?.type === 'tab'} progress={uploadProgress}
             onPreview={setPreviewFile} onDelete={url => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, selectedTab.id, url)} /></div>}

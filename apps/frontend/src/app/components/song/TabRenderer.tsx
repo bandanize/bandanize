@@ -102,7 +102,8 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
       ))}
     </pre>
     {positions.map(position => {
-      const note = annotated.find(item => item.comment.id === position.id)!;
+      const note = annotated.find(item => item.comment.id === position.id);
+      if (!note) return null;
       const siblings = annotated.filter(item => content.slice(0, item.anchor.start).split('\n').length === content.slice(0, note.anchor.start).split('\n').length);
       return <div key={position.id} data-comment-marker className="absolute left-1 z-20" style={{ top: position.top }}
         onMouseEnter={() => { setHoveredQuote(null); setActive(position.id); }} onMouseLeave={() => { setActive(null); setHoveredQuote(null); }}

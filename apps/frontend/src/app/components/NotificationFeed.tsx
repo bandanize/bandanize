@@ -1,5 +1,9 @@
+import { Link } from 'react-router-dom';
+import { useProjects } from '@/contexts/ProjectContext';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import React, { useEffect, useState } from 'react';
-import { getProjectNotifications } from '@/services/api';
+import { getProjectNotifications, markNotificationRead } from '@/services/api';
 import { Notification } from '@/types';
 import { ScrollArea } from '@/app/components/ui/scroll-area';
 import { format } from 'date-fns';
@@ -13,9 +17,12 @@ import {
 
 interface NotificationFeedProps {
     projectId: string;
+    onRead?: () => void;
 }
 
-export function NotificationFeed({ projectId }: NotificationFeedProps) {
+export function NotificationFeed({ projectId, onRead }: NotificationFeedProps) {
+    const { t } = useTranslation();
+    const { currentProject } = useProjects();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -44,6 +51,7 @@ export function NotificationFeed({ projectId }: NotificationFeedProps) {
                     color: "text-sky-400", // #38BDF8
                     borderColor: "border-l-sky-400"
                 };
+            case 'TAB_COMMENT_ADDED':
             case 'TAB_COMMENT_MENTION':
             case 'CHAT_MENTION': 
                 return { 
@@ -83,7 +91,7 @@ export function NotificationFeed({ projectId }: NotificationFeedProps) {
 
     const getMessage = (notification: Notification) => {
         const { actor, type, metadata } = notification;
-        const actorName = actor.name || actor.username;
+        const actorName = actor?.name || actor?.username || t('notification_ui.unknown');
 
         switch (type) {
             case 'LIST_CREATED':
@@ -96,8 +104,9 @@ export function NotificationFeed({ projectId }: NotificationFeedProps) {
                 return <span><strong className="font-bold text-foreground">{actorName}</strong> eliminó a un miembro</span>;
             case 'CHAT_MENTION':
                 return <span><strong className="font-bold text-foreground">{actorName}</strong> te ha mencionado en el chat</span>;
+            case 'TAB_COMMENT_ADDED':
             case 'TAB_COMMENT_MENTION':
-                return <span><strong className="font-bold text-foreground">{actorName}</strong> te ha mencionado en "{metadata.tabName}"</span>;
+                return <span><strong className="font-bold text-foreground">{actorName}</strong> {t(type === 'TAB_COMMENT_MENTION' ? 'notification_ui.mention' : 'notification_ui.comment', { tab: metadata.tabName })}</span>;
             case 'EVENT_CREATED':
                 return <span><strong className="font-bold text-foreground">{actorName}</strong> creó el evento "{metadata.eventName}"</span>;
             case 'EVENT_MODIFIED':
@@ -109,6 +118,31 @@ export function NotificationFeed({ projectId }: NotificationFeedProps) {
             default:
                 return <span><strong className="font-bold text-foreground">{actorName}</strong> realizó una acción</span>;
         }
+    };
+
+    const destination = (notification: Notification) => {
+        const { metadata, type } = notification;
+        const params = new URLSearchParams();
+        if (type === 'TAB_COMMENT_MENTION' || type === 'TAB_COMMENT_ADDED' || type === 'TAB_CREATED') {
+            params.set('tab', 'songs');
+            const list = currentProject?.songLists.find(list => list.songs.some(song =>
+                metadata.songId ? song.id === metadata.songId : song.tablatures.some(tab => tab.id === metadata.tabId)));
+            const song = list?.songs.find(song => metadata.songId ? song.id === metadata.songId : song.tablatures.some(tab => tab.id === metadata.tabId));
+            if (list && song) {
+                params.set('listId', list.id); params.set('songId', song.id);
+                if (metadata.tabId) params.set('tabId', metadata.tabId);
+                if (metadata.commentId) params.set('commentId', metadata.commentId);
+            }
+        } else params.set('tab', type === 'CHAT_MENTION' ? 'chat' : type.startsWith('EVENT_') ? 'calendar' : type.startsWith('MEMBER_') ? 'members' : 'songs');
+        return '/project/' + projectId + '?' + params.toString();
+    };
+    const read = async (notification: Notification) => {
+        if (notification.isRead) return;
+        try {
+            await markNotificationRead(projectId, notification.id);
+            setNotifications(items => items.map(item => item.id === notification.id ? { ...item, isRead: true } : item));
+            onRead?.();
+        } catch { toast.error(t('notification_ui.failed')); }
     };
 
     if (loading) {
@@ -125,11 +159,12 @@ export function NotificationFeed({ projectId }: NotificationFeedProps) {
                 {notifications.map((notification) => {
                     const style = getNotificationStyle(notification.type);
                     return (
-                        <div 
+                        <Link to={destination(notification)} onClick={() => { void read(notification); }}
+                            data-notification-id={notification.id} data-read={notification.isRead}
                             key={notification.id} 
-                            className={`flex items-start gap-4 p-4 border-b border-[#2B2B31] last:border-0 transition-all duration-200 ${
+                            className={`flex items-start gap-4 p-4 border-b border-[#2B2B31] last:border-0 hover:bg-accent/50 focus-visible:outline focus-visible:outline-primary transition-colors ${
                                 notification.isRead 
-                                    ? 'opacity-50 border-l-[4px] border-l-transparent' 
+                                    ? 'border-l-[4px] border-l-transparent' 
                                     : `border-l-[4px] ${style.borderColor} bg-transparent`
                             }`}
                         >
@@ -138,15 +173,15 @@ export function NotificationFeed({ projectId }: NotificationFeedProps) {
                                     {style.icon}
                                 </div>
                             </div>
-                            <div className="flex-1 space-y-1">
+                            <div className="flex-1 min-w-0 space-y-1 break-words">
                                 <p className="text-sm leading-snug text-foreground font-normal">
                                     {getMessage(notification)}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    {format(new Date(notification.createdAt), 'MMM d, yyyy • h:mm a')}
+                                    {format(new Date(notification.createdAt), 'MMM d, yyyy • h:mm a')} · {t(notification.isRead ? 'notification_ui.read' : 'notification_ui.unread')}
                                 </p>
                             </div>
-                        </div>
+                        </Link>
                     );
                 })}
             </div>

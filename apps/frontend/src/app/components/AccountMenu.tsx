@@ -16,7 +16,7 @@ export function AccountMenu() {
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <Button variant="ghost" aria-label={t('app_nav.account')} title={t('app_nav.account')}
-        className="relative h-10 w-10 sm:w-auto sm:max-w-40 rounded-xl p-1.5 sm:px-2 gap-2 border border-border/60 hover:bg-accent">
+        className="relative h-10 w-10 sm:w-auto sm:max-w-40 rounded-xl p-1.5 sm:px-2 gap-2 border border-border/70 bg-background/50 hover:bg-accent hover:border-primary/25 transition-colors">
         <MemberAvatar name={user?.name || ''} photo={user?.photo} className="size-7" />
         <span className="hidden sm:inline truncate text-xs">{user?.username}</span>
         <ChevronDown className="hidden sm:block size-3 text-muted-foreground shrink-0" />
