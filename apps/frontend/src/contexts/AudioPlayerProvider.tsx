@@ -17,12 +17,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     const audio = audioRef.current;
     if (!audio || !trackRef.current) return;
     const request = ++attempt.current;
-    if (audio.error) audio.load();
-    if (audio.ended) audio.currentTime = 0;
+    // Reopen a finished stream: WebKit can stall when seeking its exhausted decoder.
+    if (audio.error || audio.ended) audio.load();
     patch({ status: 'loading' });
-    // Called directly from a user gesture, including on iOS.
-    void audio.play().catch(() => {
-      if (request === attempt.current && trackRef.current) patch({ status: 'error' });
+    // Metadata-based handoff can require a fresh user gesture on iOS.
+    void audio.play().catch((error: unknown) => {
+      if (request === attempt.current && trackRef.current) patch({ status: error instanceof DOMException && error.name === 'NotAllowedError' ? 'paused' : 'error' });
     });
   }, [patch]);
   const pause = useCallback(() => {

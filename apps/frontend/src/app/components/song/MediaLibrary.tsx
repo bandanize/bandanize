@@ -1,3 +1,5 @@
+import { mediaKind } from '@/lib/media-kind';
+import { MediaVideo } from './MediaVideo';
 import { useAudioPlayer } from '@/contexts/audio-player';
 import { useSeenContent } from '@/contexts/SongUnreadContext';
 import { useState, useRef } from 'react';
@@ -17,7 +19,8 @@ export function MediaLibrary({ songId, activityScope, files, title, onUpload, on
   const [filter, setFilter] = useState('all');
   const [active, setActive] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
-  const kind = (file: LibraryFile) => file.type.startsWith('audio/') ? 'audio' : file.type.startsWith('video/') ? 'video' : file.type.startsWith('image/') ? 'image' : 'document';
+  const [audioOnly, setAudioOnly] = useState<Set<string>>(() => new Set());
+  const kind = (file: LibraryFile) => audioOnly.has(file.url) ? 'audio' : mediaKind(file);
   const visible = files.filter(file => filter === 'all' || kind(file) === filter);
   const activityRoot = useRef<HTMLElement>(null);
   useSeenContent(activityRoot, activityScope ? songId : undefined, 'files', JSON.stringify(visible.map(file => file.url)));
@@ -50,7 +53,11 @@ export function MediaLibrary({ songId, activityScope, files, title, onUpload, on
             {onDelete && <Button size="icon" variant="ghost" className="size-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(file.url)} aria-label={`${t('workspace.delete')}: ${file.name}`}><Trash2 className="size-3.5" /></Button>}
           </div>
           {type === 'video' && open && <div className="pt-2 pb-1">
-            <video key={file.url} controls playsInline preload="metadata" src={getMediaUrl(file.url)} className="w-full max-h-52 rounded-lg" aria-label={file.name} onError={() => setFailed(file.url)} />
+            <MediaVideo key={file.url} file={file} className="w-full max-h-52 rounded-lg" onError={() => setFailed(file.url)} onAudio={() => {
+              setAudioOnly(previous => new Set(previous).add(file.url));
+              setActive(null);
+              player.toggleTrack(file);
+            }} />
             {failed === file.url && <p role="status" className="text-xs text-muted-foreground mt-2">{t('workspace.media_failed')}</p>}
           </div>}
         </div>;

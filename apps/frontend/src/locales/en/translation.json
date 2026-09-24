@@ -541,6 +541,7 @@
     "ended": "One more time?",
     "error": "Could not play. Try again.",
     "retry": "Retry audio",
-    "open": "Play in the audio player"
+    "open": "Play in the audio player",
+    "listen_as_audio": "Listen as audio"
   }
 }
