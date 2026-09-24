@@ -65,6 +65,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/integrations/spotify/callback").permitAll()
                         .requestMatchers("/api/integrations/youtube/callback").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(errors -> errors.authenticationEntryPoint((request, response, error) ->
+                        response.sendError(401, "Authentication required")))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

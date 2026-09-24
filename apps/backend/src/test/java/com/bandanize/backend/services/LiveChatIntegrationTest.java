@@ -44,6 +44,10 @@ class LiveChatIntegrationTest {
             return users.saveAndFlush(user);
         });
     }
+    @Test
+    void anonymousStreamRequiresAuthentication() throws Exception {
+        mvc.perform(get("/api/live/events")).andExpect(status().isUnauthorized());
+    }
     @Test @WithMockUser("live-owner")
     void historyIsStableAndCannotSpoofSender() throws Exception {
         ChatMessageModel first = new ChatMessageModel(); first.setBand(band); first.setSender(owner);
