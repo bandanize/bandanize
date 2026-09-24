@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.2](https://github.com/bandanize/bandanize/compare/api@v1.10.1...api@v1.10.2) (2026-09-24)
+
+
+### Bug Fixes
+
+* compatible comment mentions and interactive passage markers; refine song header ([3795a0d](https://github.com/bandanize/bandanize/commit/3795a0ddc1da50f5f2c9b365815db6c010be0489))
+* install patched libexpat in runtime images and expose scan reports ([20515a9](https://github.com/bandanize/bandanize/commit/20515a9cd7022bdb451c86ae18f90f92cd226578))
+* menciones, comentarios sobre fragmentos y cabecera de canción ([57aa4a1](https://github.com/bandanize/bandanize/commit/57aa4a112a645447581d75f5a5200976b0cfa3cc))
+
 ## [1.10.1](https://github.com/bandanize/bandanize/compare/api@v1.10.0...api@v1.10.1) (2026-09-24)
 
 

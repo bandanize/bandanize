@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.18.1](https://github.com/bandanize/bandanize/compare/web@v1.18.0...web@v1.18.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* compatible comment mentions and interactive passage markers; refine song header ([3795a0d](https://github.com/bandanize/bandanize/commit/3795a0ddc1da50f5f2c9b365815db6c010be0489))
+* install patched libexpat in runtime images and expose scan reports ([20515a9](https://github.com/bandanize/bandanize/commit/20515a9cd7022bdb451c86ae18f90f92cd226578))
+* measure marker preview placement outside React rendering ([9a0d99c](https://github.com/bandanize/bandanize/commit/9a0d99cc40a3be6a5d782ab92eafee64866d1841))
+* menciones, comentarios sobre fragmentos y cabecera de canción ([57aa4a1](https://github.com/bandanize/bandanize/commit/57aa4a112a645447581d75f5a5200976b0cfa3cc))
+
 ## [1.18.0](https://github.com/bandanize/bandanize/compare/web@v1.17.0...web@v1.18.0) (2026-09-24)
 
 
