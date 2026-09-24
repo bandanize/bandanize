@@ -11,6 +11,9 @@ import java.io.IOException;
 @Service
 public class StorageService {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     private final FileStorageService fileStorageService;
 
     @org.springframework.beans.factory.annotation.Autowired
@@ -31,6 +34,16 @@ public class StorageService {
     }
 
     public void deleteFile(String filename, String folder) {
+        String url = "/api/uploads/" + folder + "/" + filename;
+        String legacy = "/uploads/" + folder + "/" + filename;
+        for (String table : java.util.List.of("song_files", "tablature_files", "tab_comment_attachments")) {
+            Long references = jdbc.queryForObject("SELECT COUNT(*) FROM " + table + " WHERE url = ? OR url = ?", Long.class, url, legacy);
+            if (references != null && references > 0) return;
+        }
+        for (String table : java.util.List.of("band_model", "user_model")) {
+            Long references = jdbc.queryForObject("SELECT COUNT(*) FROM " + table + " WHERE photo = ? OR photo = ?", Long.class, url, legacy);
+            if (references != null && references > 0) return;
+        }
         fileStorageService.delete(filename, folder);
     }
 

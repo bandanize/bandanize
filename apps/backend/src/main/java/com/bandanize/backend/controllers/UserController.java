@@ -19,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+    @Autowired private com.bandanize.backend.services.ResourceAccess access;
 
     private final UserService userService;
 
@@ -61,7 +62,7 @@ public class UserController {
      */
     @PostMapping
     public UserDTO createUser(@RequestBody UserModel user) {
-        return userService.createUser(user);
+        throw new org.springframework.security.access.AccessDeniedException("Use the registration endpoint");
     }
 
     /**
@@ -97,6 +98,7 @@ public class UserController {
      */
     @PutMapping("/{id}")
     public UserDTO updateUser(@PathVariable Long id, @RequestBody UserModel userDetails) {
+        access.user(id);
         return userService.updateUser(id, userDetails);
     }
 

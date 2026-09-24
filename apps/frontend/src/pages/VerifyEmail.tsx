@@ -1,8 +1,8 @@
+import { ResendVerification } from '@/app/components/ResendVerification';
 import { Check, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import api from '@/services/api';
-import { AxiosError } from 'axios';
+import api, { extractErrorMessage } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -39,8 +39,7 @@ export function VerifyEmail() {
         }
       } catch (error: unknown) {
         setStatus('error');
-        const err = error as AxiosError<string>;
-        const errorText = err.response?.data || t('verify_email_failed', 'Verification failed.');
+        const errorText = extractErrorMessage(error, t('verify_email_failed', 'Verification failed.'));
         setMessage(errorText);
       }
     };
@@ -90,9 +89,10 @@ export function VerifyEmail() {
 
           {status === 'error' && (
             <div className="space-y-4">
-               <X className="text-destructive size-12 mx-auto mb-4" aria-hidden="true" />
-              <h3 className="text-xl font-medium text-foreground">{t('verification_failed', 'Verification Failed')}</h3>
-               <p className="text-destructive-foreground text-[14px]">{message}</p>
+               <ResendVerification />
+               {token && <X className="text-destructive size-12 mx-auto mb-4" aria-hidden="true" />}
+              <h3 className="text-xl font-medium text-foreground">{token ? t('verification_failed', 'Verification Failed') : t('verification_resend')}</h3>
+               {token && <p className="text-destructive-foreground text-[14px]">{message}</p>}
               <Button 
                 onClick={() => navigate('/login')}
                 variant="outline"

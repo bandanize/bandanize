@@ -557,5 +557,8 @@
     "open_original": "Open original",
     "pdf_failed": "This PDF could not be displayed. Try opening or downloading the original using the buttons above.",
     "protected_pdf": "This PDF needs a password. Open the original to unlock it."
-  }
+  },
+  "verification_resend": "Resend verification email",
+  "verification_resend_hint": "No email or an expired link? Request a new link using your account email.",
+  "verification_resend_sent": "If your account needs verification, a new link has been sent. Check your spam folder too."
 }

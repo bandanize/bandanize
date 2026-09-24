@@ -24,7 +24,7 @@ export interface TabComment {
   quote?: string;
   attachments?: LibraryFile[];
   id: number;
-  sender: { id: number; name: string; photo?: string };
+  sender: { id: number; name: string; photo?: string } | null;
   message: string;
   timestamp: string;
 }
@@ -121,9 +121,11 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
   };
   const mentionsVisible = showMentions && mentionFilteredMembers.length > 0;
 
-  useEffect(() => {
+  const [previousAnchor, setPreviousAnchor] = useState(anchor);
+  if (previousAnchor !== anchor) {
+    setPreviousAnchor(anchor);
     setShowMentions(false); setMentionRange(null); setSendError('');
-  }, [anchor]);
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!mentionsVisible) return;
@@ -219,13 +221,13 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
           </div>
         ) : (
           comments.map((comment) => {
-            const isMe = String(comment.sender.id) === user?.id;
+            const isMe = String(comment.sender?.id) === user?.id;
             return (
               <div key={comment.id} data-tab-comment-id={comment.id} data-seen-key={String(comment.id)} tabIndex={-1} className="py-5 group focus-visible:outline focus-visible:outline-primary rounded-md">
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0"><span className="block text-sm font-medium text-foreground break-words">{comment.sender.name}</span>
+                    <div className="flex-1 min-w-0"><span className="block text-sm font-medium text-foreground break-words">{comment.sender?.name || t('deleted_user', 'Usuario eliminado')}</span>
                     <span className="block mt-1 text-[11px] text-muted-foreground">
                       {(() => {
                         try {

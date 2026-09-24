@@ -98,6 +98,7 @@ public class AuthController {
      * @param user The user details to register.
      * @return ResponseEntity with success or error message.
      */
+    @org.springframework.transaction.annotation.Transactional
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserModel user) {
         if (user.getUsername() == null || user.getUsername().isBlank()) {
@@ -109,6 +110,8 @@ public class AuthController {
         if (user.getHashedPassword() == null || user.getHashedPassword().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password is required");
         }
+        if (user.getId() != null) return ResponseEntity.badRequest().body("New accounts cannot specify an ID");
+        user.setBands(new java.util.ArrayList<>());
         user.setEmail(user.getEmail().trim().toLowerCase(Locale.ROOT));
         if (!user.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid email format");
@@ -133,6 +136,14 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("User registered successfully. Please check your email to verify your account.");
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerification(@RequestBody ForgotPasswordRequest request) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) return ResponseEntity.badRequest().body("Email is required");
+        userRepository.findByEmail(request.getEmail().trim()).filter(UserModel::isDisabled).ifPresent(user ->
+            userService.sendVerificationEmail(user, jwtService.generateVerificationToken(user.getUsername())));
+        return ResponseEntity.ok("If your account needs verification, a new email has been sent.");
     }
 
     @GetMapping("/verify-email")

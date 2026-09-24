@@ -557,5 +557,8 @@
     "open_original": "Abrir original",
     "pdf_failed": "No se pudo mostrar este PDF. Prueba a abrir o descargar el original con los botones de arriba.",
     "protected_pdf": "Este PDF necesita una contraseña. Abre el original para desbloquearlo."
-  }
+  },
+  "verification_resend": "Reenviar correo de verificación",
+  "verification_resend_hint": "¿No te llegó el correo o ha caducado el enlace? Pide uno nuevo con el email de tu cuenta.",
+  "verification_resend_sent": "Si tu cuenta está pendiente de verificación, te hemos enviado un enlace nuevo. Revisa también spam."
 }

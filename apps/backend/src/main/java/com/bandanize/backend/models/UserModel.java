@@ -83,6 +83,7 @@ public class UserModel implements UserDetails {
         this.city = city;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     public String getHashedPassword() {
         return hashedPassword;
     }
@@ -145,6 +146,7 @@ public class UserModel implements UserDetails {
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public String getPassword() {
         return hashedPassword;
     }

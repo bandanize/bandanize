@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@org.springframework.transaction.annotation.Transactional
 public class SongService {
 
     private static final Logger logger = LoggerFactory.getLogger(SongService.class);
@@ -35,6 +36,7 @@ public class SongService {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        if (songList.getId() != null) throw new IllegalArgumentException("New items cannot specify an ID");
         songList.setBand(band);
 
         // Set default order index to current size (append to end)
@@ -65,13 +67,19 @@ public class SongService {
         SongListModel list = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
 
-        // Delete all songs (which triggers file cleanup)
-        for (SongModel song : list.getSongs()) {
-            // Recursively clean up song files
-            cleanupSongFiles(song);
-        }
-
+        List<SongModel> candidates = new java.util.ArrayList<>(list.getSongs());
+        list.getSongs().clear();
+        songListRepository.flush();
+        list.getBand().getSongLists().removeIf(item -> item.getId().equals(listId));
         songListRepository.delete(list);
+        songListRepository.flush();
+        for (SongModel song : candidates) {
+            if (!songListRepository.existsBySongsId(song.getId())) {
+                cleanupSongFiles(song);
+                song.getBand().getSongs().removeIf(item -> item.getId().equals(song.getId()));
+                songRepository.delete(song);
+            }
+        }
     }
 
     // ...
@@ -83,6 +91,7 @@ public class SongService {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        if (song.getId() != null) throw new IllegalArgumentException("New items cannot specify an ID");
         song.setBand(list.getBand());
 
         SongModel savedSong = songRepository.save(song);
@@ -136,6 +145,8 @@ public class SongService {
         SongListModel targetList = songListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
 
+        requireSameBand(song, targetList);
+        if (!targetList.getSongs().contains(song)) throw new IllegalArgumentException("Song is not in this list");
         targetList.getSongs().remove(song);
         songListRepository.save(targetList);
 
@@ -149,6 +160,7 @@ public class SongService {
 
         if (isOrphaned) {
             cleanupSongFiles(song);
+            song.getBand().getSongs().removeIf(item -> item.getId().equals(songId));
             songRepository.delete(song);
         }
     }
@@ -161,8 +173,11 @@ public class SongService {
         SongListModel targetList = songListRepository.findById(targetListId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
 
+        requireSameBand(song, sourceList); requireSameBand(song, targetList);
+        if (!sourceList.getSongs().contains(song)) throw new IllegalArgumentException("Song is not in source list");
+        if (sourceListId.equals(targetListId)) return song;
         sourceList.getSongs().remove(song);
-        targetList.getSongs().add(song);
+        if (!targetList.getSongs().contains(song)) targetList.getSongs().add(song);
 
         songListRepository.save(sourceList);
         songListRepository.save(targetList);
@@ -176,6 +191,10 @@ public class SongService {
         SongListModel targetList = songListRepository.findById(targetListId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
 
+        requireSameBand(song, targetList);
+        SongListModel source = songListRepository.findById(sourceListId).orElseThrow(() -> new ResourceNotFoundException("Source list not found"));
+        requireSameBand(song, source);
+        if (!source.getSongs().contains(song)) throw new IllegalArgumentException("Song is not in source list");
         if (!targetList.getSongs().contains(song)) {
             targetList.getSongs().add(song);
             songListRepository.save(targetList);
@@ -194,6 +213,7 @@ public class SongService {
         SongListModel targetList = songListRepository.findById(targetListId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target SongList not found"));
 
+        requireSameBand(originalSong, targetList);
         // Create a deep copy of the song
         SongModel clonedSong = new SongModel();
         clonedSong.setName(originalSong.getName() + (appendCopySuffix ? " (Copy)" : ""));
@@ -298,6 +318,10 @@ public class SongService {
                 .orElseThrow(() -> new ResourceNotFoundException("SongList not found"));
 
         List<SongModel> currentSongs = list.getSongs();
+        if (songIds == null || songIds.size() != currentSongs.size()
+                || new java.util.HashSet<>(songIds).size() != songIds.size()
+                || !new java.util.HashSet<>(songIds).equals(currentSongs.stream().map(SongModel::getId).collect(java.util.stream.Collectors.toSet())))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT, "The list changed. Refresh before reordering.");
         java.util.Map<Long, SongModel> songMap = currentSongs.stream()
                 .collect(java.util.stream.Collectors.toMap(SongModel::getId, s -> s));
 
@@ -349,6 +373,7 @@ public class SongService {
     public TablatureModel addTablature(Long songId, TablatureModel tab) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        if (tab.getId() != null) throw new IllegalArgumentException("New items cannot specify an ID");
         tab.setSong(song);
         song.touch();
         return tablatureRepository.save(tab);
@@ -368,9 +393,7 @@ public class SongService {
             tab.setTuning(details.getTuning());
         if (details.getContent() != null)
             tab.setContent(details.getContent());
-        if (details.getFiles() != null) {
-            tab.setFiles(details.getFiles());
-        }
+        // Attachments have dedicated endpoints; editing text must not replace them.
         tab.getSong().touch();
         logger.debug("Saving tab update to DB for tabId: {}", tabId);
         return tablatureRepository.saveAndFlush(tab);
@@ -387,6 +410,7 @@ public class SongService {
         }
 
         tab.getSong().touch();
+        tab.getSong().getTablatures().removeIf(item -> item.getId().equals(tabId));
         tablatureRepository.delete(tab);
     }
 
@@ -449,21 +473,25 @@ public class SongService {
         return tablatureRepository.save(tab);
     }
 
+    private void requireSameBand(SongModel song, SongListModel list) {
+        if (song.getBand() == null || !song.getBand().getId().equals(list.getBand().getId()))
+            throw new IllegalArgumentException("Songs and lists must belong to the same project");
+    }
     private void deleteFileFromStorage(String fileUrl) {
-        // Expected URL format: /uploads/{folder}/{filename}
-        try {
-            String[] parts = fileUrl.split("/");
-            if (parts.length >= 2) {
-                String filename = parts[parts.length - 1];
-                String folder = parts[parts.length - 2];
-                storageService.deleteFile(filename, folder);
-            }
-        } catch (Exception e) {
-            // Log warning but don't fail the operation? Or fail?
-            // Failing is safer to keep consistency, but if file is already gone, maybe not.
-            // Let's let it throw for now.
-            throw new RuntimeException("Failed to delete file from storage: " + e.getMessage());
-        }
+        if (fileUrl != null && fileUrl.startsWith("/uploads/")) fileUrl = "/api" + fileUrl;
+        if (fileUrl == null || !fileUrl.startsWith("/api/uploads/")) return;
+        String[] parts = fileUrl.split("/");
+        if (parts.length != 5) return;
+        Runnable cleanup = () -> {
+            try { storageService.deleteFile(parts[4], parts[3]); }
+            catch (Exception ex) { logger.warn("Deferred file cleanup failed", ex); }
+        };
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                new org.springframework.transaction.support.TransactionSynchronization() {
+                    @Override public void afterCommit() { cleanup.run(); }
+                });
+        } else cleanup.run();
     }
 
     @org.springframework.transaction.annotation.Transactional

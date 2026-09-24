@@ -87,7 +87,7 @@ public class TabCommentService {
         requireAccess(tabId, userId);
         if (!comment.getTablature().getId().equals(tabId)) throw new ResourceNotFoundException("Comment not found");
         // Only the author can delete their own comment
-        if (!comment.getSender().getId().equals(userId)) {
+        if (comment.getSender() == null || !comment.getSender().getId().equals(userId)) {
             throw new AccessDeniedException("You can only delete your own comments");
         }
 

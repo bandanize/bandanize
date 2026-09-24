@@ -25,6 +25,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 
 @SpringBootTest
 class BandControllerTest {
+    @MockitoBean private com.bandanize.backend.services.ResourceAccess access;
 
     @Autowired
     private WebApplicationContext context;
@@ -64,7 +65,7 @@ class BandControllerTest {
 
         List<BandDTO> bands = Arrays.asList(band1, band2);
 
-        when(bandService.getAllBands()).thenReturn(bands);
+        when(bandService.getBandsByUsername("user")).thenReturn(bands);
 
         mockMvc.perform(get("/api/bands")
                 .contentType(MediaType.APPLICATION_JSON))

@@ -21,6 +21,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/bands")
 public class BandController {
+    @Autowired private com.bandanize.backend.services.ResourceAccess access;
 
     private final BandService bandService;
     private final com.bandanize.backend.services.UserService userService;
@@ -41,7 +42,7 @@ public class BandController {
      */
     @GetMapping
     public List<BandDTO> getAllBands() {
-        return bandService.getAllBands();
+        return bandService.getBandsByUsername(org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
     /**
@@ -52,6 +53,7 @@ public class BandController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<BandDTO> getBandById(@PathVariable Long id) {
+        access.band(id);
         BandDTO bandDTO = bandService.getBandById(id);
         return ResponseEntity.ok(bandDTO);
     }
@@ -77,6 +79,7 @@ public class BandController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<BandDTO> updateBand(@PathVariable Long id, @RequestBody BandModel bandDetails) {
+        access.band(id);
         BandDTO updatedBand = bandService.updateBand(id, bandDetails);
         return ResponseEntity.ok(updatedBand);
     }
@@ -89,7 +92,7 @@ public class BandController {
      */
     @PostMapping
     public BandDTO createBand(@RequestBody BandModel band) {
-        return bandService.createBand(band);
+        return bandService.createBandWithUser(access.currentUserId(), band);
     }
 
     /**
@@ -101,6 +104,7 @@ public class BandController {
      */
     @PostMapping("/create/{userId}")
     public ResponseEntity<BandDTO> createBandWithUser(@PathVariable Long userId, @RequestBody BandModel bandDetails) {
+        access.user(userId);
         BandDTO createdBand = bandService.createBandWithUser(userId, bandDetails);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdBand);
     }
