@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/bandanize/bandanize/compare/api@v1.12.1...api@v1.13.0) (2026-09-24)
+
+
+### Features
+
+* Actualizar pom.xml ([e999452](https://github.com/bandanize/bandanize/commit/e9994521718073b686f050d5065b58e034de310d))
+
 ## [1.12.1](https://github.com/bandanize/bandanize/compare/api@v1.12.0...api@v1.12.1) (2026-09-24)
 
 
