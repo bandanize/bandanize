@@ -71,6 +71,7 @@ public class TabCommentService {
         comment.setAttachments(new java.util.ArrayList<>(attachments));
         comment.setTimestamp(LocalDateTime.now());
 
+        tablature.getSong().touch();
         TabCommentModel saved = tabCommentRepository.save(comment);
 
         notificationService.createTabCommentNotifications(tablature.getSong().getBand(), sender, tablature, saved);
@@ -90,6 +91,7 @@ public class TabCommentService {
             throw new AccessDeniedException("You can only delete your own comments");
         }
 
+        comment.getTablature().getSong().touch();
         tabCommentRepository.delete(comment);
     }
     private TablatureModel requireAccess(Long tabId, Long userId) {

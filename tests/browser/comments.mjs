@@ -69,7 +69,7 @@ assert.equal(await page.getByRole('button',{name:'Comentario general',exact:true
 await page.locator('#tab-comment-input').fill('@');
 const alex=page.getByRole('option',{name:'Alex',exact:true});await alex.click();assert.equal(await page.locator('#tab-comment-input').inputValue(),'@Alex ');
 await page.waitForFunction(() => { const input = document.querySelector('#tab-comment-input'); return document.activeElement === input && input.selectionStart === 6 && input.selectionEnd === 6; });
-await page.locator('#tab-comment-input').fill('@Alex entra aquí');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);assert.equal(comments.at(-1).message,'@Alex entra aquí');assert(comments.at(-1).quote);
+await page.locator('#tab-comment-input').pressSequentially('entra aquí');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);assert.equal(comments.at(-1).message,'@Alex entra aquí');assert(comments.at(-1).quote);
 for(const width of [1440,390]){
  await page.setViewportSize({width,height:900});
  await page.getByRole('button',{name:'Comentar una parte',exact:true}).click();const picker=page.getByRole('dialog',{name:'Comentar una parte',exact:true});

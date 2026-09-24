@@ -17,6 +17,15 @@ public class SongModel {
     private String songKey; // 'key' is a reserved keyword in some DBs
     private String originalBand;
 
+    // Nullable for older songs: their historical modification time is unknown.
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    private java.time.Instant updatedAt;
+
+    public java.time.Instant getUpdatedAt() { return updatedAt; }
+
+    @PrePersist
+    public void touch() { updatedAt = java.time.Instant.now(); }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "band_id")
     @JsonBackReference

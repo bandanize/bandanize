@@ -44,6 +44,7 @@ export interface Song {
   name: string;
   bandName: string;
   originalBand?: string;
+  updatedAt?: string;
   bpm: number;
   key: string;
   files: MediaFile[];
@@ -84,6 +85,7 @@ interface BandApiResponse {
       id: number;
       name: string;
       originalBand?: string;
+  updatedAt?: string;
       bpm?: number;
       songKey?: string;
       files?: MediaFile[];
@@ -162,8 +164,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
-  const fetchProjects = useCallback(async (throwOnError = false) => {
-    setIsLoading(true);
+  const fetchProjects = useCallback(async (throwOnError = false, background = false) => {
+    if (!background) setIsLoading(true);
     try {
       const response = await api.get('/bands/my-bands');
       // Map API response to Project interface
@@ -194,6 +196,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             name: song.name,
             bandName: band.name,
             originalBand: song.originalBand,
+            updatedAt: song.updatedAt,
             bpm: song.bpm,
             key: song.songKey,
             files: song.files || [],
@@ -221,14 +224,17 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date(),
       }));
       setProjects(mappedProjects);
+      setCurrentProject(previous => previous ? mappedProjects.find(project => project.id === previous.id) || null : previous);
     } catch (error) {
       console.error("Error fetching projects", error);
       if (throwOnError) throw error;
     } finally {
-      setIsLoading(false);
+      if (!background) setIsLoading(false);
     }
   }, [user]);
   
+  const refreshProjects = useCallback(() => fetchProjects(true, true), [fetchProjects]);
+
   const fetchInvitations = useCallback(async () => {
     try {
         const response = await api.get('/invitations/mine');
@@ -465,6 +471,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               id: number;
               name: string;
               originalBand?: string;
+  updatedAt?: string;
               bpm?: number;
               songKey?: string;
               files?: MediaFile[];
@@ -483,6 +490,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               name: song.name,
               bandName: currentProject?.name || '',
               originalBand: song.originalBand,
+            updatedAt: song.updatedAt,
               bpm: song.bpm || 0,
               key: song.songKey || '',
               files: song.files || [],
@@ -592,6 +600,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             name: s.name, 
             bandName: '', // Backend doesn't return this in SongModel, and it's redundant here
             originalBand: s.originalBand,
+            updatedAt: s.updatedAt,
             bpm: s.bpm, 
             key: s.songKey, 
             tablatures: [], 
@@ -614,13 +623,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         if (data.bpm !== undefined) payload.bpm = data.bpm;
         if (data.key !== undefined) payload.songKey = data.key;
         if (data.originalBand !== undefined) payload.originalBand = data.originalBand;
-      await api.put(`/songs/${songId}`, payload);
+      const response = await api.put(`/songs/${songId}`, payload);
       
       updateLocalProject(projectId, (p) => ({
           ...p,
           songLists: p.songLists.map(l => ({
             ...l,
-            songs: l.songs.map(s => s.id === songId ? { ...s, ...data } : s)
+            songs: l.songs.map(s => s.id === songId ? { ...s, ...data, updatedAt: response.data.updatedAt ?? s.updatedAt } : s)
           }))
         }));
     } catch (error) { 
@@ -692,6 +701,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               name: copiedSongData.name,
               bandName: originalSong?.bandName || '',
               originalBand: copiedSongData.originalBand,
+            updatedAt: copiedSongData.updatedAt,
               bpm: copiedSongData.bpm,
               key: copiedSongData.songKey,
               files: copiedSongData.files || [],
@@ -739,6 +749,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
               name: replicatedSongData.name,
               bandName: originalSong?.bandName || '',
               originalBand: replicatedSongData.originalBand,
+            updatedAt: replicatedSongData.updatedAt,
               bpm: replicatedSongData.bpm,
               key: replicatedSongData.songKey,
               files: replicatedSongData.files || [],
@@ -793,6 +804,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             ...l,
             songs: l.songs.map(s => s.id === songId ? { 
                 ...s, 
+                updatedAt: updatedSong.updatedAt ?? s.updatedAt,
                 files: updatedSong.files || []
             } : s)
           }))
@@ -910,7 +922,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 ...l,
                 songs: l.songs.map(s => s.id === songId ? { 
                     ...s, 
-                    files: updatedSong.files || []
+                    updatedAt: updatedSong.updatedAt ?? s.updatedAt,
+                files: updatedSong.files || []
                 } : s)
               }))
             }));
@@ -971,7 +984,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ProjectContext.Provider value={{
-      refreshProjects: () => fetchProjects(true),
+      refreshProjects,
       updateTabCommentCount,
       projects,
       invitations,
