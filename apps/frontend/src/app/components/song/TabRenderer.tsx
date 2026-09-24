@@ -26,7 +26,7 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
   const host = useRef<HTMLDivElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
   const [active, setActive] = useState<number | null>(null);
-  const [positions, setPositions] = useState<{ id: number; top: number }[]>([]);
+  const [positions, setPositions] = useState<{ id: number; top: number; above: boolean }[]>([]);
   const annotated = useMemo(() => comments.flatMap(comment => {
     const anchor = resolveAnchor(content, { start: comment.anchorStart ?? -1, end: comment.anchorEnd ?? -1, quote: comment.quote || '' });
     return anchor ? [{ comment, anchor }] : [];
@@ -61,7 +61,7 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
             const row = Math.round(top);
             if (taken.has(row)) return [];
             taken.set(row, comment.id);
-            return [{ id: comment.id, top }];
+            return [{ id: comment.id, top, above: top > container.clientHeight - 240 }];
           }
           offset += length;
         }
@@ -113,7 +113,7 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
           <MessageCircle className="size-3.5" />
         </button>
         {active === position.id && <div role="dialog" aria-label={t('comments', 'Comments')}
-          style={position.top > (host.current?.clientHeight || 0) - 240 ? { bottom: 0 } : { top: 0 }}
+          style={position.above ? { bottom: 0 } : { top: 0 }}
           className="absolute left-6 w-56 max-w-[calc(100vw-80px)] max-h-60 overflow-y-auto rounded-lg border border-border bg-popover p-3 shadow-xl text-xs space-y-3"
           onKeyDown={event => { if (event.key === 'Escape') setActive(null); }}>
           {siblings.map(({ comment, anchor }) => <div key={comment.id} onMouseEnter={() => setHoveredQuote(anchor)}>
