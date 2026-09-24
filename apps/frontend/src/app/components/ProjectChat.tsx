@@ -1,3 +1,6 @@
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { markChatAsRead } from '@/services/api';
 import { MemberAvatar } from './MemberAvatar';
 import React, { useState, useRef, useEffect } from 'react';
 import { useProjects } from '@/contexts/ProjectContext';
@@ -13,6 +16,9 @@ import { es } from 'date-fns/locale';
 export function ProjectChat() {
   const { currentProject, sendMessage } = useProjects();
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const [sending, setSending] = useState(false);
+  const nearBottom = useRef(true);
   const [message, setMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [, setSearchParams] = useSearchParams();
@@ -27,8 +33,19 @@ export function ProjectChat() {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (nearBottom.current) scrollToBottom();
   }, [currentProject?.chat]);
+
+  useEffect(() => {
+    if (!currentProject?.id) return;
+    const read = () => {
+      if (document.visibilityState === 'visible' && nearBottom.current)
+        void markChatAsRead(currentProject.id).catch(() => {});
+    };
+    read();
+    document.addEventListener('visibilitychange', read);
+    return () => document.removeEventListener('visibilitychange', read);
+  }, [currentProject?.id, currentProject?.chat.length]);
 
   // Mention logic
   const [showMentions, setShowMentions] = useState(false);
@@ -173,6 +190,7 @@ export function ProjectChat() {
         e.preventDefault(); 
     }
     if (showMentions && e.key === 'Enter') {
+        e.stopPropagation();
         e.preventDefault();
         if (mentionType === 'user' && mentionFilteredMembers.length > 0) {
             handleSelectMention(mentionFilteredMembers[0].name);
@@ -185,12 +203,19 @@ export function ProjectChat() {
     }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && currentProject) {
-      sendMessage(currentProject.id, message);
-      setMessage('');
-    }
+    if (!message.trim() || !currentProject || sending) return;
+    const draft = message;
+    setSending(true);
+    try {
+      await sendMessage(currentProject.id, draft);
+      setMessage(previous => previous === draft ? '' : previous);
+      nearBottom.current = true;
+      scrollToBottom();
+    } catch {
+      toast.error(t('chat_send_failed', 'No se pudo enviar. Tu mensaje sigue aquí; vuelve a intentarlo.'));
+    } finally { setSending(false); }
   };
 
   const highlightMentions = (text: string, isOwnMessage: boolean) => {
@@ -239,7 +264,10 @@ export function ProjectChat() {
         </div>
       </div>
 
-      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={scrollAreaRef} onScroll={event => {
+        const area = event.currentTarget;
+        nearBottom.current = area.scrollHeight - area.scrollTop - area.clientHeight < 80;
+      }} className="flex-1 overflow-y-auto p-4 space-y-4">
         {currentProject.chat.length === 0 ? (
           <div className="text-center text-muted-foreground/60 py-8">
             <p>No hay mensajes aún</p>
@@ -268,10 +296,10 @@ export function ProjectChat() {
                       try {
                         const date = new Date(msg.timestamp);
                         return isNaN(date.getTime()) 
-                          ? 'Ahora' 
+                          ? '—' 
                           : formatDistanceToNow(date, { addSuffix: true, locale: es });
                       } catch {
-                        return 'Ahora';
+                        return '—';
                       }
                     })()}
                   </span>
@@ -330,7 +358,7 @@ export function ProjectChat() {
               className="flex-1 bg-background border-border text-foreground focus-visible:ring-ring"
               ref={inputRef}
             />
-            <Button type="submit" size="icon" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={!message.trim()}>
+            <Button type="submit" size="icon" className="bg-primary text-primary-foreground hover:bg-primary/90" aria-label={t("send", "Enviar")} disabled={sending || !message.trim()}>
               <Send className="size-4" />
             </Button>
           </form>

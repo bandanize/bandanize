@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '@/contexts/ProjectContext';
 import { Button } from '@/app/components/ui/button';
@@ -9,28 +10,31 @@ import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import { PageLayout } from '@/app/components/PageLayout';
 
 export function InvitationsPage() {
-  const { invitations, acceptInvitation, rejectInvitation, setInvitations, isLoading } = useProjects(); // Added setInvitations
+  const { invitations, acceptInvitation, rejectInvitation, isLoading } = useProjects();
   const navigate = useNavigate();
+  const [busy, setBusy] = useState<string | null>(null);
   const { t } = useTranslation();
 
   const handleAccept = async (id: string) => {
+    if (busy) return;
+    setBusy(id);
     try {
       await acceptInvitation(id);
-      setInvitations(prev => prev.filter(inv => inv.id !== id));
       toast.success(t('invitations.accepted'));
     } catch {
       toast.error(t('invitations.acceptError'));
-    }
+    } finally { setBusy(null); }
   };
 
   const handleReject = async (id: string) => {
+    if (busy) return;
+    setBusy(id);
     try {
       await rejectInvitation(id);
-      setInvitations(prev => prev.filter(inv => inv.id !== id));
       toast.success(t('invitations.rejected'));
     } catch {
       toast.error(t('invitations.rejectError'));
-    }
+    } finally { setBusy(null); }
   };
 
   return (
@@ -81,6 +85,7 @@ export function InvitationsPage() {
                 <CardFooter className="flex gap-2">
                   <Button 
                     className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90" 
+                    disabled={busy !== null}
                     onClick={() => handleAccept(inv.id)}
                   >
                     <Check className="size-4 mr-2" />
@@ -89,6 +94,7 @@ export function InvitationsPage() {
                   <Button 
                     variant="outline" 
                     className="flex-1 bg-card border-border text-destructive hover:bg-destructive/20 hover:text-destructive-foreground"
+                    disabled={busy !== null}
                     onClick={() => handleReject(inv.id)}
                   >
                     <X className="size-4 mr-2" />

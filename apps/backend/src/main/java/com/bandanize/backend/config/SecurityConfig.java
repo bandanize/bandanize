@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF as using JWT
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ASYNC).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/invite-links/*").permitAll()
                         .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
@@ -64,6 +65,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/integrations/spotify/callback").permitAll()
                         .requestMatchers("/api/integrations/youtube/callback").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(errors -> errors.authenticationEntryPoint((request, response, error) ->
+                        response.sendError(401, "Authentication required")))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
