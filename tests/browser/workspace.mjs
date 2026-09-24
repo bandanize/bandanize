@@ -45,7 +45,7 @@ await page.getByRole('button',{name:/Luces de la ciudad Próximo directo/}).clic
 await page.goto(origin+'/project/1?tab=songs&listId=11&songId=21&tabId=31');await page.locator('pre').waitFor();
 await page.getByRole('button',{name:/Ver fragmento/}).click();await page.locator('[data-anchor-line=true]').waitFor();
 await page.screenshot({path:'test-results/song-workspace.png',fullPage:true});
-await page.getByRole('button',{name:'Demo del ensayo.wav Audio'}).click();const audio=page.locator('audio').first();await audio.evaluate(async a=>{a.load();await a.play();});await page.waitForTimeout(200);assert(await audio.evaluate(a=>a.currentTime>0));await audio.evaluate(a=>a.pause());
+await page.getByRole('button',{name:'Demo del ensayo.wav Audio'}).click();const audio=page.locator('[data-global-audio]');await page.waitForFunction(()=>document.querySelector('[data-global-audio]').currentTime>0);assert(await audio.evaluate(a=>!a.paused));await page.getByRole('region',{name:'Reproductor',exact:true}).getByRole('button',{name:'Cerrar reproductor'}).click();
 await page.getByRole('button',{name:'Notas.txt Documentos'}).click();assert(await page.getByRole('dialog').getByRole('link',{name:'Descargar: Notas.txt'}).isVisible());await page.keyboard.press('Escape');
 await page.locator('pre').evaluate(pre=>{const range=document.createRange();range.selectNodeContents(pre.querySelectorAll(':scope > span')[1]);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);document.dispatchEvent(new Event('selectionchange'));});
 await page.getByRole('button',{name:'Comentar selección',exact:true}).click();await page.getByText('Comentando este fragmento',{exact:true}).waitFor();

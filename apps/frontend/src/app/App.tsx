@@ -1,3 +1,4 @@
+import { AudioPlayerProvider } from '@/contexts/AudioPlayerProvider';
 import { UploadNameProvider } from '@/app/components/UploadNameProvider';
 import React from 'react';
 import { CookiesProvider } from 'react-cookie';
@@ -77,20 +78,25 @@ function AppRoutes() {
   );
 }
 
+function AudioSession({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return <AudioPlayerProvider key={user?.id || 'signed-out'}>{children}</AudioPlayerProvider>;
+}
+
 export default function App() {
   return (
     <UploadNameProvider><Router>
       <CookiesProvider><ConsentProvider>
         <ThemeProvider storageKey="vite-ui-theme">
           <AuthProvider>
-            <ProjectProvider>
+            <ProjectProvider><AudioSession>
               <div className="min-h-dvh flex flex-col">
                 <div className="flex-1"><AppRoutes /></div>
                 <LegalFooter />
               </div>
               <Toaster />
               <CookieConsent />
-            </ProjectProvider>
+            </AudioSession></ProjectProvider>
           </AuthProvider>
         </ThemeProvider>
       </ConsentProvider></CookiesProvider>

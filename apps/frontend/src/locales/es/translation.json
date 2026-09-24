@@ -523,5 +523,24 @@
     "new_files": "Archivos sin ver",
     "new_comments": "Comentarios sin leer"
   },
-  "export_youtube_disabled": "Deshabilitado temporalmente"
+  "export_youtube_disabled": "Deshabilitado temporalmente",
+  "player": {
+    "title": "Reproductor",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "close": "Cerrar reproductor",
+    "collapse": "Minimizar reproductor",
+    "expand": "Ampliar reproductor",
+    "seek": "Posición del audio",
+    "volume": "Volumen",
+    "mute": "Silenciar",
+    "unmute": "Activar sonido",
+    "playing": "Dándolo todo",
+    "paused": "Esperando a que vuelvas…",
+    "loading": "Preparando el audio…",
+    "ended": "¿Otra vez?",
+    "error": "No se pudo reproducir. Reinténtalo.",
+    "retry": "Reintentar audio",
+    "open": "Reproducir en el reproductor"
+  }
 }

@@ -1,7 +1,8 @@
+import { useAudioPlayer } from '@/contexts/audio-player';
 import { useSeenContent } from '@/contexts/SongUnreadContext';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { File, FileAudio, Film, Image as ImageIcon, Download, Trash2, Plus, Play, ChevronDown } from 'lucide-react';
+import { File, FileAudio, Film, Image as ImageIcon, Download, Trash2, Plus, Play, Pause, ChevronDown } from 'lucide-react';
 import { getMediaUrl } from '@/services/api';
 import { Button } from '../ui/button';
 
@@ -12,6 +13,7 @@ export function MediaLibrary({ songId, activityScope, files, title, onUpload, on
   onPreview: (file: LibraryFile) => void; uploading?: boolean; progress?: number;
 }) {
   const { t } = useTranslation();
+  const player = useAudioPlayer();
   const [filter, setFilter] = useState('all');
   const [active, setActive] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -34,20 +36,21 @@ export function MediaLibrary({ songId, activityScope, files, title, onUpload, on
         const type = kind(file); const playable = type === 'audio' || type === 'video';
         const Icon = type === 'audio' ? FileAudio : type === 'video' ? Film : type === 'image' ? ImageIcon : File;
         const open = active === file.url;
+        const selectedAudio = type === 'audio' && player.track?.url === file.url;
+        const audioActive = selectedAudio && (player.status === 'playing' || player.status === 'loading');
         return <div key={file.url} data-seen-key={activityScope ? activityScope + ':' + file.url : undefined} className="px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
-            <button type="button" className="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg p-1 hover:bg-accent" aria-expanded={playable ? open : undefined}
-              onClick={() => playable ? setActive(open ? null : file.url) : onPreview(file)}>
-              <span className="size-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">{playable ? <Play className="size-4" /> : <Icon className="size-4" />}</span>
+            <button type="button" className="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg p-1 hover:bg-accent" aria-expanded={type === 'video' ? open : undefined} aria-pressed={type === 'audio' ? !!audioActive : undefined}
+              onClick={() => type === 'audio' ? player.toggleTrack(file) : type === 'video' ? setActive(open ? null : file.url) : onPreview(file)}>
+              <span className="size-9 shrink-0 rounded-lg bg-primary/10 text-primary flex items-center justify-center">{audioActive ? <Pause className="size-4" /> : playable ? <Play className="size-4" /> : <Icon className="size-4" />}</span>
               <span className="min-w-0"><span className="block truncate text-xs font-medium" title={file.name}>{file.name}</span><span className="block text-[10px] text-muted-foreground mt-0.5">{t('workspace.'+type)}</span></span>
-              {playable && <ChevronDown className={`size-3 ml-auto shrink-0 ${open ? 'rotate-180' : ''}`} />}
+              {type === 'video' && <ChevronDown className={`size-3 ml-auto shrink-0 ${open ? 'rotate-180' : ''}`} />}
             </button>
             <a href={getMediaUrl(file.url)} download={file.name} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-primary" aria-label={`${t('workspace.download')}: ${file.name}`}><Download className="size-4" /></a>
             {onDelete && <Button size="icon" variant="ghost" className="size-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(file.url)} aria-label={`${t('workspace.delete')}: ${file.name}`}><Trash2 className="size-3.5" /></Button>}
           </div>
-          {playable && open && <div className="pt-2 pb-1">
-            {type === 'audio' ? <audio key={file.url} controls preload="none" src={getMediaUrl(file.url)} className="w-full h-10" aria-label={file.name} onError={() => setFailed(file.url)} />
-              : <video key={file.url} controls playsInline preload="metadata" src={getMediaUrl(file.url)} className="w-full max-h-52 rounded-lg" aria-label={file.name} onError={() => setFailed(file.url)} />}
+          {type === 'video' && open && <div className="pt-2 pb-1">
+            <video key={file.url} controls playsInline preload="metadata" src={getMediaUrl(file.url)} className="w-full max-h-52 rounded-lg" aria-label={file.name} onError={() => setFailed(file.url)} />
             {failed === file.url && <p role="status" className="text-xs text-muted-foreground mt-2">{t('workspace.media_failed')}</p>}
           </div>}
         </div>;
