@@ -48,6 +48,7 @@ public class BandModel {
 
     @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)
     @com.fasterxml.jackson.annotation.JsonIgnore
+    @OrderBy("id ASC")
     private List<ChatMessageModel> chatMessages = new ArrayList<>();
 
     @OneToMany(mappedBy = "band", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -20,6 +20,8 @@ import java.util.HexFormat;
 @Service
 @Transactional
 public class InviteLinkService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private LiveUpdateService live;
     private final BandRepository bands;
     private final UserRepository users;
     private final SecureRandom random = new SecureRandom();
@@ -65,6 +67,7 @@ public class InviteLinkService {
                 && (band.getOwner() == null || !band.getOwner().getId().equals(user.getId()))) {
             band.getUsers().add(user);
             bands.save(band);
+            live.bandChanged(band, "projects");
         }
         return new Joined(band.getId());
     }

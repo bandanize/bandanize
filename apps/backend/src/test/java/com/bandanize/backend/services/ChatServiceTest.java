@@ -27,6 +27,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ChatServiceTest {
 
+    @Mock private LiveUpdateService live;
+
     @Mock
     private ChatMessageRepository chatMessageRepository;
 
@@ -76,7 +78,7 @@ class ChatServiceTest {
     void getChatHistory_DelegatesToRepo() {
         ChatMessageModel msg = new ChatMessageModel();
         msg.setMessage("Hello");
-        when(chatMessageRepository.findByBandIdOrderByTimestampAsc(10L)).thenReturn(List.of(msg));
+        when(chatMessageRepository.findByBandIdOrderByIdAsc(10L)).thenReturn(List.of(msg));
 
         List<ChatMessageModel> result = chatService.getChatHistory(10L);
 

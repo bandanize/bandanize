@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessageModel, Long> {
     List<ChatMessageModel> findByBandIdOrderByTimestampAsc(Long bandId);
+    List<ChatMessageModel> findByBandIdOrderByIdAsc(Long bandId);
 
     List<ChatMessageModel> findBySender(com.bandanize.backend.models.UserModel sender);
 

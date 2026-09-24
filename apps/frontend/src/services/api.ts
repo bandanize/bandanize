@@ -54,8 +54,8 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const _res = error.response;
-        // Handle 401 Unauthorized or 403 Forbidden (Expired/Invalid Token)
-        if (_res?.status === 401 || _res?.status === 403) {
+        // A forbidden project action is not an expired authentication session.
+        if (_res?.status === 401) {
             // Don't redirect if it's a login attempt failure (invalid credentials)
             const isPublicRoute = PUBLIC_ROUTES.some(route => window.location.pathname.startsWith(route));
 

@@ -32,6 +32,9 @@ public class BandService {
     private final EmailService emailService;
 
     @Autowired
+    private LiveUpdateService live;
+
+    @Autowired
     private NotificationService notificationService;
 
     @Autowired
@@ -146,7 +149,7 @@ public class BandService {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
 
-        UserModel user = userRepository.findByEmail(email)
+        UserModel user = userRepository.findByEmail(email.trim())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
         executeInvitation(band, user, inviterName);
@@ -182,6 +185,8 @@ public class BandService {
                 // Reactivate invitation
                 invitation.setStatus(com.bandanize.backend.models.InvitationStatus.PENDING);
                 invitationRepository.save(invitation);
+                live.userChanged(user.getUsername(), "invitations", bandId);
+                emailService.sendBandInvitation(user.getEmail(), band.getName(), inviterName, "view-invitations");
                 return;
             }
         }
@@ -192,6 +197,8 @@ public class BandService {
         invitation.setStatus(com.bandanize.backend.models.InvitationStatus.PENDING);
 
         invitationRepository.save(invitation);
+
+        live.userChanged(user.getUsername(), "invitations", bandId);
 
         // Send email notification
         emailService.sendBandInvitation(user.getEmail(), band.getName(), inviterName, "view-invitations");
@@ -210,19 +217,27 @@ public class BandService {
                 .collect(Collectors.toList());
     }
 
+    public void requireInvitationRecipient(Long invitationId, Long userId) {
+        var invitation = invitationRepository.findById(invitationId)
+            .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
+        if (!invitation.getInvitedUser().getId().equals(userId))
+            throw new org.springframework.security.access.AccessDeniedException("This invitation belongs to another user");
+    }
+
     @org.springframework.transaction.annotation.Transactional
     public void acceptInvitation(Long invitationId) {
         com.bandanize.backend.models.BandInvitationModel invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
 
         if (invitation.getStatus() != com.bandanize.backend.models.InvitationStatus.PENDING) {
+            if (invitation.getStatus() == com.bandanize.backend.models.InvitationStatus.ACCEPTED) return;
             throw new IllegalArgumentException("Invitation is not pending");
         }
 
         BandModel band = invitation.getBand();
         UserModel user = invitation.getInvitedUser();
 
-        band.getUsers().add(user);
+        if (band.getUsers().stream().noneMatch(member -> member.getId().equals(user.getId()))) band.getUsers().add(user);
         // Ensure bidirectional consistency if mappedBy is used, though users is owner
         // here
         // But safe to be explicit if session is open
@@ -235,6 +250,8 @@ public class BandService {
         invitation.setStatus(com.bandanize.backend.models.InvitationStatus.ACCEPTED);
         invitationRepository.save(invitation);
 
+        live.userChanged(user.getUsername(), "invitations", band.getId());
+        live.bandChanged(band, "projects");
         // Notify
         notificationService.createMemberAddedNotification(band, user, null);
     }
@@ -244,8 +261,10 @@ public class BandService {
         com.bandanize.backend.models.BandInvitationModel invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
 
+        if (invitation.getStatus() != com.bandanize.backend.models.InvitationStatus.PENDING) return;
         invitation.setStatus(com.bandanize.backend.models.InvitationStatus.REJECTED);
         invitationRepository.save(invitation);
+        live.userChanged(invitation.getInvitedUser().getUsername(), "invitations", invitation.getBand().getId());
     }
 
     @org.springframework.transaction.annotation.Transactional

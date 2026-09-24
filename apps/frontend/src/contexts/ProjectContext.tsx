@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import api from '@/services/api';
+import { mapChatMessage, orderedChat } from '@/lib/chat-messages';
+import { connectLiveUpdates } from '@/lib/live-updates';
 import { toast } from 'sonner';
 
 export interface Member {
@@ -131,7 +133,7 @@ interface ProjectContextType {
   fetchInvitations: () => Promise<void>;
   acceptInvitation: (invitationId: string) => Promise<void>;
   rejectInvitation: (invitationId: string) => Promise<void>;
-  sendMessage: (projectId: string, message: string) => void;
+  sendMessage: (projectId: string, message: string) => Promise<void>;
   createSongList: (projectId: string, name: string) => void;
   updateSongList: (projectId: string, listId: string, name: string) => void;
   deleteSongList: (projectId: string, listId: string) => void;
@@ -212,15 +214,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             })) : []
           })) : []
         })) : [],
-        chat: band.chatMessages ? band.chatMessages.map((msg) => ({
-          id: String(msg.id),
-          userId: msg.sender ? String(msg.sender.id) : 'unknown',
-          userName: msg.sender ? msg.sender.name : 'Unknown User',
-          userPhoto: msg.sender?.photo,
-          message: msg.message || '',
-          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-          mentions: [] 
-        })) : [],
+        chat: orderedChat((band.chatMessages || []).map(mapChatMessage)),
         createdAt: new Date(),
       }));
       setProjects(mappedProjects);
@@ -238,11 +232,58 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const fetchInvitations = useCallback(async () => {
     try {
         const response = await api.get('/invitations/mine');
-        setInvitations(Array.isArray(response.data) ? response.data : []);
+        setInvitations(Array.isArray(response.data) ? response.data.map(inv => ({ ...inv, id: String(inv.id), bandId: String(inv.bandId) })) : []);
     } catch (error) {
         console.error("Error fetching invitations", error);
     }
   }, []);
+
+  // Push invalidations only: history is always recovered from authenticated endpoints.
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    const pending = new Set<string>();
+    const refreshChat = async (projectId: string) => {
+      if (pending.has(projectId)) return;
+      pending.add(projectId);
+      try {
+        const response = await api.get('/bands/' + projectId + '/chat');
+        if (!active || !Array.isArray(response.data)) return;
+        const incoming = response.data.map(mapChatMessage);
+        const update = (project: Project) => project.id === projectId
+          ? { ...project, chat: orderedChat([...project.chat, ...incoming]) } : project;
+        setProjects(previous => previous.map(update));
+        setCurrentProject(previous => previous ? update(previous) : previous);
+      } catch { /* Preserve history and drafts while offline. */ }
+      finally { pending.delete(projectId); }
+    };
+    let refreshing = false;
+    const recover = async () => {
+      if (!active || refreshing || document.visibilityState === 'hidden') return;
+      refreshing = true;
+      try {
+        await fetchInvitations();
+        if (currentProject?.id) await refreshChat(currentProject.id);
+      } finally { refreshing = false; }
+    };
+    const disconnect = connectLiveUpdates(change => {
+      if (!active) return;
+      if (change.kind === 'chat' && change.bandId) void refreshChat(String(change.bandId));
+      else {
+        void fetchInvitations();
+        if (change.kind === 'projects' || change.kind === 'ready') void fetchProjects(false, true);
+      }
+    });
+    const timer = setInterval(recover, 10000);
+    window.addEventListener('online', recover);
+    window.addEventListener('focus', recover);
+    document.addEventListener('visibilitychange', recover);
+    return () => {
+      active = false; disconnect(); clearInterval(timer);
+      window.removeEventListener('online', recover); window.removeEventListener('focus', recover);
+      document.removeEventListener('visibilitychange', recover);
+    };
+  }, [user, currentProject?.id, fetchInvitations, fetchProjects]);
 
   // Fetch projects from API
   useEffect(() => {
@@ -419,19 +460,11 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             userId: user.id,
             message: message
         });
-        const msg = response.data;
-        const newMessage: ChatMessage = {
-          id: String(msg.id),
-          userId: msg.sender ? String(msg.sender.id) : 'unknown',
-          userName: msg.sender ? msg.sender.name : 'Unknown User',
-          userPhoto: msg.sender?.photo,
-          message: msg.message || '',
-          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-          mentions: [],
-        };
-        updateLocalProject(projectId, (p) => ({ ...p, chat: [...p.chat, newMessage] }));
+        const newMessage = mapChatMessage(response.data);
+        updateLocalProject(projectId, (p) => ({ ...p, chat: orderedChat([...p.chat, newMessage]) }));
     } catch (error) {
         console.error("Error sending message", error);
+        throw error;
     }
   };
 
