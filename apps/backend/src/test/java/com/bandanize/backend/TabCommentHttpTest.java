@@ -168,4 +168,61 @@ class TabCommentHttpTest {
             .jsonPath("$[0].isRead").isEqualTo(true).jsonPath("$[1].isRead").isEqualTo(false);
     }
 
+
+    private WebTestClient readerClient() {
+        return WebTestClient.bindToServer().baseUrl("http://localhost:" + port)
+            .defaultHeader("Authorization", "Bearer " + jwt.generateToken(recipientUsername)).build();
+    }
+    private WebTestClient.BodyContentSpec unread(WebTestClient reader) {
+        return reader.get().uri("/api/bands/" + projectId + "/song-unread").exchange().expectStatus().isOk().expectBody();
+    }
+    @Test void songUnreadIsPerUserPerResourceAndPersistsAcrossRequests() {
+        var comment = client.post().uri("/api/tabs/" + tabId + "/comments").bodyValue(Map.of("message", "Listen here"))
+            .exchange().expectStatus().isOk().expectBody(Map.class).returnResult().getResponseBody();
+        String commentId = comment.get("id").toString();
+        songService.addFileToSong(songId, new MediaFile("Song notes", "text/plain", "/api/uploads/files/shared.txt"));
+        songService.addFileToTablature(tabId, new MediaFile("Tab notes", "text/plain", "/api/uploads/files/shared.txt"));
+        WebTestClient reader = readerClient();
+        unread(reader).jsonPath("$[0].tabs.length()").isEqualTo(1)
+            .jsonPath("$[0].comments[0]").isEqualTo(commentId).jsonPath("$[0].files.length()").isEqualTo(2);
+        unread(client).jsonPath("$[0].comments.length()").isEqualTo(0); // Own comment isn't unread.
+        reader.post().uri("/api/songs/" + songId + "/seen")
+            .bodyValue(Map.of("tabs", List.of(tabId.toString(), "999999"), "files", List.of("song:/api/uploads/files/shared.txt")))
+            .exchange().expectStatus().isOk();
+        unread(readerClient()).jsonPath("$[0].tabs.length()").isEqualTo(0)
+            .jsonPath("$[0].comments.length()").isEqualTo(1)
+            .jsonPath("$[0].files[0]").isEqualTo("tab:" + tabId + ":/api/uploads/files/shared.txt");
+        unread(client).jsonPath("$[0].tabs.length()").isEqualTo(1).jsonPath("$[0].files.length()").isEqualTo(2);
+        reader.post().uri("/api/songs/" + songId + "/seen")
+            .bodyValue(Map.of("comments", List.of(commentId))).exchange().expectStatus().isOk();
+        unread(reader).jsonPath("$[0].comments.length()").isEqualTo(0);
+        client.delete().uri("/api/tabs/" + tabId + "/comments/" + commentId).exchange().expectStatus().isOk();
+        var replacement = client.post().uri("/api/tabs/" + tabId + "/comments").bodyValue(Map.of("message", "A new comment with unchanged total count"))
+            .exchange().expectStatus().isOk().expectBody(Map.class).returnResult().getResponseBody();
+        unread(reader).jsonPath("$[0].comments[0]").isEqualTo(replacement.get("id").toString());
+        TablatureModel next = new TablatureModel(); next.setName("Bass");
+        Long nextId = songService.addTablature(songId, next).getId();
+        unread(reader).jsonPath("$[0].tabs[0]").isEqualTo(nextId.toString());
+        // Persisted receipts must not block deletion of their song.
+        client.delete().uri("/api/songs/" + songId + "?listId=" + listId).exchange().expectStatus().isNoContent();
+        org.junit.jupiter.api.Assertions.assertEquals(0,
+            jdbc.queryForObject("SELECT COUNT(*) FROM song_read_state WHERE song_id = ?", Integer.class, songId));
+    }
+    @Test void unreadAccessRequiresMembershipAndCannotMarkFutureIdsSeen() {
+        UserModel outsider = new UserModel();
+        String username = "outside-" + UUID.randomUUID();
+        outsider.setUsername(username); outsider.setEmail(username + "@example.test"); outsider.setName("Outside"); outsider.setDisabled(false);
+        users.save(outsider);
+        WebTestClient stranger = WebTestClient.bindToServer().baseUrl("http://localhost:" + port)
+            .defaultHeader("Authorization", "Bearer " + jwt.generateToken(username)).build();
+        stranger.get().uri("/api/bands/" + projectId + "/song-unread").exchange().expectStatus().isForbidden();
+        stranger.post().uri("/api/songs/" + songId + "/seen")
+            .bodyValue(Map.of("tabs", List.of(tabId.toString()))).exchange().expectStatus().isForbidden();
+        readerClient().post().uri("/api/songs/" + songId + "/seen")
+            .bodyValue(Map.of("files", List.of("song:/api/uploads/files/future.txt"))).exchange().expectStatus().isOk();
+        songService.addFileToSong(songId, new MediaFile("Future", "text/plain", "/api/uploads/files/future.txt"));
+        unread(readerClient()).jsonPath("$[0].files[0]").isEqualTo("song:/api/uploads/files/future.txt");
+        readerClient().post().uri("/api/songs/" + songId + "/seen")
+            .bodyValue(Map.of("everything", List.of("1"))).exchange().expectStatus().isBadRequest();
+    }
 }

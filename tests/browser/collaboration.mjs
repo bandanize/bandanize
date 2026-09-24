@@ -45,10 +45,20 @@ async function setup(browser, mobile = false, auth = true, optional = false, tim
   page.on('pageerror', error => errors.push(error.message));
   const requests = [];
   const fixture = structuredClone(band);
-  const controls = { failNextTransfer: false, extraProjects: [], notifications: [], events: [] };
+  const controls = { unread: [], seen: [], failSeen: false, failNextTransfer: false, extraProjects: [], notifications: [], events: [] };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     requests.push({ path, url: request.url(), method: request.method(), data: request.postData() });
+    if (path === '/api/bands/1/song-unread') {
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(controls.unread)});return;
+    }
+    if (/^\/api\/songs\/\d+\/seen$/.test(path)) {
+      if (controls.failSeen) { await route.fulfill({status:503,body:'try later'}); return; }
+      const data = JSON.parse(request.postData()); controls.seen.push(data);
+      const summary = controls.unread.find(song=>String(song.songId)===path.split('/')[3]);
+      if(summary) for(const [kind, keys] of Object.entries(data)) summary[kind] = summary[kind].filter(key=>!keys.includes(key));
+      await route.fulfill({status:200,contentType:'application/json',body:'{}'});return;
+    }
     if (path.endsWith('/calendar/fixture-calendar-token.ics')) {
       await route.fulfill({status:200,contentType:'text/calendar',body:'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n'}); return;
     }
@@ -106,7 +116,7 @@ async function dismiss(page) {
 }
 async function capture(page, name) {
   const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: !name.startsWith('reader-columns-'), animations: 'disabled' });
-  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone', 'calendar-refresh', 'calendar-mobile', 'guide-desktop', 'guide-mobile', 'song-sort-desktop', 'song-sort-mobile', 'reader-columns-chromium', 'reader-columns-webkit'].includes(name))
+  if (['unread-desktop', 'unread-mobile', 'visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone', 'calendar-refresh', 'calendar-mobile', 'guide-desktop', 'guide-mobile', 'song-sort-desktop', 'song-sort-mobile', 'reader-columns-chromium', 'reader-columns-webkit'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
 const browser = await chromium.launch();
@@ -270,6 +280,53 @@ try {
 
 
 
+
+  const unreadTest = await setup(browser);
+  try {
+    const {page, context, controls, fixture, errors} = unreadTest;
+    controls.unread = [{songId:21, tabs:['31','32'], files:['tab:31:/fixture.txt'], comments:['1','2']}];
+    fixture.songLists[0].songs[0].tablatures.push({id:32,name:'Bass tab',instrument:'Bass',content:'E|---1---',files:[],commentCount:0});
+    await context.addInitScript(()=>localStorage.setItem('bandanize.reader.comments','hidden'));
+    await page.goto(origin + '/project/1?tab=songs&listId=11');
+    await dismiss(page);
+    const indicators = page.locator('[data-song-id="21"] [data-unread="true"]');
+    await indicators.first().waitFor();
+    assert.equal(await indicators.count(),3);
+    for(const width of [1280,390,320]) {
+      await page.setViewportSize({width,height:900});
+      await capture(page,width===1280?'unread-desktop':'unread-mobile');
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    }
+    await page.setViewportSize({width:1280,height:900});
+    await page.locator('[data-song-id="21"]').click();
+    await page.getByText('Guitar tab',{exact:true}).first().click();
+    const content=page.locator('[data-seen-key="31"]');
+    await content.scrollIntoViewIfNeeded();
+    await page.waitForFunction(()=>!!document.querySelector('[data-seen-key="31"]'));
+    await page.waitForTimeout(2400);
+    assert(!controls.unread[0].tabs.includes('31'),'Viewed tablature acknowledged');
+    assert(controls.unread[0].tabs.includes('32'),'Unopened tablature remains new');
+    assert.deepEqual(controls.unread[0].comments,['1','2'],'Hidden comments remain unread');
+    await page.getByRole('button',{name:'Show comments',exact:true}).click();
+    await page.locator('[data-tab-comment-id="2"]').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(2400);
+    assert(!controls.unread[0].comments.includes('2'),'Visible comment acknowledged');
+    await page.locator('[data-seen-key="tab:31:/fixture.txt"]').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(2400);
+    assert.deepEqual(controls.unread[0].files,[]);
+    await page.goto(origin + '/project/1?tab=songs&listId=11');
+    await page.locator('[data-song-id="21"]').waitFor();
+    await page.waitForTimeout(500);
+    assert.equal(await page.locator('[data-song-id="21"] [data-activity-kind="files"][data-unread="true"]').count(),0);
+    assert.equal(await page.locator('[data-song-id="21"] [data-activity-kind="tabs"][data-unread="true"]').count(),1);
+    controls.unread[0].files.push('song:/new-file.txt');
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+    await page.locator('[data-song-id="21"] [data-activity-kind="files"][data-unread="true"]').waitFor();
+    assert.deepEqual(errors,[]);
+    console.log('PASS independent persistent unread indicators, hidden comments, viewport receipts and new activity after reading');
+  } catch(error) {await capture(unreadTest.page,'unread-failure');throw error;}
+  finally {await unreadTest.context.close();}
+
   const sorting = await setup(browser);
   try {
     const {page, fixture, requests, errors} = sorting;
@@ -288,11 +345,11 @@ try {
     await expectOrder(['21','22','23']);
     const activity=page.locator('[data-song-id="21"] time');
     assert.equal(await activity.getAttribute('datetime'),'2026-09-20T18:00:00.000Z');
-    assert.match(await activity.getAttribute('aria-label'),/^Last change:/);
+    assert.match(await activity.getAttribute('aria-label'),/^Last activity:/);
     assert((await activity.innerText()).length>0);
     assert.equal(await page.locator('[data-song-id="23"] time').count(),0);
     assert.equal(await page.getByText('No date',{exact:true}).count(),0);
-    assert.match(await activity.innerText(),/^Updated:/);
+    assert.match(await activity.innerText(),/^Activity:/);
     assert.match(await activity.getAttribute('title'),/Includes edits, comments and files/);
     await select('Artist');
     await expectOrder(['22','21','23']);
@@ -332,9 +389,9 @@ try {
     }
     await page.getByRole('combobox',{name:'Idioma / Language'}).click();
     await page.getByRole('option',{name:'Español',exact:true}).click();
-    await page.locator('[data-song-id="21"] time[aria-label^="Último cambio:"]').waitFor();
+    await page.locator('[data-song-id="21"] time[aria-label^="Última actividad:"]').waitFor();
     assert.equal(await page.getByText('Sin fecha',{exact:true}).count(),0);
-    assert.match(await page.locator('[data-song-id="21"] time').innerText(),/^Cambios:/);
+    assert.match(await page.locator('[data-song-id="21"] time').innerText(),/^Actividad:/);
     assert.match(await page.locator('[data-song-id="21"] time').getAttribute('title'),/Incluye ediciones, comentarios y archivos/);
     assert.deepEqual(errors,[]);
     console.log('PASS song activity timestamps, localized exact dates, hidden unknown dates and compact mobile rows');

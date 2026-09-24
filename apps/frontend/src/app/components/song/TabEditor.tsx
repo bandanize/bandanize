@@ -1,3 +1,4 @@
+import { useSeenContent } from '@/contexts/SongUnreadContext';
 import { createPortal } from 'react-dom';
 import { PassagePicker } from './PassagePicker';
 import { MediaLibrary } from './MediaLibrary';
@@ -96,6 +97,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
 }
 
 interface TabEditorProps {
+  songId: string;
   commentsVisible?: boolean;
   onToggleComments?: () => void;
   hideFiles?: boolean;
@@ -113,7 +115,7 @@ interface TabEditorProps {
   onPreview: (file: { url: string; type: string; name: string }) => void;
 }
 
-export function TabEditor({ 
+export function TabEditor({ songId, 
   tab, 
   songName, 
   onSave, 
@@ -130,6 +132,7 @@ export function TabEditor({
   const [selectionHost, setSelectionHost] = useState<Element | null>(null);
   const [selectionPosition, setSelectionPosition] = useState<{ left: number; top: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  useSeenContent(contentRef, songId, 'tabs', tab.id + ':' + isFullscreen + ':' + viewMode);
   const [selection, setSelection] = useState<CommentAnchor | null>(null);
   
   const fontSizes = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl'];
@@ -369,7 +372,7 @@ export function TabEditor({
           onClick={() => { const chosen = selection; setSelection(null); setIsFullscreen(false); onAnnotate(chosen); }}>
           <MessageSquarePlus className="size-4" />{t('workspace.comment_selection')}
         </Button></div>, selectionHost)}
-      <div ref={contentRef} className={cn("relative", isFullscreen && "flex-1 min-h-0 overflow-hidden")}>
+      <div ref={contentRef} data-seen-key={tab.id} className={cn("relative", isFullscreen && "flex-1 min-h-0 overflow-hidden")}>
           <div className={cn("absolute top-2 right-2 flex gap-1 z-10", isFullscreen && "hidden")}>
               <Button
                   variant="ghost"
@@ -415,7 +418,7 @@ export function TabEditor({
 
       {!isFullscreen && viewMode === 'edit' && <TablatureControls onInsert={handleInsertText} />}
 
-      {!isFullscreen && !hideFiles && <MediaLibrary files={tab.files || []} title={t('workspace.tab_files')} onUpload={() => onUpload(tab.id)}
+      {!isFullscreen && !hideFiles && <MediaLibrary songId={songId} activityScope={'tab:' + tab.id} files={tab.files || []} title={t('workspace.tab_files')} onUpload={() => onUpload(tab.id)}
         onDelete={url => onDeleteFile(tab.id, url)} onPreview={onPreview} uploading={uploading} progress={uploadProgress} />}
 
     </div>

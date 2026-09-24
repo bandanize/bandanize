@@ -33,10 +33,12 @@ public class SongModel {
 
     @OneToMany(mappedBy = "song", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
+    @org.hibernate.annotations.BatchSize(size = 64)
     private List<TablatureModel> tablatures = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(name = "song_files", joinColumns = @JoinColumn(name = "song_id"))
+    @org.hibernate.annotations.BatchSize(size = 64)
     private List<MediaFile> files = new ArrayList<>();
 
     public Long getId() {

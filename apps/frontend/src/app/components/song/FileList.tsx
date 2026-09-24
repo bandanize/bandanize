@@ -6,5 +6,5 @@ export function FileList({song,onUpload,isUploading,uploadProgress,onPreview,onD
   onPreview: (file: LibraryFile) => void; onDelete: (url: string) => void;
 }) {
   const {t}=useTranslation();
-  return <MediaLibrary files={song.files} title={t('workspace.song_files')} onUpload={onUpload} onPreview={onPreview} onDelete={onDelete} uploading={isUploading} progress={uploadProgress} />;
+  return <MediaLibrary songId={song.id} activityScope="song" files={song.files} title={t('workspace.song_files')} onUpload={onUpload} onPreview={onPreview} onDelete={onDelete} uploading={isUploading} progress={uploadProgress} />;
 }

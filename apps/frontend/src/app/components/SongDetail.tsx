@@ -239,7 +239,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
         <div className="song-tabs min-w-0"><TabList song={song} selectedTabId={selectedTabId} onSelectTab={setSelectedTabId}
           onDeleteTab={handleDeleteTab} onCreateTab={handleCreateTab} onUpdateTabDetails={handleUpdateTabDetails} /></div>
         <div className="song-score min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4">
-          {selectedTab ? <TabEditor key={selectedTab.id} tab={selectedTab} songName={song.name} onSave={handleSaveTabContent} isSaving={isSavingTab}
+          {selectedTab ? <TabEditor songId={song.id} key={selectedTab.id} tab={selectedTab} songName={song.name} onSave={handleSaveTabContent} isSaving={isSavingTab}
             hideFiles commentsVisible={commentsVisible} onToggleComments={toggleComments}
             comments={tabComments.tabId === selectedTab.id ? tabComments.comments : []}
             onUpload={tabId => handleFileUploadTrigger('tab', tabId)} uploading={isUploading && uploadTarget?.type === 'tab'} uploadProgress={uploadProgress}
@@ -249,10 +249,10 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             : <div className="min-h-64 flex items-center justify-center text-center text-sm text-muted-foreground p-6">{t('workspace.choose_tab')}</div>}
         </div>
         <div className="song-comments min-w-0 space-y-4">
-          {selectedTab && <div hidden={!commentsVisible}><TabComments onCommentsChange={receiveComments} key={selectedTab.id} tabId={selectedTab.id} content={selectedTab.content}
+          {selectedTab && <div hidden={!commentsVisible}><TabComments songId={song.id} onCommentsChange={receiveComments} key={selectedTab.id} tabId={selectedTab.id} content={selectedTab.content}
             anchor={pendingAnchor?.tabId === selectedTab.id ? pendingAnchor.anchor : null} onClearAnchor={() => setPendingAnchor(null)}
             onLocate={anchor => setFocusedAnchor({ tabId: selectedTab.id, anchor })} onPreview={setPreviewFile} /></div>}
-          {selectedTab && <div className="song-tab-media"><MediaLibrary files={selectedTab.files || []} title={t('workspace.tab_files')}
+          {selectedTab && <div className="song-tab-media"><MediaLibrary songId={song.id} activityScope={'tab:' + selectedTab.id} files={selectedTab.files || []} title={t('workspace.tab_files')}
             onUpload={() => handleFileUploadTrigger('tab', selectedTab.id)} uploading={isUploading && uploadTarget?.type === 'tab'} progress={uploadProgress}
             onPreview={setPreviewFile} onDelete={url => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, selectedTab.id, url)} /></div>}
         </div>
