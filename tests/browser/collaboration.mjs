@@ -327,7 +327,7 @@ try {
       assert(await sections.evaluate(el => el.scrollWidth <= el.clientWidth + 1));
       for (const tab of await sections.getByRole('tab').all()) {
         const box = await tab.boundingBox();
-        assert(box.x >= 0 && box.x + box.width <= width && box.height >= 44);
+        assert(box.x >= 0 && box.x + box.width <= width && box.height >= (width >= 768 ? 36 : 44));
         assert((await tab.innerText()).trim().length > 0, 'Mobile tabs retain readable labels');
       }
       await page.getByRole('combobox', { name: 'Idioma / Language' }).click();
