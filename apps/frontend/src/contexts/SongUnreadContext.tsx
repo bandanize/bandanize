@@ -102,8 +102,8 @@ export function useSeenContent(root: RefObject<HTMLElement | null>, songId: stri
     const reset = () => { visible.forEach((_time, element) => visible.set(element, Date.now())); };
     document.addEventListener('visibilitychange', reset);
     const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible' || host.closest('[hidden]')) return;
-      const keys = [...visible].filter(([element, since]) => Date.now() - since >= 800 && !element.closest('[hidden]'))
+      if (document.visibilityState !== 'visible' || host.closest('[hidden], [aria-hidden="true"], [inert]')) { reset(); return; }
+      const keys = [...visible].filter(([element, since]) => Date.now() - since >= 800 && !element.closest('[hidden], [aria-hidden="true"], [inert]'))
         .map(([element]) => element.getAttribute('data-seen-key')!).filter(Boolean);
       if (keys.length) void markSeen(songId, kind, keys);
     }, 1000);
