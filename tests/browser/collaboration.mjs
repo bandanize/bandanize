@@ -95,7 +95,7 @@ async function setup(browser, mobile = false, auth = true, optional = false, tim
     else if (path.endsWith('/notifications')) body = controls.notifications;
     else if (path.includes('unread-count')) body = controls.notifications.filter(item => !item.isRead).length;
     else if (path.includes('unread')) body = false;
-    else if (path.endsWith('/comments')) body = [{ id: 1, message: 'One', sender: owner, timestamp: '2026-09-23T10:00:00Z' }, { id: 2, message: 'Two', sender: owner, timestamp: '2026-09-23T10:00:00Z' }];
+    else if (path.endsWith('/comments')) body = controls.tabComments || [{ id: 1, message: 'One', sender: owner, timestamp: '2026-09-23T10:00:00Z' }, { id: 2, message: 'Two', sender: owner, timestamp: '2026-09-23T10:00:00Z' }];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });
   return { context, page, errors, requests, controls, fixture };
@@ -106,7 +106,7 @@ async function dismiss(page) {
 }
 async function capture(page, name) {
   const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true, animations: 'disabled' });
-  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone', 'calendar-refresh', 'calendar-mobile', 'guide-desktop', 'guide-mobile', 'song-sort-desktop', 'song-sort-mobile'].includes(name))
+  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone', 'calendar-refresh', 'calendar-mobile', 'guide-desktop', 'guide-mobile', 'song-sort-desktop', 'song-sort-mobile', 'reader-columns-chromium', 'reader-columns-webkit'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
 const browser = await chromium.launch();
@@ -636,3 +636,58 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
   finally { await context.close(); await browser.close(); }
 }
 
+
+for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
+  const browser = await engine.launch();
+  const {context, page, fixture, controls, errors} = await setup(browser);
+  try {
+    const lines = Array.from({length:70},(_,i)=>i%2===0 ? 'Am       C       G   | '+String(i).padStart(3,'0') : 'A melody for the next rehearsal '+String(i).padStart(3,'0'));
+    const content = lines.join('\n');
+    fixture.songLists[0].songs[0].tablatures[0].content = content;
+    const quote = lines[52], start = content.indexOf(quote);
+    controls.tabComments = [{id:701,sender:owner,message:'Quietly on this phrase',timestamp:new Date().toISOString(),anchorStart:start,anchorEnd:start+quote.length,quote}];
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(origin+'/project/1?tab=songs&listId=11&songId=21&tabId=31'); await dismiss(page);
+    await page.locator('[data-tab-comment-id="701"]').waitFor();
+    await page.getByRole('button',{name:'Fullscreen',exact:true}).click();
+    const dialog = page.getByRole('dialog');
+    const pre = dialog.locator('pre');
+    await pre.waitFor();
+    assert.equal(await pre.evaluate(el=>getComputedStyle(el).columnCount),'2');
+    assert.equal(await pre.textContent(),content);
+    assert(await pre.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'70 short lines fit into two visible columns');
+    assert(await pre.evaluate(el=>el.scrollHeight<=el.clientHeight+1),'Reading columns must fit vertically');
+    const marker=dialog.locator('[data-comment-marker-id="701"]');
+    await marker.waitFor();
+    assert((await marker.boundingBox()).x>600,'Comment marker follows the second column');
+    await marker.locator('button').hover();
+    await marker.getByText('Quietly on this phrase',{exact:true}).waitFor();
+    assert.equal(await pre.locator('mark').textContent(),quote);
+    await page.mouse.move(10,10);
+    await capture(page,'reader-columns-'+name);
+    // Increasing font size can require more columns; wheel and keyboard advance horizontally.
+    await dialog.getByRole('combobox',{name:'Font size'}).selectOption('4');
+    await pre.hover(); await page.mouse.wheel(0,650);
+    await page.waitForFunction(()=>document.querySelector('[role="dialog"] pre')?.scrollLeft>0);
+    assert.equal(await pre.evaluate(el=>el.scrollTop),0);
+    assert.equal(await pre.textContent(),content);
+    await pre.focus(); await pre.press('Home');
+    assert.equal(await pre.evaluate(el=>el.scrollLeft),0);
+    await pre.press('PageDown');
+    assert(await pre.evaluate(el=>el.scrollLeft>0));
+    // Wider monitors gain a third column, without changing the actual score.
+    await page.setViewportSize({width:1920,height:900});
+    assert.equal(await pre.evaluate(el=>getComputedStyle(el).columnCount),'3');
+    assert.equal(await pre.textContent(),content);
+    // Editing remains a single textarea; narrow screens retain their wrapped vertical reader.
+    await dialog.getByRole('button',{name:'Edit tablature',exact:true}).click();
+    assert.equal(await dialog.locator('textarea').inputValue(),content);
+    await dialog.getByRole('button',{name:'View chords',exact:true}).click();
+    await page.setViewportSize({width:390,height:844});
+    assert.equal(await pre.evaluate(el=>getComputedStyle(el).columnCount),'auto');
+    assert(await pre.evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+    assert.equal(await pre.textContent(),content);
+    assert.deepEqual(errors,[]);
+    console.log('PASS '+name+' desktop fullscreen columns, anchored comments, horizontal wheel/keyboard, font reflow and mobile fallback');
+  } finally {await context.close();await browser.close();}
+}

@@ -386,6 +386,7 @@ export function TabEditor({
           </div>
           {viewMode === 'view' ? (
             <TabRenderer
+              columns={isFullscreen}
               content={editingContent}
               highlighted={commentsVisible ? focusedAnchor : null}
               comments={hasChanges || !commentsVisible ? [] : comments}
