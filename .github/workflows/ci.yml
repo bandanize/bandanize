@@ -108,7 +108,7 @@ jobs:
           if [ -f trivy-backend.txt ]; then
             echo "### Backend - Trivy Security Scan Results" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            cat trivy-backend.txt >> $GITHUB_STEP_SUMMARY
+            cat trivy-backend.txt | tee -a "$GITHUB_STEP_SUMMARY"
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
