@@ -293,8 +293,9 @@ try {
     await expectOrder(['22','21','23']);
     // Returning from a song picks up server-side edits/comments without losing the selected sort.
     await page.locator('[data-song-id="21"] [role="button"]').click();
+    await page.getByRole('button',{name:'Back to songs',exact:true}).waitFor();
     fixture.songLists[0].songs[0].updatedAt='2026-09-25T10:00:00Z';
-    await page.goBack();
+    await page.getByRole('button',{name:'Back to songs',exact:true}).click();
     await page.waitForFunction(()=>document.querySelector('[data-song-id]')?.getAttribute('data-song-id')==='21');
     await expectOrder(['21','22','23']);
     await select('Established order');
@@ -318,6 +319,9 @@ try {
     }
     assert.deepEqual(errors,[]);
     console.log('PASS song sorts preserve manual order, put unknown artists/dates last, survive navigation/reload and refresh recent changes');
+  } catch(error) {
+    console.log('SORT_DIAGNOSTIC',sorting.page.url(),await sorting.page.locator('[data-song-id]').evaluateAll(rows=>rows.map(row=>({id:row.getAttribute('data-song-id'),text:row.innerText}))),sorting.requests.filter(r=>r.path.endsWith('my-bands')).length);
+    throw error;
   } finally {await sorting.context.close();}
 
   const picker = await setup(browser);
