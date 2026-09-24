@@ -100,7 +100,7 @@ async function dismiss(page) {
 }
 async function capture(page, name) {
   const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true, animations: 'disabled' });
-  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile'].includes(name))
+  if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
 const browser = await chromium.launch();
@@ -399,6 +399,8 @@ try {
       assert.equal(await info.getByRole('link',{name:'Open Google Calendar',exact:true}).getAttribute('href'),'https://calendar.google.com/calendar/u/0/r');
       assert.match(await info.getByRole('link',{name:'Add for the first time',exact:true}).getAttribute('href'),/fixture-calendar-token/);
       await info.getByText(/Adding it again does not refresh/).waitFor();
+      await page.setViewportSize({width:390,height:844});
+      if(zone==='Europe/Madrid') await capture(page,'calendar-timezone');
       await page.keyboard.press('Escape');
       await page.getByRole('button',{name:'Create event',exact:true}).first().click();
       const form = page.getByRole('dialog');
