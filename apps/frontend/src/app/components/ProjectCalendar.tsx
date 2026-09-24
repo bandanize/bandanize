@@ -277,7 +277,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     return (
         <Card className="bg-card border-border rounded-[14px]">
             <Dialog open={googleOpen} onOpenChange={setGoogleOpen}>
-              <DialogContent aria-describedby={undefined}>
+              <DialogContent aria-describedby={undefined} className="max-h-[calc(100dvh-32px)] overflow-y-auto">
                 <DialogTitle>{t('calendar_link.title')}</DialogTitle>
                 <p className="text-sm text-muted-foreground">{t('calendar_link.description')}</p>
                 <Button asChild><a href="https://calendar.google.com/calendar/u/0/r" target="_blank" rel="noopener noreferrer">{t('calendar_link.view')}</a></Button>
