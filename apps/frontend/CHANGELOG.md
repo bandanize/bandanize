@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.1](https://github.com/bandanize/bandanize/compare/web@v1.20.0...web@v1.20.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* force release please ([e3f2876](https://github.com/bandanize/bandanize/commit/e3f287609090276ea31528057277777d9eb63789))
+
 ## [1.20.0](https://github.com/bandanize/bandanize/compare/web@v1.19.0...web@v1.20.0) (2026-09-24)
 
 
