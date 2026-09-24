@@ -69,6 +69,9 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   assert.equal(await page.locator('audio').count(),1);
   assert.equal(await panel.locator('[data-mascot="playing"]').count(),1);
   await panel.locator('.audio-mascot-strip').evaluate(async img=>{await img.decode();});
+  const pose = await panel.locator('.audio-mascot-strip').evaluate(el=>getComputedStyle(el).transform);
+  await page.waitForTimeout(150);
+  assert.notEqual(await panel.locator('.audio-mascot-strip').evaluate(el=>getComputedStyle(el).transform),pose,'Playing sprite advances through frames');
   await page.evaluate(()=>window.scrollTo(0,0));
   const capture=async name=>{
    const png=await page.screenshot({path:'test-results/'+name+'.png',animations:'disabled'});
@@ -107,6 +110,11 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   assert(await page.locator('[data-global-audio]').evaluate(a=>a.muted));
   await panel.getByRole('button',{name:'Activar sonido',exact:true}).click();
   assert(!(await page.locator('[data-global-audio]').evaluate(a=>a.muted)));
+  await panel.getByRole('slider',{name:'Volumen',exact:true}).focus();
+  await page.keyboard.press('Home');
+  assert.equal(await page.locator('[data-global-audio]').evaluate(a=>a.volume),0);
+  await page.keyboard.press('End');
+  assert.equal(await page.locator('[data-global-audio]').evaluate(a=>a.volume),1);
   await page.getByRole('button',{name:attachment.name+' Audio',exact:true}).click();
   await page.locator('.floating-audio-player[data-playback="playing"]').waitFor();
   assert.equal(await panel.getByText(attachment.name,{exact:true}).count(),1);
@@ -134,7 +142,7 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await page.locator('.floating-audio-player[data-playback="playing"]').waitFor();
   // Logout remounts the session provider and releases its source.
   await page.setViewportSize({width:1280,height:900});
-  await page.getByRole('button',{name:/owner|Owner/}).first().click();
+  await page.getByRole('button',{name:'Mi cuenta',exact:true}).click();
   await page.getByRole('menuitem',{name:/Cerrar sesión|Log out|Logout/}).click();
   await page.waitForURL(/login/);
   assert.equal(await page.locator('.floating-audio-player').count(),0);

@@ -39,7 +39,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const toggle = useCallback(() => {
     const audio = audioRef.current;
     if (!audio || !trackRef.current) return;
-    if (!audio.paused) pause(); else start();
+    if (audio.paused || audio.error) start(); else pause();
   }, [pause, start]);
   const toggleTrack = useCallback((track: AudioTrack) => {
     const audio = audioRef.current;
@@ -96,9 +96,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     <audio ref={audioRef} data-global-audio preload="metadata" hidden
       onPlaying={event => { if (trackRef.current && !event.currentTarget.paused) patch({ status: 'playing' }); }}
       onWaiting={event => { if (trackRef.current && !event.currentTarget.paused) patch({ status: 'loading' }); }}
-      onPause={event => { if (trackRef.current && event.currentTarget.paused && !event.currentTarget.ended) patch({ status: 'paused' }); }}
-      onEnded={() => { if (trackRef.current) patch({ status: 'ended' }); }}
-      onError={() => { if (trackRef.current) patch({ status: 'error' }); }}
+      onPause={event => { if (trackRef.current && event.currentTarget.paused && !event.currentTarget.ended && !event.currentTarget.error) patch({ status: 'paused' }); }}
+      onEnded={event => { if (trackRef.current && event.currentTarget.ended) patch({ status: 'ended' }); }}
+      onError={event => { if (trackRef.current && event.currentTarget.error) patch({ status: 'error' }); }}
       onTimeUpdate={event => { if (trackRef.current) patch({ position: event.currentTarget.currentTime }); }}
       onDurationChange={event => patch({ duration: Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0 })}
       onVolumeChange={event => patch({ volume: event.currentTarget.volume, muted: event.currentTarget.muted })} />
