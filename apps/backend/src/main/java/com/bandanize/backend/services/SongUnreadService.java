@@ -18,11 +18,12 @@ public class SongUnreadService {
     private final UserRepository users;
     private final TabCommentRepository comments;
     private final SongReadStateRepository states;
-    private final ObjectMapper json;
+    // Private mapper for internal string-set storage, independent of HTTP Jackson configuration.
+    private final ObjectMapper json = new ObjectMapper();
     public SongUnreadService(SongRepository songs, BandRepository bands, UserRepository users,
-            TabCommentRepository comments, SongReadStateRepository states, ObjectMapper json) {
+            TabCommentRepository comments, SongReadStateRepository states) {
         this.songs = songs; this.bands = bands; this.users = users;
-        this.comments = comments; this.states = states; this.json = json;
+        this.comments = comments; this.states = states;
     }
     public record Unread(Long songId, Set<String> tabs, Set<String> files, Set<String> comments) {}
     private Map<String, Set<String>> empty() {

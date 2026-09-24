@@ -327,6 +327,26 @@ try {
   } catch(error) {await capture(unreadTest.page,'unread-failure');throw error;}
   finally {await unreadTest.context.close();}
 
+
+  const failedReceipt = await setup(browser);
+  try {
+    const { page, controls, errors } = failedReceipt;
+    controls.unread = [{songId:21,tabs:['31'],files:[],comments:[]}];
+    controls.failSeen = true;
+    await page.goto(origin + '/project/1?tab=songs&listId=11&songId=21&tabId=31');
+    await dismiss(page);
+    await page.locator('[data-seen-key="31"]').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(2400);
+    assert.deepEqual(controls.unread[0].tabs,['31'],'Failed receipt does not acknowledge the tab');
+    controls.failSeen = false;
+    await page.reload();
+    await page.locator('[data-seen-key="31"]').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(2400);
+    assert.deepEqual(controls.unread[0].tabs,[],'Unsuccessful receipt can be retried');
+    assert.deepEqual(errors,[]);
+    console.log('PASS failed read receipt retains unread state and recovers');
+  } finally {await failedReceipt.context.close();}
+
   const sorting = await setup(browser);
   try {
     const {page, fixture, requests, errors} = sorting;

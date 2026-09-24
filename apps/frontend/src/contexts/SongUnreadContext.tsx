@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, useCallback, type ReactNode, type RefObject } from 'react';
 import api from '@/services/api';
+import { useLocation } from 'react-router-dom';
 
 export type ActivityKind = 'tabs' | 'files' | 'comments';
 type Unread = Record<ActivityKind, string[]>;
@@ -10,6 +11,8 @@ const ActivityContext = createContext<{
 }>({ unread: {}, markSeen: () => {} });
 
 export function SongUnreadProvider({ projectId, children }: { projectId: string; children: ReactNode }) {
+  const { search } = useLocation();
+  const refreshRef = useRef<() => void>(() => {});
   const [unread, setUnread] = useState<Summary>({});
   const epoch = useRef(0);
   const acknowledged = useRef(new Set<string>());
@@ -34,18 +37,22 @@ export function SongUnreadProvider({ projectId, children }: { projectId: string;
         }
         setUnread(next);
       } catch { /* Older servers cannot report unread activity. Keep ordinary counters. */ }
-      finally { loading = false; }
+      finally {
+        loading = false;
+        if (active && version !== epoch.current && !pending.current.size) void refresh();
+      }
     };
+    refreshRef.current = refresh;
     void refresh();
     const interval = window.setInterval(refresh, 30000);
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
     return () => {
-      active = false; mounted.current = false;
+      active = false; mounted.current = false; refreshRef.current = () => {};
       clearInterval(interval); window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
     };
-  }, [projectId]);
+  }, [projectId, search]);
 
   const markSeen = useCallback(async (songId: string, kind: ActivityKind, keys: string[]) => {
     if (Date.now() < retryAt.current || !mounted.current) return;
@@ -67,7 +74,10 @@ export function SongUnreadProvider({ projectId, children }: { projectId: string;
         });
       }
     } catch { retryAt.current = Date.now() + 30000; }
-    finally { observed.forEach(key => pending.current.delete(receiptKey(key))); epoch.current++; }
+    finally {
+      observed.forEach(key => pending.current.delete(receiptKey(key))); epoch.current++;
+      if (!pending.current.size) refreshRef.current();
+    }
   }, []);
   return <ActivityContext.Provider value={{ unread, markSeen }}>{children}</ActivityContext.Provider>;
 }
