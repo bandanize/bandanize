@@ -16,6 +16,7 @@ LABEL org.opencontainers.image.source = "https://github.com/bandanize/bandanize"
 
 # Fix security vulnerabilities
 RUN apk add --no-cache \
+    'libexpat>=2.8.5-r0' \
     'libpng>=1.6.55-r0' \
     'zlib>=1.3.2-r0'
 

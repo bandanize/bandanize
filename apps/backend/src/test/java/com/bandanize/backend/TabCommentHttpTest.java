@@ -21,6 +21,10 @@ class TabCommentHttpTest {
     @Autowired SongRepository songs;
     @Autowired TablatureRepository tabs;
     @Autowired JwtService jwt;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
+    Long recipientId;
+    Long projectId;
+    String recipientUsername;
     @Autowired org.springframework.transaction.PlatformTransactionManager transactionManager;
     WebTestClient client;
     Long tabId;
@@ -30,7 +34,10 @@ class TabCommentHttpTest {
         UserModel user = new UserModel();
         user.setUsername(name); user.setEmail(name + "@example.test"); user.setName("Comment Test"); user.setDisabled(false);
         user = users.save(user);
-        BandModel band = new BandModel(); band.setName("Comment Test"); band.setOwner(user); band.setUsers(new java.util.ArrayList<>(List.of(user))); band = bands.save(band);
+        UserModel recipient = new UserModel(); recipientUsername = name + "-other";
+        recipient.setUsername(recipientUsername); recipient.setEmail(recipientUsername + "@example.test");
+        recipient.setName("Alex"); recipient.setDisabled(false); recipient = users.save(recipient); recipientId = recipient.getId();
+        BandModel band = new BandModel(); band.setName("Comment Test"); band.setOwner(user); band.setUsers(new java.util.ArrayList<>(List.of(user, recipient))); band = bands.save(band); projectId = band.getId();
         SongModel song = new SongModel(); song.setName("Song"); song.setBand(band); song = songs.save(song);
         TablatureModel tab = new TablatureModel(); tab.setSong(song); tab.setName("Tab"); tab.setContent("Am\nUna melodía\nC"); tabId = tabs.save(tab).getId();
         });
@@ -50,6 +57,27 @@ class TabCommentHttpTest {
         client.get().uri("/api/tabs/" + tabId + "/comments").exchange().expectStatus().isOk().expectBody()
             .jsonPath("$[0].quote").isEqualTo("Una melodía").jsonPath("$[0].attachments[0].name").isEqualTo("Ensayo acústico.wav");
     }
+
+    @Test void mentionsSurviveLegacyNotificationConstraintWithAndWithoutSelection() {
+        // Reproduce the constraint retained by an older installation after ddl-auto=update.
+        jdbc.execute("ALTER TABLE notifications ADD CONSTRAINT legacy_mentions CHECK (type <> 'TAB_COMMENT_MENTION')");
+        try {
+            for (boolean selected : List.of(false, true)) {
+                java.util.Map<String,Object> body = new java.util.HashMap<>();
+                body.put("message", "@Alex revisar");
+                if (selected) { body.put("anchorStart", 3); body.put("anchorEnd", 14); body.put("quote", "Una melodía"); }
+                client.post().uri("/api/tabs/" + tabId + "/comments").bodyValue(body).exchange().expectStatus().isOk()
+                    .expectBody().jsonPath("$.message").isEqualTo("@Alex revisar");
+            }
+            client.get().uri("/api/tabs/" + tabId + "/comments").exchange().expectStatus().isOk()
+                .expectBody().jsonPath("$.length()").isEqualTo(2).jsonPath("$[1].quote").isEqualTo("Una melodía");
+            WebTestClient recipientClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port)
+                .defaultHeader("Authorization", "Bearer " + jwt.generateToken(recipientUsername)).build();
+            recipientClient.get().uri("/api/projects/" + projectId + "/notifications").exchange().expectStatus().isOk()
+                .expectBody().jsonPath("$.length()").isEqualTo(2).jsonPath("$[0].type").isEqualTo("TAB_COMMENT_MENTION");
+        } finally { jdbc.execute("ALTER TABLE notifications DROP CONSTRAINT legacy_mentions"); }
+    }
+
     @org.springframework.web.bind.annotation.RestController
     static class LegacyCommentEndpoint {
         @org.springframework.web.bind.annotation.PostMapping("/legacy-comments")

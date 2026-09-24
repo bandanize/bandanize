@@ -403,6 +403,14 @@
     "part_placeholder": "Comenta este fragmento…",
     "send_error": "No se pudo guardar el comentario. Tu texto y adjuntos siguen aquí; vuelve a intentarlo.",
     "stale_error": "La tablatura cambió desde que seleccionaste el fragmento. Vuelve a seleccionarlo o pulsa «Comentario general» para enviar solo tu texto.",
-    "network_error": "No se pudo conectar con el servidor. Tu comentario sigue aquí; revisa la conexión y vuelve a intentarlo."
+    "network_error": "No se pudo conectar con el servidor. Tu comentario sigue aquí; revisa la conexión y vuelve a intentarlo.",
+    "marker_one": "Ver comentario del fragmento",
+    "marker_other": "Ver {{count}} comentarios del fragmento"
+  },
+  "song_header": {
+    "back": "Volver a canciones",
+    "actions": "Opciones de la canción",
+    "label": "Canción",
+    "key": "Tonalidad"
   }
 }

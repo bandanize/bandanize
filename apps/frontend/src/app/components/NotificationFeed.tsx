@@ -44,6 +44,7 @@ export function NotificationFeed({ projectId }: NotificationFeedProps) {
                     color: "text-sky-400", // #38BDF8
                     borderColor: "border-l-sky-400"
                 };
+            case 'TAB_COMMENT_MENTION':
             case 'CHAT_MENTION': 
                 return { 
                     icon: <MessageSquare className="h-4 w-4" />, 
@@ -95,6 +96,8 @@ export function NotificationFeed({ projectId }: NotificationFeedProps) {
                 return <span><strong className="font-bold text-foreground">{actorName}</strong> eliminó a un miembro</span>;
             case 'CHAT_MENTION':
                 return <span><strong className="font-bold text-foreground">{actorName}</strong> te ha mencionado en el chat</span>;
+            case 'TAB_COMMENT_MENTION':
+                return <span><strong className="font-bold text-foreground">{actorName}</strong> te ha mencionado en "{metadata.tabName}"</span>;
             case 'EVENT_CREATED':
                 return <span><strong className="font-bold text-foreground">{actorName}</strong> creó el evento "{metadata.eventName}"</span>;
             case 'EVENT_MODIFIED':

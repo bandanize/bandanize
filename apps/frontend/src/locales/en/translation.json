@@ -403,6 +403,14 @@
     "part_placeholder": "Comment on this passage…",
     "send_error": "Could not save the comment. Your text and attachments are still here; please try again.",
     "stale_error": "The tablature changed after you selected the passage. Select it again or choose “General comment” to send only your text.",
-    "network_error": "Could not connect to the server. Your comment is still here; check your connection and try again."
+    "network_error": "Could not connect to the server. Your comment is still here; check your connection and try again.",
+    "marker_one": "View passage comment",
+    "marker_other": "View {{count}} passage comments"
+  },
+  "song_header": {
+    "back": "Back to songs",
+    "actions": "Song options",
+    "label": "Song",
+    "key": "Key"
   }
 }

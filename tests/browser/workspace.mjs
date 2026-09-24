@@ -61,8 +61,8 @@ await page.reload();await page.getByText('Probamos esta frase más suave.',{exac
 for (const [area, name, endpoint] of [['.song-media','Demo canción','/songs/21/files'],['.song-tab-media','Demo guitarra','/tabs/31/files']]) {
  await page.locator(area).getByRole('button',{name:'Añadir',exact:true}).click();
  await page.locator('.song-workspace').locator('..').locator('input[type=file]').first().setInputFiles({name:'take.wav',mimeType:'audio/wav',buffer:Buffer.from('take')});
- await page.locator('#upload-name').fill(name);await page.getByRole('button',{name:'Subir archivo',exact:true}).click();
- await page.waitForResponse(r=>new URL(r.url()).pathname.endsWith(endpoint));
+ await page.locator('#upload-name').fill(name);
+ await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname.endsWith(endpoint)), page.getByRole('button',{name:'Subir archivo',exact:true}).click()]);
  assert.equal(JSON.parse(requests.find(r=>r.path.endsWith(endpoint)&&r.method==='POST').data).name,name+'.wav');
 }
 // Cancellation does not upload anything.
