@@ -1,123 +1,66 @@
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/app/components/ui/dialog";
-import { Button } from "@/app/components/ui/button";
-import WelcomeImage from "@/assets/welcome.svg";
-import ProjectImage from "@/assets/project.svg";
-import SongListImage from "@/assets/song-list.svg";
-import SongImage from "@/assets/song.svg";
-import TabImage from "@/assets/tab.svg";
-import { cn } from "@/app/components/ui/utils";
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
+import { Button } from './ui/button';
+import WelcomeImage from '@/assets/welcome.svg';
+import ProjectImage from '@/assets/project.svg';
+import SongListImage from '@/assets/song-list.svg';
+import TabImage from '@/assets/tab.svg';
+import CalendarImage from '@/assets/calendar.svg';
 
-interface WelcomeModalProps {
-  open: boolean;
-  onClose: () => void;
+interface WelcomeModalProps { open: boolean; onClose: () => void; guide?: boolean; }
+const images = [WelcomeImage, ProjectImage, SongListImage, TabImage, CalendarImage];
+const topics = ['intro', 'project', 'songs', 'tabs', 'team'];
+
+export function WelcomeModal(props: WelcomeModalProps) {
+  return props.open ? <GuideContent {...props} /> : null;
 }
 
-const STEPS = [
-  {
-    icon: ProjectImage,
-    title: "1. Crea un Proyecto Musical",
-    description: "Puede ser un proyecto en solitario o una banda. Añade nombre, descripción, imagen y miembros."
-  },
-  {
-    icon: SongListImage,
-    title: "2. Organiza con Listas",
-    description: "Dentro de cada proyecto, crea listas para agrupar canciones (ej: \"Set en vivo\")."
-  },
-  {
-    icon: SongImage,
-    title: "3. Añade Canciones",
-    description: "En cada lista, añade canciones con detalles como BPM, tonalidad y archivos multimedia."
-  },
-  {
-    icon: TabImage,
-    title: "4. Crea Tablaturas",
-    description: "Para cada canción, añade archivos (video, audio, imágenes) o tablaturas para cada instrumento."
-  }
-];
-
-export function WelcomeModal({ open, onClose }: WelcomeModalProps) {
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent 
-        className={cn(
-          "sm:max-w-[480px] w-[95vw] mt-16 p-6 pt-[50px] gap-3",
-          "bg-card border-border rounded-[10px] shadow-2xl",
-          "flex flex-col items-center",
-          "!overflow-visible !max-h-[85vh]",
-          "[&>button.absolute]:hidden" // Hides the default close button
-        )}
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
-        
-        {/* Header Image - Absolute Positioned */}
-        <div className="absolute -top-[160px] left-1/2 -translate-x-1/2 w-[240px] h-[200px] z-50 pointer-events-none flex items-center justify-center">
-           <img 
-             src={WelcomeImage} 
-             className="w-full h-full object-contain drop-shadow-2xl" 
-             alt="Welcome" 
-           />
+function GuideContent({ open, onClose, guide = false }: WelcomeModalProps) {
+  const { t } = useTranslation();
+  const [step, setStep] = useState(0);
+  const topic = topics[step];
+  const last = step === topics.length - 1;
+  return <Dialog open={open} onOpenChange={value => { if (!value) onClose(); }}>
+    <DialogContent className="w-[calc(100%-24px)] sm:max-w-[760px] p-0 gap-0 overflow-hidden max-h-[calc(100dvh-24px)] rounded-2xl">
+      <div className="overflow-y-auto min-h-0 max-h-[calc(100dvh-24px)]">
+        <div className="px-5 sm:px-7 pt-6 pb-4 pr-12">
+          <p className="text-[10px] font-semibold tracking-[0.18em] uppercase text-primary mb-2">Bandanize · {t('guide_ui.eyebrow')}</p>
+          <DialogTitle className="text-xl sm:text-2xl font-semibold">{t(guide ? 'guide_ui.title' : 'guide_ui.welcome')}</DialogTitle>
+          <DialogDescription className="mt-2 text-sm">{t('guide_ui.description')}</DialogDescription>
         </div>
-        
-        {/* Title Section */}
-        <div className="flex flex-col items-center text-center gap-2 w-full mb-1 shrink-0">
-          <DialogTitle className="text-2xl font-bold text-foreground font-poppins leading-7">
-            ¡Bienvenido a Bandanize!
-          </DialogTitle>
-          <DialogDescription className="text-sm font-normal text-muted-foreground font-poppins leading-5">
-            Esta plataforma te ayudará a organizar tus proyectos musicales y colaborar con tu banda.
-          </DialogDescription>
-        </div>
-
-        {/* Steps Container */}
-        <div className="w-full bg-white/5 border border-white/5 rounded-[10px] p-4 flex flex-col gap-3 flex-1 min-h-0 overflow-hidden"> 
-            
-            <div className="flex flex-col gap-0 shrink-0">
-              <h3 className="text-base font-bold text-foreground font-poppins leading-6">¿Cómo funciona?</h3>
-              <p className="text-xs text-muted-foreground font-poppins leading-4">Sigue estos pasos para empezar a organizar tu música:</p>
+        <div className="px-5 sm:px-7 pb-5">
+          <nav aria-label={t('guide_ui.topics')} className="flex gap-1.5 mb-5">
+            {topics.map((item,index)=><button key={item} type="button" aria-label={t('guide_ui.'+item+'.title')}
+              aria-current={index===step?'step':undefined} onClick={()=>setStep(index)}
+              className="flex-1 min-w-0 h-8 flex items-center rounded-lg px-0.5 focus-visible:outline focus-visible:outline-primary"><span className={`block w-full h-1.5 rounded-full ${index===step?'bg-primary':index<step?'bg-primary/35':'bg-muted'}`} /></button>)}
+          </nav>
+          <div className="grid sm:grid-cols-[220px_minmax(0,1fr)] gap-5 sm:gap-7 items-center">
+            <div className="relative rounded-2xl bg-gradient-to-br from-primary/10 via-primary/[0.03] to-[#ff859a]/10 border border-white/5 flex items-center justify-center h-32 sm:h-64 overflow-hidden">
+              <span aria-hidden="true" className="absolute rounded-full border border-primary/10 size-40 sm:size-56" />
+              <img src={images[step]} alt="" className="relative object-contain w-40 h-28 sm:w-52 sm:h-56 p-2" />
             </div>
-            
-            <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-1 flex-1">
-              {STEPS.map((step, index) => (
-                <StepItem key={index} {...step} />
-              ))}
+            <div aria-live="polite" aria-atomic="true" className="min-w-0">
+              <p className="text-xs text-muted-foreground mb-2">{t('guide_ui.step',{current:step+1,total:topics.length})}</p>
+              <h3 className="text-lg font-semibold mb-2">{t('guide_ui.'+topic+'.title')}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{t('guide_ui.'+topic+'.body')}</p>
+              <ul className="mt-4 space-y-3">
+                {[1,2].map(item=><li key={item} className="flex gap-2 text-sm leading-relaxed"><Check className="size-4 text-primary shrink-0 mt-0.5" /><span>{t('guide_ui.'+topic+'.tip'+item)}</span></li>)}
+              </ul>
             </div>
-        </div>
-
-        {/* Tip Section */}
-        <div className="w-full bg-[#FEE8EB] border border-[#FF859A] rounded-[10px] p-3 flex gap-1 items-start shrink-0">
-           <p className="text-[#0A0A0A] text-xs leading-[18px] font-poppins">
-              <span className="font-bold">Tip: </span> 
-              Usa el chat del proyecto para comunicarte con tu banda y mantener todos organizados.
-           </p>
-        </div>
-
-        {/* Footer Button */}
-        <div className="w-full shrink-0">
-            <Button 
-                onClick={onClose} 
-                className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-4 rounded-[6px]"
-            >
-                ¡Entendido, empecemos!
+          </div>
+          <p className="mt-5 text-xs text-muted-foreground border-t border-border pt-4">{t('guide_ui.reopen')}</p>
+          <div className="flex items-center justify-between gap-2 mt-5">
+            <Button variant="ghost" onClick={()=>step===0?onClose():setStep(step-1)} className="text-muted-foreground">
+              {step>0&&<ArrowLeft className="size-4" />}{t(step===0?'guide_ui.later':'guide_ui.back')}
             </Button>
+            <Button onClick={()=>last?onClose():setStep(step+1)} className="rounded-xl">
+              {t(last?(guide?'guide_ui.done':'guide_ui.start'):'guide_ui.next')}{!last&&<ArrowRight className="size-4" />}
+            </Button>
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function StepItem({ icon, title, description }: { icon: string; title: string; description: string }) {
-  return (
-    <div className="flex gap-3 items-center">
-      <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-transparent">
-        <img src={icon} className="w-full h-full object-contain" alt={title} />
       </div>
-      <div className="flex flex-col">
-        <h4 className="text-sm font-bold text-foreground font-poppins leading-5">{title}</h4>
-        <p className="text-xs font-normal text-muted-foreground font-poppins leading-4">
-          {description}
-        </p>
-      </div>
-    </div>
-  );
+    </DialogContent>
+  </Dialog>;
 }

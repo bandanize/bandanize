@@ -439,5 +439,72 @@
     "unread": "Unread",
     "failed": "Could not mark as read",
     "unknown": "A member"
+  },
+  "guide_ui": {
+    "menu": "Bandanize guide",
+    "title": "Your Bandanize guide",
+    "welcome": "Your music, in good company",
+    "eyebrow": "Quick guide",
+    "description": "From your first project to your next rehearsal, all in one place.",
+    "topics": "Guide sections",
+    "step": "Step {{current}} of {{total}}",
+    "reopen": "Come back any time from your account → Bandanize guide.",
+    "later": "Not now",
+    "back": "Back",
+    "next": "Next",
+    "start": "Get started",
+    "done": "Close guide",
+    "intro": {
+      "title": "A space to make music",
+      "body": "Bring songs, ideas and people together without losing track of messages and files.",
+      "tip1": "Works for solo projects and bands alike.",
+      "tip2": "Start with one project and add what you need at your own pace."
+    },
+    "project": {
+      "title": "Create your project and invite",
+      "body": "From “Your Projects”, create a musical project with its name and image. This is where your group meets.",
+      "tip1": "Invite your collaborators from Members, including by sharing a link.",
+      "tip2": "Switch between multiple projects from the project name in the header."
+    },
+    "songs": {
+      "title": "Organize your repertoire",
+      "body": "Create playlists for a live set, an album or your next ideas. Add your songs inside each list.",
+      "tip1": "Keep each song’s BPM, key and files together.",
+      "tip2": "Drag to reorder; between playlists, choose to move or duplicate."
+    },
+    "tabs": {
+      "title": "Work on each part of the song",
+      "body": "Add tablatures by instrument and leave comments on a specific passage.",
+      "tip1": "Mention your collaborators to ask them to review a part.",
+      "tip2": "Use fullscreen, adjust the font or hide comments for comfortable reading."
+    },
+    "team": {
+      "title": "Plan your next rehearsal",
+      "body": "Talk in chat, follow updates in notifications and schedule rehearsals and shows in the calendar.",
+      "tip1": "Everyone sees events in their local time.",
+      "tip2": "Add the calendar to Google; its updates are not immediate."
+    }
+  },
+  "calendar_ui": {
+    "subtitle": "Rehearsals, shows and what’s next.",
+    "previous": "Previous month",
+    "next": "Next month",
+    "options": "Calendar options",
+    "copy_link": "Copy subscription link",
+    "load_error": "Could not load events.",
+    "retry": "Try again",
+    "month_view": "Month view",
+    "agenda": "Agenda",
+    "event_count_one": "{{count}} event",
+    "event_count_other": "{{count}} events",
+    "upcoming": "Upcoming",
+    "empty_day": "This day is free",
+    "empty_help": "Make room for your next plan together.",
+    "plan": "Plan an event",
+    "time": "Time",
+    "google_intro": "Your rehearsals and shows, also in Google Calendar.",
+    "google_timing": "Google picks up new events, changes and deletions when it checks this calendar again. Updates are not immediate.",
+    "google_add": "Add to Google Calendar",
+    "google_once": "Add it just once. Clicking again does not force a refresh."
   }
 }

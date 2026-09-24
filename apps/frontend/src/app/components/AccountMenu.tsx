@@ -1,4 +1,6 @@
-import { LogOut, Settings, Mail, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import { WelcomeModal } from './WelcomeModal';
+import { LogOut, Settings, Mail, ChevronDown, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,12 +10,13 @@ import { MemberAvatar } from './MemberAvatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 
 export function AccountMenu() {
+  const [guideOpen, setGuideOpen] = useState(false);
   const { user, logout } = useAuth();
   const { invitations } = useProjects();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const count = invitations?.length || 0;
-  return <DropdownMenu>
+  return <><DropdownMenu>
     <DropdownMenuTrigger asChild>
       <Button variant="ghost" aria-label={t('app_nav.account')} title={t('app_nav.account')}
         className="relative h-10 w-10 sm:w-auto sm:max-w-40 rounded-xl p-1.5 sm:px-2 gap-2 border border-border/70 bg-background/50 hover:bg-accent hover:border-primary/25 transition-colors">
@@ -29,7 +32,9 @@ export function AccountMenu() {
       <DropdownMenuItem onSelect={() => navigate('/profile')}><Settings className="size-4 mr-2" />{t('my_profile')}</DropdownMenuItem>
       <DropdownMenuItem onSelect={() => navigate('/invitations')}><Mail className="size-4 mr-2" />{t('invitations')}{count > 0 && <span className="ml-auto text-xs text-primary">{count}</span>}</DropdownMenuItem>
       <DropdownMenuSeparator />
+      <DropdownMenuItem onSelect={() => setGuideOpen(true)}><BookOpen className="size-4 mr-2" />{t('guide_ui.menu')}</DropdownMenuItem>
+      <DropdownMenuSeparator />
       <DropdownMenuItem onSelect={logout}><LogOut className="size-4 mr-2" />{t('logout')}</DropdownMenuItem>
     </DropdownMenuContent>
-  </DropdownMenu>;
+  </DropdownMenu><WelcomeModal open={guideOpen} onClose={() => setGuideOpen(false)} guide /></>;
 }
