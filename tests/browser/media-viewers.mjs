@@ -96,6 +96,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await page.waitForFunction(()=>document.querySelector('[data-pdf-viewer] [aria-busy]')?.getAttribute('aria-busy')==='false');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await capture('pdf-mobile');
+  console.log('VIEWER_LAYOUT '+JSON.stringify(await page.evaluate(()=>({inner:innerWidth,visual:visualViewport.width,dialog:getComputedStyle(document.querySelector('[role="dialog"]')).width,section:getComputedStyle(document.querySelector('[data-pdf-viewer]')).width,classes:document.querySelector('[role="dialog"]').className}))));
   const bounds=await pdfViewer.boundingBox();assert(bounds.x>=0 && bounds.x+bounds.width<=321,JSON.stringify(bounds));
   await page.keyboard.press('Escape');
   await capture('video-mobile');
