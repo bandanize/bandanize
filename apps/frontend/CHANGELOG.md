@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.18.0](https://github.com/bandanize/bandanize/compare/web@v1.17.0...web@v1.18.0) (2026-09-24)
+
+
+### Features
+
+* feedback de acceso, idiomas y mejoras visuales para móvil ([9bee03e](https://github.com/bandanize/bandanize/commit/9bee03eceaf25ad1dce1ae1db7aef85fa30d4518))
+* **frontend:** branded auth layout and uncropped cookie illustration ([67e7338](https://github.com/bandanize/bandanize/commit/67e7338b298c0a2d3b54cbc833a13a35756c4096))
+* **frontend:** login con branding original y cookies sin recortes ([a6bf53a](https://github.com/bandanize/bandanize/commit/a6bf53af8c0e756c43e4ca0c8b57bfa04753a2be))
+* improve login feedback, session choice and mobile reading experience ([25e9c03](https://github.com/bandanize/bandanize/commit/25e9c036c72e55d207198b001e78a8af828c3b10))
+* selector de proyectos, fotos de perfil y cookies sin franjas ([1711ae8](https://github.com/bandanize/bandanize/commit/1711ae8f50f088a567b4a09c427f009306402fdb))
+
+
+### Bug Fixes
+
+* comentarios más limpios y menciones sin bloqueos ([96eb9b6](https://github.com/bandanize/bandanize/commit/96eb9b6b0831f038a9889c5e67844592e8ff44ab))
+* envío de comentarios, publicación del servidor y orden de archivos ([5a25868](https://github.com/bandanize/bandanize/commit/5a25868827826c86b151d19350e08565971cc2c0))
+* restore plain comment compatibility and publish matching backend images ([f27ac3e](https://github.com/bandanize/bandanize/commit/f27ac3eae29c2506da0611981eb40afe98403739))
+* saltos de línea en tablaturas móviles ([52d2d07](https://github.com/bandanize/bandanize/commit/52d2d07b48a827cb3a5fdca27e56b21a2dfca6bb))
+* simplify comments and avoid empty mention menus blocking selected comments ([4826732](https://github.com/bandanize/bandanize/commit/4826732a50ec0423a66c0a55375166e6c48b7494))
+* wrap long tablature lines in mobile reading and editing ([f39c0e2](https://github.com/bandanize/bandanize/commit/f39c0e2a0d5ff9d30c6cd2c19827cc5be2f9e2e6))
+
 ## [1.17.0](https://github.com/bandanize/bandanize/compare/web@v1.16.2...web@v1.17.0) (2026-09-23)
 
 
