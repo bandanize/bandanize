@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.0](https://github.com/bandanize/bandanize/compare/web@v1.19.0...web@v1.20.0) (2026-09-24)
+
+
+### Features
+
+* Fix missing newline at end of pom.xml ([ded7af9](https://github.com/bandanize/bandanize/commit/ded7af93340b6adbc867889f0dc115a3e172d0f2))
+
 ## [1.19.0](https://github.com/bandanize/bandanize/compare/web@v1.18.1...web@v1.19.0) (2026-09-24)
 
 
