@@ -188,6 +188,6 @@ jobs:
           if [ -f trivy-frontend.txt ]; then
             echo "### Frontend - Trivy Security Scan Results" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            cat trivy-frontend.txt >> $GITHUB_STEP_SUMMARY
+            cat trivy-frontend.txt | tee -a "$GITHUB_STEP_SUMMARY"
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
