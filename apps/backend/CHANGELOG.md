@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.2](https://github.com/bandanize/bandanize/compare/api@v1.13.1...api@v1.13.2) (2026-09-24)
+
+
+### Bug Fixes
+
+* repair database lifecycles, account email recovery and project access ([c52cc90](https://github.com/bandanize/bandanize/commit/c52cc90b4e58021c5b2f674a65177e081414c902))
+
 ## [1.13.1](https://github.com/bandanize/bandanize/compare/api@v1.13.0...api@v1.13.1) (2026-09-24)
 
 

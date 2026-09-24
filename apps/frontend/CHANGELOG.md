@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.20.2](https://github.com/bandanize/bandanize/compare/web@v1.20.1...web@v1.20.2) (2026-09-24)
+
+
+### Bug Fixes
+
+* bound media dialog width to the visible viewport ([46e9f7f](https://github.com/bandanize/bandanize/commit/46e9f7f507dc40343a5a6d94dda3077fb4698280))
+* keep expanded video controls visible in the file library ([d03a280](https://github.com/bandanize/bandanize/commit/d03a280db36df22be5c926bb52b963c4ca76ee69))
+* repair database lifecycles, account email recovery and project access ([c52cc90](https://github.com/bandanize/bandanize/commit/c52cc90b4e58021c5b2f674a65177e081414c902))
+* repair PDF previews and modernize video controls ([10c2821](https://github.com/bandanize/bandanize/commit/10c2821c95ccd40a50e5230faea3d17c8a9ae6c1))
+* resize the media dialog immediately without width transitions ([0a957b2](https://github.com/bandanize/bandanize/commit/0a957b20227a4bd34cbc12b5b961493ffc5c2669))
+* resolve PDF assets in standalone Docker builds ([1bb5245](https://github.com/bandanize/bandanize/commit/1bb5245bdcbc904d68a3d0879cef458b96a1e38b))
+
 ## [1.20.1](https://github.com/bandanize/bandanize/compare/web@v1.20.0...web@v1.20.1) (2026-09-24)
 
 
