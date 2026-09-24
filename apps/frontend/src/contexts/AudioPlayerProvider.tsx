@@ -9,6 +9,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const trackRef = useRef<AudioTrack | null>(null);
   const attempt = useRef(0);
+  const audibleVolume = useRef(1);
   const [state, setState] = useState(initial);
   const patch = useCallback((value: Partial<AudioPlayerState>) => setState(previous => ({ ...previous, ...value })), []);
 
@@ -65,15 +66,20 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     if (!audio) return;
     const value = Math.max(0, Math.min(1, volume));
     audio.volume = value; audio.muted = value === 0;
+    if (value > 0) audibleVolume.current = value;
     patch({ volume: value, muted: value === 0 });
   }, [patch]);
   const toggleMute = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.muted = !audio.muted;
-    patch({ muted: audio.muted });
+    if (audio.muted || audio.volume === 0) {
+      if (audio.volume === 0) audio.volume = audibleVolume.current;
+      audio.muted = false;
+    } else audio.muted = true;
+    patch({ muted: audio.muted, volume: audio.volume });
   }, [patch]);
 
+  const cancelPending = useCallback(() => { ++attempt.current; }, []);
   useEffect(() => {
     const audio = audioRef.current;
     // Video and global audio must not play over one another.
@@ -85,10 +91,10 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     document.addEventListener('play', exclusive, true);
     return () => {
       document.removeEventListener('play', exclusive, true);
-      ++attempt.current;
+      cancelPending();
       if (audio) { audio.pause(); audio.removeAttribute('src'); audio.load(); }
     };
-  }, [pause]);
+  }, [pause, cancelPending]);
 
   return <AudioPlayerContext.Provider value={{ ...state, toggleTrack, toggle, pause, seek, changeVolume, toggleMute, close,
     setCollapsed: collapsed => patch({ collapsed }) }}>
