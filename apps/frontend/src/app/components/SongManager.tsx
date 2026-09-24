@@ -5,11 +5,9 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical, FileText, Paperclip, MessageCircle, ListMusic, ArrowRight, Loader2, Clock3 } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical, FileText, Paperclip, MessageCircle, ListMusic, ArrowRight, Loader2 } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
-import { formatDistanceStrict } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
 import SongListImage from '@/assets/song-list.svg';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -69,9 +67,17 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
   const activityDate = song.updatedAt ? new Date(song.updatedAt) : null;
   const hasActivity = activityDate !== null && Number.isFinite(activityDate.getTime());
   const activityExact = hasActivity ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(activityDate) : '';
-  const activityLabel = hasActivity
-    ? formatDistanceStrict(activityDate, now, { addSuffix: true, locale: i18n.language.startsWith('es') ? es : enUS })
-    : t('song_activity.unknown');
+  const activityLabel = (() => {
+    if (!hasActivity) return '';
+    const seconds = Math.max(0, (now - activityDate.getTime()) / 1000);
+    if (seconds < 60) return t('song_activity.now');
+    const units: [Intl.RelativeTimeFormatUnit, number][] = [
+      ['year', 31536000], ['month', 2592000], ['day', 86400], ['hour', 3600], ['minute', 60],
+    ];
+    const [unit, duration] = units.find(([, duration]) => seconds >= duration)!;
+    return new Intl.RelativeTimeFormat(i18n.language, { style: 'narrow', numeric: 'always' })
+      .format(-Math.floor(seconds / duration), unit);
+  })();
 
   const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
     accept: ItemType.SONG_ROW,
@@ -162,13 +168,13 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
         </span>)}
       </div>
 
-        <span className="flex items-center gap-1 text-[10px] leading-3 text-muted-foreground"
-          title={hasActivity ? t('song_activity.exact', { date: activityExact }) : t('song_activity.unknown_hint')}>
-          <Clock3 className="size-3 shrink-0 text-primary/65" aria-hidden="true" />
-          {hasActivity
-            ? <time dateTime={activityDate.toISOString()} aria-label={t('song_activity.exact', { date: activityExact })}>{activityLabel}</time>
-            : <span>{activityLabel}</span>}
-        </span>
+        {hasActivity && <time
+          dateTime={activityDate.toISOString()}
+          className="text-[10px] leading-3 text-muted-foreground/75 whitespace-nowrap"
+          title={t('song_activity.exact', { date: activityExact }) + '. ' + t('song_activity.includes')}
+          aria-label={t('song_activity.exact', { date: activityExact })}>
+          {t('song_activity.short', { time: activityLabel })}
+        </time>}
       </div>
 
       {/* Actions Dropdown */}

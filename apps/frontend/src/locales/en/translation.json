@@ -515,8 +515,9 @@
     "refresh_error": "Recent changes could not be refreshed."
   },
   "song_activity": {
-    "exact": "Last activity: {{date}}",
-    "unknown": "No date",
-    "unknown_hint": "No activity date has been recorded yet."
+    "exact": "Last change: {{date}}",
+    "short": "Updated: {{time}}",
+    "now": "just now",
+    "includes": "Includes edits, comments and files."
   }
 }

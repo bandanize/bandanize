@@ -515,8 +515,9 @@
     "refresh_error": "No se han podido actualizar los cambios recientes."
   },
   "song_activity": {
-    "exact": "Última actividad: {{date}}",
-    "unknown": "Sin fecha",
-    "unknown_hint": "Todavía no hay una fecha de actividad registrada."
+    "exact": "Último cambio: {{date}}",
+    "short": "Cambios: {{time}}",
+    "now": "ahora",
+    "includes": "Incluye ediciones, comentarios y archivos."
   }
 }

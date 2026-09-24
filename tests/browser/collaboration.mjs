@@ -288,10 +288,12 @@ try {
     await expectOrder(['21','22','23']);
     const activity=page.locator('[data-song-id="21"] time');
     assert.equal(await activity.getAttribute('datetime'),'2026-09-20T18:00:00.000Z');
-    assert.match(await activity.getAttribute('aria-label'),/^Last activity:/);
+    assert.match(await activity.getAttribute('aria-label'),/^Last change:/);
     assert((await activity.innerText()).length>0);
     assert.equal(await page.locator('[data-song-id="23"] time').count(),0);
-    await page.locator('[data-song-id="23"]').getByText('No date',{exact:true}).waitFor();
+    assert.equal(await page.getByText('No date',{exact:true}).count(),0);
+    assert.match(await activity.innerText(),/^Updated:/);
+    assert.match(await activity.getAttribute('title'),/Includes edits, comments and files/);
     await select('Artist');
     await expectOrder(['22','21','23']);
     await select('Recent changes');
@@ -330,10 +332,12 @@ try {
     }
     await page.getByRole('combobox',{name:'Idioma / Language'}).click();
     await page.getByRole('option',{name:'Español',exact:true}).click();
-    await page.locator('[data-song-id="21"] time[aria-label^="Última actividad:"]').waitFor();
-    await page.locator('[data-song-id="23"]').getByText('Sin fecha',{exact:true}).waitFor();
+    await page.locator('[data-song-id="21"] time[aria-label^="Último cambio:"]').waitFor();
+    assert.equal(await page.getByText('Sin fecha',{exact:true}).count(),0);
+    assert.match(await page.locator('[data-song-id="21"] time').innerText(),/^Cambios:/);
+    assert.match(await page.locator('[data-song-id="21"] time').getAttribute('title'),/Incluye ediciones, comentarios y archivos/);
     assert.deepEqual(errors,[]);
-    console.log('PASS song activity timestamps, localized exact dates, missing-date fallback and compact mobile rows');
+    console.log('PASS song activity timestamps, localized exact dates, hidden unknown dates and compact mobile rows');
     console.log('PASS song sorts preserve manual order, put unknown artists/dates last, survive navigation/reload and refresh recent changes');
   } catch(error) {
     console.log('SORT_DIAGNOSTIC',sorting.page.url(),await sorting.page.locator('[data-song-id]').evaluateAll(rows=>rows.map(row=>({id:row.getAttribute('data-song-id'),text:row.innerText}))),sorting.requests.filter(r=>r.path.endsWith('my-bands')).length);
