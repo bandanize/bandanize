@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.1](https://github.com/bandanize/bandanize/compare/api@v1.10.0...api@v1.10.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* envío de comentarios, publicación del servidor y orden de archivos ([5a25868](https://github.com/bandanize/bandanize/commit/5a25868827826c86b151d19350e08565971cc2c0))
+* restore plain comment compatibility and publish matching backend images ([f27ac3e](https://github.com/bandanize/bandanize/commit/f27ac3eae29c2506da0611981eb40afe98403739))
+
 ## [1.10.0](https://github.com/bandanize/bandanize/compare/api@v1.9.3...api@v1.10.0) (2026-09-23)
 
 
