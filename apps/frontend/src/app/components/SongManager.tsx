@@ -5,9 +5,11 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
-import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical, FileText, Paperclip, MessageCircle, ListMusic, ArrowRight, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit, GripVertical, Share, ArrowLeft, ArrowRightLeft, Copy, MoreVertical, FileText, Paperclip, MessageCircle, ListMusic, ArrowRight, Loader2, Clock3 } from 'lucide-react';
 import { SongDetail } from '@/app/components/SongDetail';
 import { toast } from 'sonner';
+import { formatDistanceStrict } from 'date-fns';
+import { es, enUS } from 'date-fns/locale';
 import SongListImage from '@/assets/song-list.svg';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -55,14 +57,21 @@ interface SortableSongRowProps {
   onEdit: (listId: string, song: Song) => void;
   onMoveCopy: (listId: string, song: Song) => void;
   isDuplicate: boolean;
+  now: number;
   canReorder: boolean;
 }
 
-const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate, canReorder }: SortableSongRowProps) => {
+const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, onSelect, onDelete, onEdit, onMoveCopy, isDuplicate, canReorder, now }: SortableSongRowProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const blockDrag = useRef(false);
   const lastDrag = useRef(0);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const activityDate = song.updatedAt ? new Date(song.updatedAt) : null;
+  const hasActivity = activityDate !== null && Number.isFinite(activityDate.getTime());
+  const activityExact = hasActivity ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(activityDate) : '';
+  const activityLabel = hasActivity
+    ? formatDistanceStrict(activityDate, now, { addSuffix: true, locale: i18n.language.startsWith('es') ? es : enUS })
+    : t('song_activity.unknown');
 
   const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>({
     accept: ItemType.SONG_ROW,
@@ -142,6 +151,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
           {song.key ? ` • ${song.key}` : ''}
         </p>
       </div>
+      <div className="flex shrink-0 flex-col items-end gap-1">
       <div className="flex shrink-0 items-center gap-2 sm:gap-3 text-[11px] tabular-nums text-muted-foreground" role="group" aria-label={t('visual.song_activity')}>
         {[
           { Icon: FileText, value: song.tablatures.length, label: t('library.tab_count', { count: song.tablatures.length }) },
@@ -150,6 +160,15 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
         ].map(({ Icon, value, label }) => <span key={label} role="img" title={label} aria-label={label} className="inline-flex items-center gap-1">
           <Icon className="size-3 opacity-80" aria-hidden="true" /><span aria-hidden="true">{value}</span>
         </span>)}
+      </div>
+
+        <span className="flex items-center gap-1 text-[10px] leading-3 text-muted-foreground"
+          title={hasActivity ? t('song_activity.exact', { date: activityExact }) : t('song_activity.unknown_hint')}>
+          <Clock3 className="size-3 shrink-0 text-primary/65" aria-hidden="true" />
+          {hasActivity
+            ? <time dateTime={activityDate.toISOString()} aria-label={t('song_activity.exact', { date: activityExact })}>{activityLabel}</time>
+            : <span>{activityLabel}</span>}
+        </span>
       </div>
 
       {/* Actions Dropdown */}
@@ -217,6 +236,11 @@ interface SortableSongListProps {
 
 const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong, onEditSong, onMoveCopySong, duplicateSongIds, canReorder }: SortableSongListProps) => {
     const [items, setItems] = useState<Song[]>(songs);
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+        const timer = window.setInterval(() => setNow(Date.now()), 60000);
+        return () => window.clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         setItems(songs);
@@ -257,6 +281,7 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
                     onMoveCopy={onMoveCopySong}
                     isDuplicate={duplicateSongIds.has(song.id)}
                     canReorder={canReorder}
+                    now={now}
                 />
             ))}
         </div>
@@ -471,11 +496,11 @@ export function SongManager() {
   const selectedListId = searchParams.get('listId');
   const selectedSongId = searchParams.get('songId');
   useEffect(() => {
-    if (sortMode === 'recent' && !selectedSongId) {
+    if (!selectedSongId) {
       // Read server timestamps after returning from edits, files or comments.
       void refreshProjects().catch(() => toast.error(t('song_sort.refresh_error')));
     }
-  }, [sortMode, selectedSongId, refreshProjects, t]);
+  }, [selectedSongId, refreshProjects, t]);
 
   const handleSelectList = useCallback((listId: string) => {
       setSearchParams(prev => {
