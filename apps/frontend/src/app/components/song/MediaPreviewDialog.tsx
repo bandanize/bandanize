@@ -1,3 +1,5 @@
+import { useAudioPlayer } from '@/contexts/audio-player';
+import { Button } from '@/app/components/ui/button';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
@@ -10,6 +12,7 @@ interface MediaPreviewDialogProps {
 
 export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
   const { t } = useTranslation();
+  const player = useAudioPlayer();
   if (!file) return null;
 
   return (
@@ -53,15 +56,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                     />
                 ) : file.type.startsWith('audio/') ? (
                     <div className="w-full py-10 px-4 sm:px-8 bg-secondary/20 rounded-xl flex items-center justify-center">
-                        <audio 
-                            controls 
-                            preload="metadata"
-                            className="w-full max-w-md h-12"
-                            style={{ touchAction: 'auto' }}
-                            src={getMediaUrl(file.url)}
-                        >
-                            Your browser does not support the audio element.
-                        </audio>
+                        <Button onClick={() => { player.toggleTrack(file); onClose(); }}>{t('player.open')}</Button>
                     </div>
                 ) : <a href={getMediaUrl(file.url)} download={file.name} target="_blank" rel="noopener noreferrer" className="text-primary underline py-8">{t('workspace.download')}: {file.name}</a>}
             </div>

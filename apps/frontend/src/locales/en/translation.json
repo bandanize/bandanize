@@ -523,5 +523,24 @@
     "new_files": "Unseen files",
     "new_comments": "Unread comments"
   },
-  "export_youtube_disabled": "Temporarily disabled"
+  "export_youtube_disabled": "Temporarily disabled",
+  "player": {
+    "title": "Audio player",
+    "play": "Play",
+    "pause": "Pause",
+    "close": "Close player",
+    "collapse": "Minimize player",
+    "expand": "Expand player",
+    "seek": "Audio position",
+    "volume": "Volume",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "playing": "Rocking out",
+    "paused": "Waiting for you…",
+    "loading": "Getting the audio ready…",
+    "ended": "One more time?",
+    "error": "Could not play. Try again.",
+    "retry": "Retry audio",
+    "open": "Play in the audio player"
+  }
 }
