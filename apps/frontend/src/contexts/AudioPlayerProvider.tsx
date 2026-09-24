@@ -100,12 +100,16 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     setCollapsed: collapsed => patch({ collapsed }) }}>
     <div className={state.track ? (state.collapsed ? 'pb-28' : 'pb-48') : undefined}>{children}</div>
     <audio ref={audioRef} data-global-audio preload="metadata" hidden
-      onPlaying={event => { if (trackRef.current && !event.currentTarget.paused) patch({ status: 'playing' }); }}
-      onWaiting={event => { if (trackRef.current && !event.currentTarget.paused) patch({ status: 'loading' }); }}
+      onPlaying={event => { if (trackRef.current && !event.currentTarget.paused && !event.currentTarget.ended) patch({ status: 'playing' }); }}
+      onWaiting={event => { const audio = event.currentTarget; if (trackRef.current && !audio.paused && !audio.ended && audio.readyState < 3) patch({ status: 'loading' }); }}
       onPause={event => { if (trackRef.current && event.currentTarget.paused && !event.currentTarget.ended && !event.currentTarget.error) patch({ status: 'paused' }); }}
       onEnded={event => { if (trackRef.current && event.currentTarget.ended) patch({ status: 'ended' }); }}
       onError={event => { if (trackRef.current && event.currentTarget.error) patch({ status: 'error' }); }}
-      onTimeUpdate={event => { if (trackRef.current) patch({ position: event.currentTarget.currentTime }); }}
+      onTimeUpdate={event => { if (trackRef.current) patch({ position: event.currentTarget.currentTime, ...(event.currentTarget.ended ? { status: 'ended' as const } : {}) }); }}
+      onSeeked={event => {
+        const audio = event.currentTarget;
+        if (trackRef.current) patch({ position: audio.currentTime, status: audio.error ? 'error' : audio.ended ? 'ended' : audio.paused ? 'paused' : audio.readyState >= 3 ? 'playing' : 'loading' });
+      }}
       onDurationChange={event => patch({ duration: Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0 })}
       onVolumeChange={event => patch({ volume: event.currentTarget.volume, muted: event.currentTarget.muted })} />
     <FloatingAudioPlayer />

@@ -32,6 +32,10 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
  let fail=true;const audioRequests=[];
  await context.addCookies([{name:'i18next',value:'es',url:origin}]);
  await context.addInitScript(owner=>{
+  window.audioEvents=[];
+  for(const type of ['play','playing','pause','waiting','seeking','seeked','ended','error','loadedmetadata'])document.addEventListener(type,event=>{
+   const a=event.target;if(a instanceof HTMLAudioElement)window.audioEvents.push({type,time:a.currentTime,src:a.currentSrc,paused:a.paused,ended:a.ended,ready:a.readyState});
+  },true);
   localStorage.setItem('token','fixture');localStorage.setItem('currentUser',JSON.stringify(owner));
   localStorage.setItem('welcome_seen_1','true');localStorage.setItem('i18nextLng','es');localStorage.setItem('vite-ui-theme','dark');
  },owner);
@@ -150,6 +154,8 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   assert.deepEqual(errors,[]);
   console.log('PASS '+engineName+' real audio, playing/paused mascot, SPA navigation, single source, seeking/end/replay, mute, attachments, mobile, reduced motion, retry and logout');
  } catch(error) {
+  console.log('AUDIO_EVENTS '+JSON.stringify(await page.evaluate(()=>window.audioEvents)));
+  console.log('AUDIO_REQUESTS '+JSON.stringify(audioRequests));
   const png=await page.screenshot({path:'test-results/player-failure-'+engineName+'.png'});
   console.log('VISUAL_IMAGE player-failure-'+engineName+' '+png.toString('base64'));
   throw error;
