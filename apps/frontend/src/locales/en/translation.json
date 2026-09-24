@@ -519,5 +519,6 @@
     "short": "Updated: {{time}}",
     "now": "just now",
     "includes": "Includes edits, comments and files."
-  }
+  },
+  "export_youtube_disabled": "Temporarily disabled"
 }
