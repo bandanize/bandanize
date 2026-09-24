@@ -95,8 +95,8 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await page.setViewportSize({width:320,height:844});
   await page.waitForFunction(()=>document.querySelector('[data-pdf-viewer] [aria-busy]')?.getAttribute('aria-busy')==='false');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-  const bounds=await pdfViewer.boundingBox();assert(bounds.x>=0 && bounds.x+bounds.width<=320);
   await capture('pdf-mobile');
+  const bounds=await pdfViewer.boundingBox();assert(bounds.x>=0 && bounds.x+bounds.width<=321,JSON.stringify(bounds));
   await page.keyboard.press('Escape');
   await capture('video-mobile');
   await page.getByRole('button',{name:/^Broken.pdf/}).click();

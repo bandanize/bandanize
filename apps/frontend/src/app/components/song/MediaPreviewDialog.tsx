@@ -22,7 +22,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
   return (
     <Dialog open={!!file} onOpenChange={onClose}>
         <DialogContent
-          className="bg-card border-border text-foreground w-[95vw] sm:max-w-4xl rounded-xl p-4 sm:p-6"
+          className="bg-card border-border text-foreground w-[95vw] min-w-0 grid-cols-[minmax(0,1fr)] max-h-[calc(100dvh-1rem)] overflow-y-auto sm:max-w-4xl rounded-xl p-4 sm:p-6"
           aria-describedby={undefined}
           onPointerDownOutside={(e) => {
             // Prevent dialog from closing when interacting with media controls
@@ -35,7 +35,7 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
             <DialogHeader>
                 <DialogTitle className="truncate pr-8">{file.name}</DialogTitle>
             </DialogHeader>
-            <div className="mt-4 flex justify-center w-full overflow-hidden">
+            <div className="mt-4 flex justify-center w-full min-w-0 overflow-hidden">
                 {mediaKind(file) === 'image' ? (
                     <img 
                         src={getMediaUrl(file.url)} 
