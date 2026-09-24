@@ -1,6 +1,8 @@
 // Real media playback, exclusively on the GitHub runner. No production data.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 const require = createRequire(process.env.BROWSER_PACKAGE + '/package.json');
 const { chromium, webkit } = require('playwright');
@@ -24,6 +26,14 @@ function wav(seconds=15) {
  for(let i=0;i<samples;i++)buffer.writeInt16LE(Math.round(500*Math.sin(2*Math.PI*220*i/8000)),44+i*2);
  return buffer;
 }
+// Real encoded media, generated only in CI; a misleading extension must not discard video.
+execFileSync('ffmpeg',['-y','-f','lavfi','-i','sine=frequency=220:duration=8','-c:a','libmp3lame','test-results/audio.mp3'],{stdio:'ignore'});
+execFileSync('ffmpeg',['-y','-f','lavfi','-i','color=c=green:s=160x90:d=8','-c:v','libx264','-pix_fmt','yuv420p','test-results/video.mp4'],{stdio:'ignore'});
+const encodedAudio=readFileSync('test-results/audio.mp3'), encodedVideo=readFileSync('test-results/video.mp4');
+const mpeg={name:'Ensayo.mpeg',url:'/api/uploads/videos/audio.mpeg',type:'video/mpeg'};
+const generic={name:'Grabacion.MP3',url:'/api/uploads/files/generic.mp3',type:'application/octet-stream'};
+const realVideo={name:'Escenario.mpeg',url:'/api/uploads/videos/video.mpeg',type:'video/mpeg'};
+band.songLists[0].songs[0].files.push(mpeg,generic,realVideo);
 for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
  const browser=await engine.launch();
  const context=await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'});
@@ -41,6 +51,17 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
  },owner);
  await context.route('**/api/**',async route=>{
   const request=route.request(),path=new URL(request.url()).pathname;
+  if(path.endsWith('.mpeg') || path.endsWith('.mp3')) {
+   audioRequests.push(path);
+   const body=path.endsWith('/video.mpeg')?encodedVideo:encodedAudio;
+   const contentType=path.endsWith('/video.mpeg')?'video/mp4':'audio/mpeg';
+   const range=request.headers()['range']?.match(/bytes=(\d+)-(\d*)/);
+   if(range) {
+    const start=Number(range[1]),end=Math.min(body.length-1,range[2]?Number(range[2]):body.length-1);
+    return route.fulfill({status:206,contentType,headers:{'accept-ranges':'bytes','content-range':'bytes '+start+'-'+end+'/'+body.length},body:body.subarray(start,end+1)});
+   }
+   return route.fulfill({contentType,body});
+  }
   if(path.endsWith('.wav')) {
    audioRequests.push(path);
    if(path.endsWith('missing.wav')&&fail)return route.fulfill({status:404,body:'Unavailable'});
@@ -144,6 +165,27 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   fail=false;
   await panel.getByRole('button',{name:'Reintentar audio'}).click();
   await page.locator('.floating-audio-player[data-playback="playing"]').waitFor();
+  await page.setViewportSize({width:1280,height:900});
+  await panel.getByRole('button',{name:'Cerrar reproductor'}).click();
+  await page.getByRole('button',{name:/^Grabacion.MP3 Audio$/}).click();
+  await page.locator('.floating-audio-player[data-playback="playing"]').waitFor();
+  assert(await page.locator('[data-global-audio]').evaluate(a=>a.src.endsWith('generic.mp3')));
+  await panel.getByRole('button',{name:'Cerrar reproductor'}).click();
+  await page.getByRole('button',{name:/^Ensayo.mpeg/}).click();
+  await panel.waitFor();
+  // Some browsers require Play after an asynchronous metadata handoff.
+  await page.waitForFunction(()=>['playing','paused'].includes(document.querySelector('.floating-audio-player')?.dataset.playback));
+  if(await panel.getByRole('button',{name:'Reproducir',exact:true}).isVisible()) await panel.getByRole('button',{name:'Reproducir',exact:true}).click();
+  await page.locator('.floating-audio-player[data-playback="playing"]').waitFor();
+  assert(await page.locator('[data-global-audio]').evaluate(a=>a.src.endsWith('audio.mpeg')));
+  assert.equal(await page.locator('video').count(),0);
+  await panel.getByRole('button',{name:'Cerrar reproductor'}).click();
+  await page.getByRole('button',{name:/^Escenario.mpeg/}).click();
+  await page.waitForFunction(()=>document.querySelector('video')?.videoWidth>0);
+  assert.equal(await panel.count(),0,'Actual video must retain its picture');
+  await page.getByRole('button',{name:'Escuchar como audio',exact:true}).click();
+  await panel.waitFor();
+  assert.equal(await page.locator('video').count(),0);
   // Logout remounts the session provider and releases its source.
   await page.setViewportSize({width:1280,height:900});
   await page.getByRole('button',{name:'Mi cuenta',exact:true}).click();

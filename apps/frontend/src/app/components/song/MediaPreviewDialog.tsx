@@ -1,3 +1,5 @@
+import { mediaKind } from '@/lib/media-kind';
+import { MediaVideo } from './MediaVideo';
 import { useAudioPlayer } from '@/contexts/audio-player';
 import { Button } from '@/app/components/ui/button';
 import React from 'react';
@@ -32,29 +34,22 @@ export function MediaPreviewDialog({ file, onClose }: MediaPreviewDialogProps) {
                 <DialogTitle className="truncate pr-8">{file.name}</DialogTitle>
             </DialogHeader>
             <div className="mt-4 flex justify-center w-full overflow-hidden">
-                {file.type.startsWith('image') ? (
+                {mediaKind(file) === 'image' ? (
                     <img 
                         src={getMediaUrl(file.url)} 
                         alt={file.name} 
                         className="max-h-[70vh] w-auto object-contain rounded-md"
                     />
-                ) : file.type.startsWith('video') ? (
-                    <video playsInline 
-                        controls 
-                        preload="metadata"
-                        className="max-h-[60vh] sm:max-h-[70vh] w-full rounded-md"
-                        style={{ touchAction: 'auto' }}
-                        src={getMediaUrl(file.url)}
-                    >
-                        Your browser does not support the video element.
-                    </video>
+                ) : mediaKind(file) === 'video' ? (
+                    <MediaVideo key={file.url} file={file} className="max-h-[60vh] sm:max-h-[70vh] w-full rounded-md"
+                        onAudio={() => { player.toggleTrack(file); onClose(); }} />
                 ) : file.type === 'application/pdf' ? (
                     <iframe
                         src={getMediaUrl(file.url)}
                         className="w-full h-[60vh] sm:h-[70vh] rounded-md border-0 bg-white"
                         title={file.name}
                     />
-                ) : file.type.startsWith('audio/') ? (
+                ) : mediaKind(file) === 'audio' ? (
                     <div className="w-full py-10 px-4 sm:px-8 bg-secondary/20 rounded-xl flex items-center justify-center">
                         <Button onClick={() => { player.toggleTrack(file); onClose(); }}>{t('player.open')}</Button>
                     </div>

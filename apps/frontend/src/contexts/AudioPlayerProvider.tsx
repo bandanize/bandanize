@@ -20,9 +20,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     if (audio.error) audio.load();
     if (audio.ended) audio.currentTime = 0;
     patch({ status: 'loading' });
-    // Called directly from a user gesture, including on iOS.
-    void audio.play().catch(() => {
-      if (request === attempt.current && trackRef.current) patch({ status: 'error' });
+    // Metadata-based handoff can require a fresh user gesture on iOS.
+    void audio.play().catch((error: unknown) => {
+      if (request === attempt.current && trackRef.current) patch({ status: error instanceof DOMException && error.name === 'NotAllowedError' ? 'paused' : 'error' });
     });
   }, [patch]);
   const pause = useCallback(() => {

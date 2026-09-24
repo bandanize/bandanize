@@ -19,6 +19,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build --workspace=@bandanize/frontend
+      - name: Install media fixture encoder
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Install browsers in CI
         run: |
           npm install --prefix "$BROWSER_PACKAGE" --no-save --package-lock=false playwright@1.63.0

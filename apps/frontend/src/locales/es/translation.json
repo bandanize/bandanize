@@ -541,6 +541,7 @@
     "ended": "¿Otra vez?",
     "error": "No se pudo reproducir. Reinténtalo.",
     "retry": "Reintentar audio",
-    "open": "Reproducir en el reproductor"
+    "open": "Reproducir en el reproductor",
+    "listen_as_audio": "Escuchar como audio"
   }
 }
