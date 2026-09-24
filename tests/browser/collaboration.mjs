@@ -347,10 +347,21 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     assert.equal(await dialog.locator('pre button').first().evaluate(el => getComputedStyle(el).fontSize), '20px');
     const reading = await dialog.locator('pre').boundingBox();
     assert(reading.height > 600, JSON.stringify(reading));
-    assert.equal(await dialog.locator('pre').evaluate(el => getComputedStyle(el).whiteSpace), 'pre');
+    assert.equal(await dialog.locator('pre').evaluate(el => getComputedStyle(el).whiteSpace), 'pre-wrap');
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 844 });
+      const pre = dialog.locator('pre');
+      assert(await pre.evaluate(el => el.scrollWidth <= el.clientWidth + 1), 'Long tab lines must wrap without horizontal scrolling');
+      assert.equal(await pre.textContent(), band.songLists[0].songs[0].tablatures[0].content, 'Wrapping must not change tab content or comment offsets');
+      assert(await pre.locator(':scope > span').nth(1).evaluate(el => el.getBoundingClientRect().height > parseFloat(getComputedStyle(el).lineHeight) * 2), 'Long line must visibly occupy multiple rows');
+    }
+    await dialog.getByRole('button', { name: 'Edit tablature', exact: true }).click();
+    assert(await dialog.locator('textarea').evaluate(el => el.scrollWidth <= el.clientWidth + 1), 'Mobile editing must also wrap');
+    await dialog.getByRole('button', { name: 'View chords', exact: true }).click();
     await capture(page, name + '-mobile-fullscreen');
     await dialog.getByRole('button', { name: /Exit fullscreen|Salir de pantalla completa/i }).click();
     await page.getByRole('dialog').waitFor({ state: 'detached' });
+    assert(await page.locator('pre').evaluate(el => el.scrollWidth <= el.clientWidth + 1), 'Normal mobile view must wrap too');
     assert.deepEqual(errors, []);
     console.log('PASS ' + name + ' mobile viewport, scrolling, font size and exit');
   } catch (error) { await capture(page, name + '-failure'); throw error; }
