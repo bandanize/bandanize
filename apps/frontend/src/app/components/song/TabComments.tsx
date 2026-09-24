@@ -191,7 +191,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
   };
 
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden">
+    <div className="tab-comments-panel bg-card rounded-xl border border-border overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2 select-none">
         <MessageCircle className="size-4 text-muted-foreground" />
         <h4 className="text-sm font-medium text-foreground">
@@ -204,7 +204,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
 
       <div 
         ref={scrollAreaRef} 
-        className="max-h-64 overflow-y-auto p-3 space-y-3"
+        className="tab-comments-scroll max-h-[min(32rem,65dvh)] overflow-y-auto px-4 divide-y divide-border/60"
       >
         {isLoading ? (
           <div className="text-center text-muted-foreground/60 py-4 text-sm">
@@ -218,13 +218,12 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
           comments.map((comment) => {
             const isMe = String(comment.sender.id) === user?.id;
             return (
-              <div key={comment.id} data-tab-comment-id={comment.id} tabIndex={-1} className="flex gap-2 group focus-visible:outline focus-visible:outline-primary rounded-md">
-                <MemberAvatar name={comment.sender.name} className="size-7" photo={String(comment.sender.id) === user?.id ? user?.photo || comment.sender.photo : currentProject?.members.find(member => member.id === String(comment.sender.id))?.photo ?? comment.sender.photo} />
+              <div key={comment.id} data-tab-comment-id={comment.id} tabIndex={-1} className="py-5 group focus-visible:outline focus-visible:outline-primary rounded-md">
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xs font-medium text-foreground">{comment.sender.name}</span>
-                    <span className="text-[10px] text-muted-foreground">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0"><span className="block text-sm font-medium text-foreground break-words">{comment.sender.name}</span>
+                    <span className="block mt-1 text-[11px] text-muted-foreground">
                       {(() => {
                         try {
                           const date = new Date(comment.timestamp);
@@ -236,10 +235,11 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
                         }
                       })()}
                     </span>
+                    </div>
                     {isMe && (
                       <button
                         onClick={() => handleDeleteComment(comment.id)}
-                        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity ml-auto p-1"
+                        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity ml-auto shrink-0 p-1"
                         title={t('delete_comment', 'Eliminar comentario')}
                       >
                         <Trash2 className="size-3 text-destructive hover:text-destructive/80" />
@@ -248,16 +248,16 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
                   </div>
                   {comment.quote && (() => {
                     const located = resolveAnchor(content, { start: comment.anchorStart ?? -1, end: comment.anchorEnd ?? -1, quote: comment.quote });
-                    return <div className="mt-2 mb-1 border-l-2 border-primary/50 pl-2">
+                    return <div className="mt-3 mb-3 border-l-2 border-primary/50 bg-primary/[0.04] rounded-r-md py-2 pl-3 pr-2">
                       <button data-comment-locate type="button" disabled={!located} onClick={() => located && onLocate(located)} className="text-left text-xs text-primary hover:underline disabled:text-muted-foreground w-full">
-                        <span className="block text-[10px] mb-1">{t(located ? 'workspace.see_passage' : 'workspace.passage_changed')}</span><span className="font-mono whitespace-pre-wrap line-clamp-3">{comment.quote}</span>
+                        <span className="block text-[10px] mb-1">{t(located ? 'workspace.see_passage' : 'workspace.passage_changed')}</span><span className="font-mono whitespace-pre-wrap break-words line-clamp-3">{comment.quote}</span>
                       </button>
                     </div>;
                   })()}
-                  <p className="text-sm text-foreground/90 break-words mt-0.5">
+                  <p className="text-sm leading-6 text-foreground/90 whitespace-pre-wrap break-words mt-3">
                     {highlightMentions(comment.message)}
                   </p>
-                  {!!comment.attachments?.length && <div className="mt-2"><MediaLibrary files={comment.attachments} title={t('workspace.attachments')} onPreview={onPreview} /></div>}
+                  {!!comment.attachments?.length && <div className="mt-4"><MediaLibrary files={comment.attachments} title={t('workspace.attachments')} onPreview={onPreview} /></div>}
                 </div>
               </div>
             );
@@ -265,9 +265,9 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
         )}
       </div>
 
-      <div className="p-3 border-t border-border relative">
+      <div className="px-3 py-4 border-t border-border relative">
         {mentionsVisible && (
-          <div id="comment-mention-options" role="listbox" aria-label={t('comments_ui.mention')} className="mb-3 w-full bg-popover border border-border rounded-md max-h-48 overflow-y-auto">
+          <div id="comment-mention-options" role="listbox" aria-label={t('comments_ui.mention')} className="tab-comments-scroll mb-3 w-full bg-popover border border-border rounded-md max-h-48 overflow-y-auto">
             {mentionFilteredMembers.map((member, index) => (
                 <button
                   key={member.id} id={`comment-member-${index}`} type="button" role="option" aria-label={member.name} aria-selected={index === mentionIndex}

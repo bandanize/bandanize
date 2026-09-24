@@ -12,3 +12,23 @@
 }
 
 .song-media [data-media-items] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); max-height: 240px; }
+
+/* Keep native wheel, touch and keyboard scrolling with the Bandanize palette. */
+.tab-comments-scroll,
+.tab-comments-panel [data-media-items] {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 45%, var(--card)) var(--card);
+}
+.tab-comments-scroll::-webkit-scrollbar,
+.tab-comments-panel [data-media-items]::-webkit-scrollbar { width: 8px; height: 8px; }
+.tab-comments-scroll::-webkit-scrollbar-track,
+.tab-comments-panel [data-media-items]::-webkit-scrollbar-track { background: var(--card); }
+.tab-comments-scroll::-webkit-scrollbar-thumb,
+.tab-comments-panel [data-media-items]::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary) 45%, var(--card));
+  border: 2px solid var(--card);
+  border-radius: 999px;
+}
+.tab-comments-scroll::-webkit-scrollbar-thumb:hover,
+.tab-comments-panel [data-media-items]::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+.tab-comments-scroll::-webkit-scrollbar-button { display: none; }
