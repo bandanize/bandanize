@@ -313,13 +313,13 @@ try {
     for (const [name, value] of [['Chat', 'chat'], ['Songs', 'songs']]) {
       await sections.getByRole('tab', { name, exact: true }).click();
       await page.waitForURL(new RegExp('tab=' + value));
-      assert.equal(await sections.getByRole('tab', { name, exact: true }).getAttribute('aria-selected'), 'true');
+      await sections.getByRole('tab', { name, exact: true }).and(page.locator('[aria-selected="true"]')).waitFor();
       assert.equal(new URL(page.url()).searchParams.get('listId'), '11');
     }
     await page.getByRole('button', { name: 'My account', exact: true }).click();
     await page.getByRole('menuitem', { name: /Invitations/ }).waitFor();
     await page.keyboard.press('Escape');
-    assert(await page.getByRole('button', { name: 'My account', exact: true }).evaluate(el => el === document.activeElement));
+    await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'My account');
     await capture(page, 'app-navbar-desktop');
     for (const width of [390, 320]) {
       await page.setViewportSize({ width, height: 844 });
