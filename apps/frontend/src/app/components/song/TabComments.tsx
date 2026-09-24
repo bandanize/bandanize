@@ -1,3 +1,4 @@
+import { useSeenContent } from '@/contexts/SongUnreadContext';
 import { useUploadName } from '../UploadNameProvider';
 import { uploadMedia } from '@/lib/upload-media';
 import { resolveAnchor, type CommentAnchor } from '@/lib/comment-anchor';
@@ -29,6 +30,7 @@ export interface TabComment {
 }
 
 interface TabCommentsProps {
+  songId: string;
   tabId: string;
   content: string;
   anchor: CommentAnchor | null;
@@ -38,7 +40,7 @@ interface TabCommentsProps {
   onCommentsChange: (comments: TabComment[]) => void;
 }
 
-export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, onPreview, onCommentsChange }: TabCommentsProps) {
+export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onLocate, onPreview, onCommentsChange }: TabCommentsProps) {
   const { t, i18n } = useTranslation();
   const requestUploadName = useUploadName();
   const [attachments, setAttachments] = useState<LibraryFile[]>([]);
@@ -64,6 +66,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
   const [sendError, setSendError] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  useSeenContent(scrollAreaRef, loadedTabId === tabId ? songId : undefined, 'comments', JSON.stringify(comments.map(comment => comment.id)));
 
   // Mention state
   const [showMentions, setShowMentions] = useState(false);
@@ -218,7 +221,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
           comments.map((comment) => {
             const isMe = String(comment.sender.id) === user?.id;
             return (
-              <div key={comment.id} data-tab-comment-id={comment.id} tabIndex={-1} className="py-5 group focus-visible:outline focus-visible:outline-primary rounded-md">
+              <div key={comment.id} data-tab-comment-id={comment.id} data-seen-key={String(comment.id)} tabIndex={-1} className="py-5 group focus-visible:outline focus-visible:outline-primary rounded-md">
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-3">

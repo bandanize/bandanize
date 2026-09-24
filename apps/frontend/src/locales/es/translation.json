@@ -515,10 +515,13 @@
     "refresh_error": "No se han podido actualizar los cambios recientes."
   },
   "song_activity": {
-    "exact": "Último cambio: {{date}}",
-    "short": "Cambios: {{time}}",
+    "exact": "Última actividad: {{date}}",
+    "short": "Actividad: {{time}}",
     "now": "ahora",
-    "includes": "Incluye ediciones, comentarios y archivos."
+    "includes": "Incluye ediciones, comentarios y archivos.",
+    "new_tabs": "Tablaturas sin ver",
+    "new_files": "Archivos sin ver",
+    "new_comments": "Comentarios sin leer"
   },
   "export_youtube_disabled": "Deshabilitado temporalmente"
 }

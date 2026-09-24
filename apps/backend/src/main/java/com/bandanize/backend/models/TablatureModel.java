@@ -29,6 +29,7 @@ public class TablatureModel {
 
     @ElementCollection
     @CollectionTable(name = "tablature_files", joinColumns = @JoinColumn(name = "tablature_id"))
+    @org.hibernate.annotations.BatchSize(size = 64)
     private List<MediaFile> files = new ArrayList<>();
 
     public int getCommentCount() {

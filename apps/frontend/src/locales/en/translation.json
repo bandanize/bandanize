@@ -515,10 +515,13 @@
     "refresh_error": "Recent changes could not be refreshed."
   },
   "song_activity": {
-    "exact": "Last change: {{date}}",
-    "short": "Updated: {{time}}",
+    "exact": "Last activity: {{date}}",
+    "short": "Activity: {{time}}",
     "now": "just now",
-    "includes": "Includes edits, comments and files."
+    "includes": "Includes edits, comments and files.",
+    "new_tabs": "Unseen tablatures",
+    "new_files": "Unseen files",
+    "new_comments": "Unread comments"
   },
   "export_youtube_disabled": "Temporarily disabled"
 }

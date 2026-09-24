@@ -11,6 +11,10 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserModel, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM UserModel u WHERE u.id = :id")
+    Optional<UserModel> findByIdForUpdate(@Param("id") Long id);
+
     Optional<UserModel> findByUsername(String username);
 
     @Query("SELECT u FROM UserModel u WHERE LOWER(u.email) = LOWER(:email)")

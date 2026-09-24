@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useSeenContent } from '@/contexts/SongUnreadContext';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { File, FileAudio, Film, Image as ImageIcon, Download, Trash2, Plus, Play, ChevronDown } from 'lucide-react';
 import { getMediaUrl } from '@/services/api';
 import { Button } from '../ui/button';
 
 export interface LibraryFile { url: string; name: string; type: string }
-export function MediaLibrary({ files, title, onUpload, onDelete, onPreview, uploading = false, progress = 0 }: {
+export function MediaLibrary({ songId, activityScope, files, title, onUpload, onDelete, onPreview, uploading = false, progress = 0 }: {
+  songId?: string; activityScope?: string;
   files: LibraryFile[]; title: string; onUpload?: () => void; onDelete?: (url: string) => void;
   onPreview: (file: LibraryFile) => void; uploading?: boolean; progress?: number;
 }) {
@@ -15,7 +17,9 @@ export function MediaLibrary({ files, title, onUpload, onDelete, onPreview, uplo
   const [failed, setFailed] = useState<string | null>(null);
   const kind = (file: LibraryFile) => file.type.startsWith('audio/') ? 'audio' : file.type.startsWith('video/') ? 'video' : file.type.startsWith('image/') ? 'image' : 'document';
   const visible = files.filter(file => filter === 'all' || kind(file) === filter);
-  return <section className="rounded-xl border border-border bg-card overflow-hidden min-w-0">
+  const activityRoot = useRef<HTMLElement>(null);
+  useSeenContent(activityRoot, activityScope ? songId : undefined, 'files', JSON.stringify(visible.map(file => file.url)));
+  return <section ref={activityRoot} className="rounded-xl border border-border bg-card overflow-hidden min-w-0">
     <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
       <h3 className="text-sm font-medium">{title} <span className="text-muted-foreground ml-1">{files.length}</span></h3>
       {onUpload && <Button size="sm" variant="outline" disabled={uploading} onClick={onUpload} aria-label={t('workspace.add_file')}><Plus className="size-4" /><span className="hidden sm:inline">{t('workspace.add_file')}</span></Button>}
@@ -30,7 +34,7 @@ export function MediaLibrary({ files, title, onUpload, onDelete, onPreview, uplo
         const type = kind(file); const playable = type === 'audio' || type === 'video';
         const Icon = type === 'audio' ? FileAudio : type === 'video' ? Film : type === 'image' ? ImageIcon : File;
         const open = active === file.url;
-        return <div key={file.url} className="px-3 py-2">
+        return <div key={file.url} data-seen-key={activityScope ? activityScope + ':' + file.url : undefined} className="px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
             <button type="button" className="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg p-1 hover:bg-accent" aria-expanded={playable ? open : undefined}
               onClick={() => playable ? setActive(open ? null : file.url) : onPreview(file)}>

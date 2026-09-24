@@ -1,3 +1,5 @@
+import { SongUnreadProvider, useSongUnread, type ActivityKind } from '@/contexts/SongUnreadContext';
+import { useAuth } from '@/contexts/AuthContext';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useProjects, Song, SongList } from '@/contexts/ProjectContext';
 import { Card, CardContent } from '@/app/components/ui/card';
@@ -64,6 +66,7 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
   const blockDrag = useRef(false);
   const lastDrag = useRef(0);
   const { t, i18n } = useTranslation();
+  const unread = useSongUnread(song.id);
   const activityDate = song.updatedAt ? new Date(song.updatedAt) : null;
   const hasActivity = activityDate !== null && Number.isFinite(activityDate.getTime());
   const activityExact = hasActivity ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(activityDate) : '';
@@ -160,12 +163,20 @@ const SortableSongRow = ({ song, index, listId, moveSong, onDrop, onCancelDrag, 
       <div className="flex shrink-0 flex-col items-end gap-1">
       <div className="flex shrink-0 items-center gap-2 sm:gap-3 text-[11px] tabular-nums text-muted-foreground" role="group" aria-label={t('visual.song_activity')}>
         {[
-          { Icon: FileText, value: song.tablatures.length, label: t('library.tab_count', { count: song.tablatures.length }) },
-          { Icon: Paperclip, value: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0), label: t('library.file_count', { count: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0) }) },
-          { Icon: MessageCircle, value: song.tablatures.some(tab => tab.commentCount === undefined) ? '—' : song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0), label: song.tablatures.some(tab => tab.commentCount === undefined) ? t('library.comments_unavailable') : t('library.comment_count', { count: song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0) }) },
-        ].map(({ Icon, value, label }) => <span key={label} role="img" title={label} aria-label={label} className="inline-flex items-center gap-1">
-          <Icon className="size-3 opacity-80" aria-hidden="true" /><span aria-hidden="true">{value}</span>
-        </span>)}
+          { kind: 'tabs', Icon: FileText, value: song.tablatures.length, label: t('library.tab_count', { count: song.tablatures.length }) },
+          { kind: 'files', Icon: Paperclip, value: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0), label: t('library.file_count', { count: song.files.length + song.tablatures.reduce((total, tab) => total + tab.files.length, 0) }) },
+          { kind: 'comments', Icon: MessageCircle, value: song.tablatures.some(tab => tab.commentCount === undefined) ? '—' : song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0), label: song.tablatures.some(tab => tab.commentCount === undefined) ? t('library.comments_unavailable') : t('library.comment_count', { count: song.tablatures.reduce((total, tab) => total + (tab.commentCount || 0), 0) }) },
+        ].map(({ kind, Icon, value, label }) => {
+          const isUnread = Boolean(unread?.[kind as ActivityKind]?.length);
+          const description = label + (isUnread ? ' · ' + t('song_activity.new_' + kind) : '');
+          return <span key={kind} role="img" title={description} aria-label={description}
+            data-activity-kind={kind} data-unread={isUnread}
+            className={`relative inline-flex items-center gap-1 ${isUnread ? 'text-primary font-medium' : ''}`}>
+            <span className="relative"><Icon className="size-3 opacity-80" aria-hidden="true" />
+              {isUnread && <span aria-hidden="true" className="absolute -top-1 -right-1 size-1 rounded-full bg-primary" />}
+            </span><span aria-hidden="true">{value}</span>
+          </span>;
+        })}
       </div>
 
         {hasActivity && <time
@@ -468,6 +479,15 @@ function DragPreview() {
 // --- Main SongManager Component ---
 
 export function SongManager() {
+  const { currentProject } = useProjects();
+  const { user } = useAuth();
+  if (!currentProject || !user) return null;
+  return <SongUnreadProvider key={user.id + ':' + currentProject.id} projectId={currentProject.id}>
+    <SongManagerContent />
+  </SongUnreadProvider>;
+}
+
+function SongManagerContent() {
   const { currentProject, refreshProjects, createSongList, updateSongList, deleteSongList, duplicateSongList, reorderSongLists, createSong, reorderSongs, deleteSong, updateSong, moveSongToList, copySongToList, replicateSongInList } = useProjects();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
