@@ -659,6 +659,8 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     assert(await pre.evaluate(el=>el.scrollHeight<=el.clientHeight+1),'Reading columns must fit vertically');
     const marker=dialog.locator('[data-comment-marker-id="701"]');
     await marker.waitFor();
+    await dialog.evaluate(async el=>{await Promise.all(el.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})));});
+    await capture(page,'reader-columns-'+name);
     assert((await marker.boundingBox()).x>600,'Comment marker follows the second column');
     await marker.locator('button').hover();
     await marker.getByText('Quietly on this phrase',{exact:true}).waitFor();

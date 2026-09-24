@@ -46,6 +46,8 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
     if (!pre || !container) return;
     const measure = () => {
       const origin = container.getBoundingClientRect();
+      const scaleX = origin.width / container.offsetWidth || 1;
+      const scaleY = origin.height / container.offsetHeight || 1;
       const taken = new Set<string>();
       const style = getComputedStyle(pre);
       const count = Number.parseInt(style.columnCount) || 1;
@@ -63,11 +65,11 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
             const range = document.createRange();
             range.setStart(node, anchor.start - offset); range.setEnd(node, Math.min(length, anchor.start - offset + 1));
             const rect = range.getBoundingClientRect();
-            const top = rect.top - origin.top;
+            const top = (rect.top - origin.top) / scaleY;
             if (top < 0 || top > container.clientHeight - 20) return [];
             // One marker per visual row; its preview includes every comment on that row.
-            const column = count > 1 ? Math.max(0, Math.floor((rect.left - preBounds.left + pre.scrollLeft - padding + 1) / step)) : 0;
-            const left = count > 1 ? preBounds.left - origin.left + padding + column * step - pre.scrollLeft - 32 : 4;
+            const column = count > 1 ? Math.max(0, Math.floor(((rect.left - preBounds.left) / scaleX + pre.scrollLeft - padding + 2) / step)) : 0;
+            const left = count > 1 ? (preBounds.left - origin.left) / scaleX + padding + column * step - pre.scrollLeft - 32 : 4;
             if (left < 0 || left + 24 > container.clientWidth) return [];
             const row = Math.round(top) + ':' + column;
             if (taken.has(row)) return [];
