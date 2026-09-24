@@ -70,18 +70,18 @@ for (const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await page.evaluate(()=>window.emitLive({kind:'chat',bandId:1}));
   assert.equal(await page.getByText('Keep my draft',{exact:true}).count(),1);
   await page.goto(origin+'/invitations');
-  await page.getByText('No tienes invitaciones pendientes',{exact:true}).waitFor();
+  await page.getByText('No hay invitaciones pendientes',{exact:true}).waitFor();
   invitations=[{id:55,bandId:2,bandName:'Instant invitation'}];
   await page.evaluate(()=>window.emitLive({kind:'invitations',bandId:2}));
   await page.getByText('Instant invitation',{exact:true}).waitFor();
   await page.getByRole('button',{name:'Aceptar',exact:true}).click();
-  await page.getByText('No tienes invitaciones pendientes',{exact:true}).waitFor();
+  await page.getByText('No hay invitaciones pendientes',{exact:true}).waitFor();
   assert.deepEqual(invitations,[]);
   // A lost push is recovered by background refresh; no navigation or reload.
   invitations=[{id:56,bandId:3,bandName:'Recovered invitation'}];
   await page.getByText('Recovered invitation',{exact:true}).waitFor({timeout:15000});
   await page.getByRole('button',{name:'Rechazar',exact:true}).click();
-  await page.getByText('No tienes invitaciones pendientes',{exact:true}).waitFor();
+  await page.getByText('No hay invitaciones pendientes',{exact:true}).waitFor();
   assert.deepEqual(errors,[]);
   console.log('PASS '+name+' stable legacy chat order, failed-send draft, live arrival/deduplication, instant invitations, accept/reject and lost-push recovery');
  } finally {await context.close();await browser.close();}

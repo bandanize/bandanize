@@ -214,6 +214,8 @@ class BandServiceTest {
     @Test
     void rejectInvitation_Success() {
         BandInvitationModel invitation = new BandInvitationModel();
+        invitation.setBand(band);
+        invitation.setInvitedUser(member);
         invitation.setId(100L);
         invitation.setStatus(InvitationStatus.PENDING);
 

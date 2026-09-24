@@ -25,14 +25,17 @@ class LiveChatIntegrationTest {
     @Autowired ChatService chat;
     @Autowired BandService bandService;
     @Autowired LiveUpdateService live;
+    @Autowired org.springframework.transaction.PlatformTransactionManager transactions;
     MockMvc mvc;
     UserModel owner, guest;
     BandModel band;
     @BeforeEach void setup() {
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+        new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(status -> {
         owner = user("live-owner"); guest = user("live-guest");
         band = new BandModel(); band.setName("Live rehearsal"); band.setOwner(owner);
         band.getUsers().add(owner); band.getUsers().add(guest); band = bands.saveAndFlush(band);
+        });
     }
     UserModel user(String name) {
         return users.findByUsername(name).orElseGet(() -> {
