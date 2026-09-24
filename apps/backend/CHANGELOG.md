@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/bandanize/bandanize/compare/api@v1.10.2...api@v1.11.0) (2026-09-24)
+
+
+### Features
+
+* Fix missing newline at end of pom.xml ([4554693](https://github.com/bandanize/bandanize/commit/45546935b1a2e3e512c6c928d0acb5618281c487))
+
 ## [1.10.2](https://github.com/bandanize/bandanize/compare/api@v1.10.1...api@v1.10.2) (2026-09-24)
 
 
