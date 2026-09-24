@@ -29,7 +29,7 @@ export function TabRenderer({ content, className, highlighted }: TabRendererProp
   return (
     <pre
       className={cn(
-        'font-mono whitespace-pre-wrap break-words leading-relaxed p-4 bg-background border border-border rounded-md text-foreground overflow-auto',
+        'font-mono whitespace-pre-wrap break-words max-sm:break-all leading-relaxed p-4 bg-background border border-border rounded-md text-foreground overflow-auto',
         className,
       )}
     >

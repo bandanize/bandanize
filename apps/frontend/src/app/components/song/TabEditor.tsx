@@ -378,7 +378,7 @@ export function TabEditor({
               className={cn(
                 "min-h-[400px]",
                 fontSizes[fontSizeIndex],
-                isFullscreen && "h-full min-h-0 w-full rounded-none border-0 p-2 whitespace-pre break-normal overflow-auto leading-snug"
+                isFullscreen && "h-full min-h-0 w-full rounded-none border-0 p-2 whitespace-pre-wrap break-all sm:whitespace-pre sm:break-normal overflow-auto leading-snug"
               )}
             />
           ) : (
@@ -388,9 +388,9 @@ export function TabEditor({
               value={editingContent}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingContent(e.target.value)}
               className={cn(
-                  "font-mono min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4",
+                  "font-mono max-sm:break-all min-h-[400px] bg-background border-border text-foreground resize-none leading-relaxed p-4",
                   fontSizes[fontSizeIndex],
-                  isFullscreen && "h-full min-h-0 w-full rounded-none border-0 p-2 whitespace-pre break-normal overflow-auto leading-snug"
+                  isFullscreen && "h-full min-h-0 w-full rounded-none border-0 p-2 whitespace-pre-wrap break-all sm:whitespace-pre sm:break-normal overflow-auto leading-snug"
               )}
               placeholder={t('tab_content_placeholder', "Escribe o pega aquí tu tablatura...\n\ne|---\nB|---\nG|---\nD|---\nA|---\nE|---\n")}
               spellCheck={false}
