@@ -276,34 +276,38 @@ try {
     fixture.songLists[0].songs.push({id:23,name:'No artist yet',files:[],tablatures:[]});
     await page.goto(origin+'/project/1?tab=songs&listId=11'); await dismiss(page);
     const order=()=>page.locator('[data-song-id]').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-song-id')));
+    const expectOrder=async expected=>{
+      await page.waitForFunction(ids=>JSON.stringify([...document.querySelectorAll('[data-song-id]')].map(row=>row.getAttribute('data-song-id')))===JSON.stringify(ids),expected);
+      assert.deepEqual(await order(),expected);
+    };
     const select=async name=>{
       await page.getByRole('combobox',{name:'Sort songs',exact:true}).click();
       await page.getByRole('option',{name,exact:true}).click();
     };
     await page.locator('[data-song-id="23"]').waitFor();
-    assert.deepEqual(await order(),['21','22','23']);
+    await expectOrder(['21','22','23']);
     await select('Artist');
-    assert.deepEqual(await order(),['22','21','23']);
+    await expectOrder(['22','21','23']);
     await select('Recent changes');
     await page.waitForFunction(()=>document.querySelector('[data-song-id]')?.getAttribute('data-song-id')==='22');
-    assert.deepEqual(await order(),['22','21','23']);
+    await expectOrder(['22','21','23']);
     // Returning from a song picks up server-side edits/comments without losing the selected sort.
     await page.locator('[data-song-id="21"] [role="button"]').click();
     fixture.songLists[0].songs[0].updatedAt='2026-09-25T10:00:00Z';
     await page.goBack();
     await page.waitForFunction(()=>document.querySelector('[data-song-id]')?.getAttribute('data-song-id')==='21');
-    assert.deepEqual(await order(),['21','22','23']);
+    await expectOrder(['21','22','23']);
     await select('Established order');
-    assert.deepEqual(await order(),['21','22','23']);
+    await expectOrder(['21','22','23']);
     assert.equal(requests.filter(r=>r.path.endsWith('/reorder')).length,0);
     await select('Artist'); await capture(page,'song-sort-desktop');
     await page.reload(); await page.locator('[data-song-id="23"]').waitFor();
-    assert.deepEqual(await order(),['22','21','23']);
+    await expectOrder(['22','21','23']);
     // In-list dragging must not persist a different manual order while using a computed sort.
     const first=await page.locator('[data-song-id="22"]').boundingBox(),last=await page.locator('[data-song-id="21"]').boundingBox();
     await page.mouse.move(first.x+50,first.y+first.height/2);await page.mouse.down();await page.waitForTimeout(70);
     await page.mouse.move(last.x+50,last.y+last.height-2,{steps:12});await page.mouse.up();
-    assert.deepEqual(await order(),['22','21','23']);
+    await expectOrder(['22','21','23']);
     assert.equal(requests.filter(r=>r.path.endsWith('/reorder')).length,0);
     for(const width of [390,320]){
       await page.setViewportSize({width,height:844});

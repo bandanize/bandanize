@@ -962,7 +962,8 @@ export function SongManager() {
 
                 {/* Song List */}
                 {selectedList.songs.length > 0 && (
-                  <SortableSongList 
+                  <SortableSongList
+                      key={`${selectedList.id}:${sortMode}`}
                       listId={selectedList.id}
                       songs={sortedSongs}
                       canReorder={!['recent', 'artist'].includes(sortMode)}
