@@ -105,7 +105,7 @@ async function dismiss(page) {
   if (await button.isVisible()) await button.click();
 }
 async function capture(page, name) {
-  const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: true, animations: 'disabled' });
+  const bytes = await page.screenshot({ path: 'test-results/' + name + '.png', fullPage: !name.startsWith('reader-columns-'), animations: 'disabled' });
   if (['visual-cookies', 'visual-library', 'visual-transfer', 'visual-mobile', 'visual-dashboard', 'visual-cookie-mobile', 'projects-single', 'projects-multiple', 'projects-mobile', 'profile-avatars', 'app-navbar-desktop', 'app-navbar-mobile', 'calendar-timezone', 'calendar-refresh', 'calendar-mobile', 'guide-desktop', 'guide-mobile', 'song-sort-desktop', 'song-sort-mobile', 'reader-columns-chromium', 'reader-columns-webkit'].includes(name))
     console.log('VISUAL_IMAGE ' + name + ' ' + bytes.toString('base64'));
 }
@@ -664,7 +664,7 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     assert((await marker.boundingBox()).x>600,'Comment marker follows the second column');
     await marker.locator('button').hover();
     await marker.getByText('Quietly on this phrase',{exact:true}).waitFor();
-    assert.equal(await pre.locator('mark').textContent(),quote);
+    assert.equal(await pre.locator('mark').evaluateAll(marks=>marks.map(mark=>mark.textContent).join('')),quote);
     await page.mouse.move(10,10);
     await capture(page,'reader-columns-'+name);
     // Increasing font size can require more columns; wheel and keyboard advance horizontally.
