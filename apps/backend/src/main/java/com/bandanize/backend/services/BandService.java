@@ -41,7 +41,8 @@ public class BandService {
     public BandService(BandRepository bandRepository, UserRepository userRepository,
             com.bandanize.backend.repositories.BandInvitationRepository invitationRepository,
             SongService songService, StorageService storageService, EmailService emailService,
-            NotificationService notificationService) {
+            NotificationService notificationService, LiveUpdateService live) {
+        this.live = live;
         this.bandRepository = bandRepository;
         this.userRepository = userRepository;
         this.invitationRepository = invitationRepository;

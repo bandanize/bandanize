@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import api from '@/services/api';
 import { mapChatMessage, orderedChat } from '@/lib/chat-messages';
@@ -162,6 +162,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
+  const invitationRequest = useRef(0);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
@@ -217,8 +218,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         chat: orderedChat((band.chatMessages || []).map(mapChatMessage)),
         createdAt: new Date(),
       }));
-      setProjects(mappedProjects);
-      setCurrentProject(previous => previous ? mappedProjects.find(project => project.id === previous.id) || null : previous);
+      const merge = (project: Project, previous?: Project) => previous
+        ? { ...project, chat: orderedChat([...previous.chat, ...project.chat]) } : project;
+      setProjects(previous => mappedProjects.map(project => merge(project, previous.find(old => old.id === project.id))));
+      setCurrentProject(previous => {
+        const next = previous && mappedProjects.find(project => project.id === previous.id);
+        return next ? merge(next, previous!) : null;
+      });
     } catch (error) {
       console.error("Error fetching projects", error);
       if (throwOnError) throw error;
@@ -230,8 +236,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const refreshProjects = useCallback(() => fetchProjects(true, true), [fetchProjects]);
 
   const fetchInvitations = useCallback(async () => {
+    const request = ++invitationRequest.current;
     try {
         const response = await api.get('/invitations/mine');
+        if (request !== invitationRequest.current) return;
         setInvitations(Array.isArray(response.data) ? response.data.map(inv => ({ ...inv, id: String(inv.id), bandId: String(inv.bandId) })) : []);
     } catch (error) {
         console.error("Error fetching invitations", error);
@@ -243,8 +251,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     let active = true;
     const pending = new Set<string>();
+    const dirty = new Set<string>();
     const refreshChat = async (projectId: string) => {
-      if (pending.has(projectId)) return;
+      if (pending.has(projectId)) { dirty.add(projectId); return; }
       pending.add(projectId);
       try {
         const response = await api.get('/bands/' + projectId + '/chat');
@@ -255,7 +264,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         setProjects(previous => previous.map(update));
         setCurrentProject(previous => previous ? update(previous) : previous);
       } catch { /* Preserve history and drafts while offline. */ }
-      finally { pending.delete(projectId); }
+      finally {
+        pending.delete(projectId);
+        if (active && dirty.delete(projectId)) void refreshChat(projectId);
+      }
     };
     let refreshing = false;
     const recover = async () => {
