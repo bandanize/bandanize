@@ -321,7 +321,7 @@ try {
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'My account');
     await capture(page, 'app-navbar-desktop');
-    for (const width of [390, 320]) {
+    for (const width of [768, 640, 390, 320]) {
       await page.setViewportSize({ width, height: 844 });
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Navbar must fit narrow screens');
       assert(await sections.evaluate(el => el.scrollWidth <= el.clientWidth + 1));

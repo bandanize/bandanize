@@ -346,7 +346,7 @@ export function ProjectHub() {
       <div className="max-w-[1280px] w-full mx-auto py-6 sm:py-8 px-4 sm:px-6">
          <div className="max-w-[1216px] w-full mx-auto">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList aria-label={t('app_nav.sections')} className="grid grid-cols-6 sm:flex bg-card/60 border border-border/70 rounded-xl p-1 h-14 sm:h-12 w-full sm:w-fit max-w-full mx-auto gap-0.5">
+          <TabsList aria-label={t('app_nav.sections')} className="grid grid-cols-6 md:flex bg-card/60 border border-border/70 rounded-xl p-1 h-14 md:h-12 w-full md:w-fit max-w-full mx-auto gap-0.5">
             {[
               { value: 'overview', icon: LayoutDashboard, label: t('workspace.overview'), short: t('workspace.overview') },
               { value: 'songs', icon: Music, label: t('songs'), short: t('songs') },
@@ -355,10 +355,10 @@ export function ProjectHub() {
               { value: 'calendar', icon: Calendar, label: t('calendar'), short: t('app_nav.agenda') },
               { value: 'notifications', icon: Bell, label: t('notifications'), short: t('app_nav.alerts') },
             ].map(({ value, icon: Icon, label, short }) => <TabsTrigger key={value} value={value} aria-label={label} title={label}
-              className="relative min-w-0 h-full px-0.5 sm:px-3 flex flex-col sm:flex-row gap-1 sm:gap-2 rounded-lg border-0 text-muted-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none font-normal">
+              className="relative min-w-0 h-full px-0.5 md:px-3 flex flex-col md:flex-row gap-1 md:gap-2 rounded-lg border-0 text-muted-foreground data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none font-normal">
               <Icon className="size-4 shrink-0" />
-              <span className="sm:hidden max-w-full truncate text-[9px] leading-3">{short}</span>
-              <span className="hidden sm:inline text-xs">{label}</span>
+              <span className="md:hidden max-w-full truncate text-[9px] leading-3">{short}</span>
+              <span className="hidden md:inline text-xs">{label}</span>
               {value === 'chat' && hasUnreadChat && <span className="absolute top-1 right-1 size-1.5 bg-primary rounded-full" />}
               {value === 'notifications' && unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>}
             </TabsTrigger>)}
