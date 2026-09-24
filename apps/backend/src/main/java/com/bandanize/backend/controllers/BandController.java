@@ -115,6 +115,7 @@ public class BandController {
     @PostMapping("/{bandId}/invite")
     public ResponseEntity<String> inviteUser(@PathVariable Long bandId, @RequestBody Map<String, String> body,
             @AuthenticationPrincipal UserDetails userDetails) {
+        chatService.requireMember(bandId, userService.getUserByUsername(userDetails.getUsername()).getId());
         String email = body.get("email");
         String userIdStr = body.get("userId");
         String inviterName = userDetails != null ? userDetails.getUsername() : "Un miembro";
@@ -213,11 +214,19 @@ public class BandController {
      * @param request The chat message request.
      * @return ResponseEntity with the saved ChatMessageModel.
      */
+    @GetMapping("/{bandId}/chat")
+    public ResponseEntity<List<com.bandanize.backend.models.ChatMessageModel>> getChat(
+            @PathVariable Long bandId, @AuthenticationPrincipal UserDetails userDetails) {
+        chatService.requireMember(bandId, userService.getUserByUsername(userDetails.getUsername()).getId());
+        return ResponseEntity.ok(chatService.getChatHistory(bandId));
+    }
+
     @PostMapping("/{bandId}/chat")
     public ResponseEntity<com.bandanize.backend.models.ChatMessageModel> addChatMessage(@PathVariable Long bandId,
-            @RequestBody com.bandanize.backend.dtos.ChatMessageRequestDTO request) {
+            @RequestBody com.bandanize.backend.dtos.ChatMessageRequestDTO request,
+            @AuthenticationPrincipal UserDetails userDetails) {
         com.bandanize.backend.models.ChatMessageModel savedMessage = chatService.sendMessage(bandId,
-                request.getUserId(), request.getMessage());
+                userService.getUserByUsername(userDetails.getUsername()).getId(), request.getMessage());
         return ResponseEntity.ok(savedMessage);
     }
 
@@ -232,6 +241,7 @@ public class BandController {
     public ResponseEntity<Boolean> getUnreadChatStatus(@PathVariable Long bandId,
             @AuthenticationPrincipal UserDetails userDetails) {
         com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
+        chatService.requireMember(bandId, user.getId());
         boolean hasUnread = chatService.hasUnreadMessages(bandId, user.getId());
         return ResponseEntity.ok(hasUnread);
     }
@@ -247,6 +257,7 @@ public class BandController {
     public ResponseEntity<String> markChatAsRead(@PathVariable Long bandId,
             @AuthenticationPrincipal UserDetails userDetails) {
         com.bandanize.backend.dtos.UserDTO user = userService.getUserByUsername(userDetails.getUsername());
+        chatService.requireMember(bandId, user.getId());
         chatService.markAsRead(bandId, user.getId());
         return ResponseEntity.ok("Chat marked as read");
     }

@@ -32,13 +32,15 @@ public class InvitationController {
     }
 
     @PostMapping("/{id}/accept")
-    public ResponseEntity<String> acceptInvitation(@PathVariable Long id) {
+    public ResponseEntity<String> acceptInvitation(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        bandService.requireInvitationRecipient(id, userService.getUserByUsername(userDetails.getUsername()).getId());
         bandService.acceptInvitation(id);
         return ResponseEntity.ok("Invitation accepted");
     }
 
     @PostMapping("/{id}/reject")
-    public ResponseEntity<String> rejectInvitation(@PathVariable Long id) {
+    public ResponseEntity<String> rejectInvitation(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        bandService.requireInvitationRecipient(id, userService.getUserByUsername(userDetails.getUsername()).getId());
         bandService.rejectInvitation(id);
         return ResponseEntity.ok("Invitation rejected");
     }

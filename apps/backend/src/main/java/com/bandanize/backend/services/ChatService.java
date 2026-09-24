@@ -16,6 +16,8 @@ import java.util.List;
 @Service
 public class ChatService {
     @Autowired
+    private LiveUpdateService live;
+    @Autowired
     private ChatMessageRepository chatMessageRepository;
     @Autowired
     private BandRepository bandRepository;
@@ -26,8 +28,16 @@ public class ChatService {
     @Autowired
     private com.bandanize.backend.repositories.ChatReadStatusRepository chatReadStatusRepository;
 
+    public void requireMember(Long bandId, Long userId) {
+        requireMember(bandRepository.findById(bandId).orElseThrow(() -> new ResourceNotFoundException("Band not found")), userId);
+    }
+    private void requireMember(BandModel band, Long userId) {
+        if ((band.getOwner() == null || !userId.equals(band.getOwner().getId()))
+                && band.getUsers().stream().noneMatch(member -> userId.equals(member.getId())))
+            throw new org.springframework.security.access.AccessDeniedException("Project membership required");
+    }
     public List<ChatMessageModel> getChatHistory(Long bandId) {
-        return chatMessageRepository.findByBandIdOrderByTimestampAsc(bandId);
+        return chatMessageRepository.findByBandIdOrderByIdAsc(bandId);
     }
 
     @org.springframework.transaction.annotation.Transactional
@@ -37,6 +47,9 @@ public class ChatService {
         UserModel sender = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        requireMember(band, userId);
+        if (message == null || message.isBlank() || message.length() > 10000)
+            throw new IllegalArgumentException("Message must contain between 1 and 10000 characters");
         ChatMessageModel chatMessage = new ChatMessageModel();
         chatMessage.setBand(band);
         chatMessage.setSender(sender);
@@ -61,6 +74,7 @@ public class ChatService {
             }
         }
 
+        live.bandChanged(band, "chat");
         return savedMessage;
     }
 
@@ -101,6 +115,6 @@ public class ChatService {
             return false;
         }
 
-        return latestMessage.getTimestamp().isAfter(lastRead);
+        return latestMessage.getTimestamp() == null || lastRead == null || latestMessage.getTimestamp().isAfter(lastRead);
     }
 }

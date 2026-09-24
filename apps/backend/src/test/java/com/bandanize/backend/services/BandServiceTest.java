@@ -26,6 +26,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class BandServiceTest {
 
+    @Mock private LiveUpdateService live;
+
     @Mock
     private BandRepository bandRepository;
 
@@ -173,6 +175,8 @@ class BandServiceTest {
         invitation.setBand(band);
         invitation.setInvitedUser(member);
         invitation.setStatus(InvitationStatus.PENDING);
+        invitation.setBand(band);
+        invitation.setInvitedUser(member);
 
         when(invitationRepository.findById(100L)).thenReturn(Optional.of(invitation));
 
@@ -189,7 +193,7 @@ class BandServiceTest {
     void acceptInvitation_NotPending_ThrowsException() {
         BandInvitationModel invitation = new BandInvitationModel();
         invitation.setId(100L);
-        invitation.setStatus(InvitationStatus.ACCEPTED); // Already accepted
+        invitation.setStatus(InvitationStatus.REJECTED); // Rejected invitations cannot be accepted
 
         when(invitationRepository.findById(100L)).thenReturn(Optional.of(invitation));
 
@@ -210,6 +214,8 @@ class BandServiceTest {
     @Test
     void rejectInvitation_Success() {
         BandInvitationModel invitation = new BandInvitationModel();
+        invitation.setBand(band);
+        invitation.setInvitedUser(member);
         invitation.setId(100L);
         invitation.setStatus(InvitationStatus.PENDING);
 

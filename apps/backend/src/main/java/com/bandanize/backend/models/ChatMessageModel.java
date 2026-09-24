@@ -12,7 +12,7 @@ public class ChatMessageModel {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
-    @JsonIgnoreProperties({ "bands", "hashedPassword", "rrss", "hibernateLazyInitializer", "handler" })
+    @JsonIgnoreProperties({ "bands", "hashedPassword", "password", "rrss", "hibernateLazyInitializer", "handler" })
     private UserModel sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
