@@ -12,7 +12,7 @@ import axios from 'axios';
 
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
-import { Send, Trash2, MessageCircle, Paperclip, X, LoaderCircle, AtSign } from 'lucide-react';
+import { Send, Trash2, MessageCircle, Paperclip, X, LoaderCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
@@ -113,8 +113,14 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
     setShowMentions(false); setMentionRange(null);
     requestAnimationFrame(() => { inputRef.current?.focus(); inputRef.current?.setSelectionRange(start + insertion.length, start + insertion.length); });
   };
+  const mentionsVisible = showMentions && mentionFilteredMembers.length > 0;
+
+  useEffect(() => {
+    setShowMentions(false); setMentionRange(null); setSendError('');
+  }, [anchor]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showMentions) return;
+    if (!mentionsVisible) return;
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
       setMentionIndex(index => (index + (e.key === 'ArrowDown' ? 1 : -1) + mentionFilteredMembers.length) % Math.max(1, mentionFilteredMembers.length));
@@ -204,7 +210,6 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
         ) : comments.length === 0 ? (
           <div className="text-center text-muted-foreground/60 py-4">
             <p className="text-sm">{t('no_comments', 'No hay comentarios')}</p>
-            <p className="text-xs">{t('be_first_comment', 'Sé el primero en comentar')}</p>
           </div>
         ) : (
           comments.map((comment) => {
@@ -258,13 +263,9 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
       </div>
 
       <div className="p-3 border-t border-border relative">
-        <div className="flex flex-wrap gap-2 mb-2"><Button type="button" variant={anchor ? 'outline' : 'secondary'} size="sm" aria-pressed={!anchor} onClick={() => { onClearAnchor(); setSendError(''); inputRef.current?.focus(); }}>{t('comments_ui.general_button')}</Button></div>
-        <p className="text-xs text-muted-foreground mb-2">{t(anchor ? 'comments_ui.part_comment' : 'comments_ui.general_comment')}</p>
-        <Button type="button" variant="outline" size="sm" className="mb-3" disabled={isSending} onClick={() => { setShowMentions(value => !value); setMentionQuery(''); setMentionRange(null); setMentionIndex(0); }}><AtSign className="size-4" />{t('comments_ui.mention')}</Button>
-        {showMentions && (
+        {mentionsVisible && (
           <div id="comment-mention-options" role="listbox" aria-label={t('comments_ui.mention')} className="mb-3 w-full bg-popover border border-border rounded-md max-h-48 overflow-y-auto">
-            {mentionFilteredMembers.length > 0 ? (
-              mentionFilteredMembers.map((member, index) => (
+            {mentionFilteredMembers.map((member, index) => (
                 <button
                   key={member.id} id={`comment-member-${index}`} type="button" role="option" aria-label={member.name} aria-selected={index === mentionIndex}
                   onMouseDown={event => event.preventDefault()}
@@ -274,12 +275,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
                   <MemberAvatar name={member.name} photo={member.photo} className="size-5" />
                   {member.name}
                 </button>
-              ))
-            ) : (
-              <div className="px-3 py-2 text-sm text-muted-foreground">
-                {t('no_members_found', 'No se encontraron miembros')}
-              </div>
-            )}
+              ))}
           </div>
         )}
         <input type="file" ref={attachmentInput} onChange={attach} className="hidden" />
@@ -293,7 +289,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
         <form onSubmit={handleSendComment} className="flex gap-2">
           <Button type="button" size="icon" variant="outline" className="size-8 shrink-0" disabled={uploading || isSending || attachments.length >= 5} onClick={() => attachmentInput.current?.click()} aria-label={t('workspace.attach_file')}><Paperclip className="size-4" /></Button>
           <Input
-            id="tab-comment-input" role="combobox" aria-autocomplete="list" aria-expanded={showMentions} aria-controls={showMentions ? "comment-mention-options" : undefined} aria-activedescendant={showMentions && mentionFilteredMembers[mentionIndex] ? `comment-member-${mentionIndex}` : undefined} aria-label={t('workspace.comment')} maxLength={10000}
+            id="tab-comment-input" role="combobox" aria-autocomplete="list" aria-expanded={mentionsVisible} aria-controls={mentionsVisible ? "comment-mention-options" : undefined} aria-activedescendant={mentionsVisible && mentionFilteredMembers[mentionIndex] ? `comment-member-${mentionIndex}` : undefined} aria-label={t('workspace.comment')} maxLength={10000}
             value={message}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}

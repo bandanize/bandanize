@@ -48,7 +48,9 @@ const bubble=page.getByRole('button',{name:'Comentar selección',exact:true});aw
 const box=await bubble.boundingBox(),lineBox=await line.boundingBox();assert(box.y+box.height<=lineBox.y+2,'Comment action must be above selected text');
 await page.screenshot({path:'test-results/comment-selection.png',fullPage:false});
 await bubble.click();await page.waitForTimeout(220);assert.equal(await page.locator('#tab-comment-input').evaluate(el=>document.activeElement===el),true);
-await page.getByRole('button',{name:'Mencionar a alguien',exact:true}).click();
+assert.equal(await page.getByRole('button',{name:'Mencionar a alguien',exact:true}).count(),0);
+assert.equal(await page.getByRole('button',{name:'Comentario general',exact:true}).count(),0);
+await page.locator('#tab-comment-input').fill('@');
 const alex=page.getByRole('option',{name:'Alex',exact:true});await alex.click();assert.equal(await page.locator('#tab-comment-input').inputValue(),'@Alex ');
 await page.locator('#tab-comment-input').fill('@Alex entra aquí');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);assert.equal(comments.at(-1).message,'@Alex entra aquí');assert(comments.at(-1).quote);
 for(const width of [1440,390]){
@@ -68,8 +70,24 @@ await page.getByRole('dialog').locator('pre > span').nth(1).dblclick({position:{
 await page.getByRole('button',{name:'Pantalla completa',exact:true}).click();
 await page.getByRole('button',{name:'Comentar una parte',exact:true}).click();const picker=page.getByRole('dialog',{name:'Comentar una parte',exact:true});await picker.getByRole('button',{name:'Línea 2: Una melodía para volver',exact:true}).click();await picker.getByRole('button',{name:'Comentar estas líneas',exact:true}).click();await page.waitForTimeout(250);assert.equal(await page.getByRole('dialog').count(),0);assert(await page.locator('#tab-comment-input').evaluate(el=>document.activeElement===el));
 // The plain path works against the legacy server and never sends an attachments array.
-legacyMode=true;await page.getByRole('button',{name:'Comentario general',exact:true}).click();await page.locator('#tab-comment-input').fill('Sin seleccionar ninguna línea');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);
+legacyMode=true;await page.getByRole('button',{name:'Quitar selección',exact:true}).click();await page.locator('#tab-comment-input').fill('Sin seleccionar ninguna línea');await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);
 assert.deepEqual(JSON.parse(requests.filter(r=>r.path.endsWith('/comments')&&r.method==='POST').at(-1).data),{message:'Sin seleccionar ninguna línea'});assert.equal(comments.at(-1).message,'Sin seleccionar ninguna línea');
+// A solo project must not show an empty mention picker or block Enter.
+legacyMode=false; band.members=[owner];
+await page.reload();await page.locator('pre').waitFor();
+await page.getByRole('button',{name:'Comentar una parte',exact:true}).click();
+const soloPicker=page.getByRole('dialog',{name:'Comentar una parte',exact:true});
+await soloPicker.getByRole('button',{name:'Línea 2: Una melodía para volver',exact:true}).click();
+await soloPicker.getByRole('button',{name:'Comentar estas líneas',exact:true}).click();
+const soloInput=page.locator('#tab-comment-input');
+await soloInput.fill('@nadie Revisar esta frase');
+assert.equal(await page.getByRole('listbox').count(),0);
+assert.equal(await page.getByText('No se encontraron miembros',{exact:true}).count(),0);
+await soloInput.press('Enter');
+await page.waitForFunction(()=>document.querySelector('#tab-comment-input')?.value==='');
+assert.equal(comments.at(-1).quote,'Una melodía para volver');
+assert.equal(content.slice(comments.at(-1).anchorStart,comments.at(-1).anchorEnd),comments.at(-1).quote);
+console.log('PASS compact composer and solo-project selected comments with Enter');
 // Verify the requested visual order, and the scope of both libraries.
 const header=await page.getByText('Luces de la ciudad',{exact:true}).first().boundingBox(),songFiles=await page.locator('.song-media').boundingBox(),workspace=await page.locator('.song-workspace').boundingBox(),commentPanel=await page.locator('.song-comments > div').first().boundingBox(),tabFiles=await page.locator('.song-tab-media').boundingBox();
 assert(songFiles.y>header.y && songFiles.y+songFiles.height<=workspace.y);assert(tabFiles.y>=commentPanel.y+commentPanel.height);
