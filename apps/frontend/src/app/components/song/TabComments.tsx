@@ -17,7 +17,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 
-interface TabComment {
+export interface TabComment {
   anchorStart?: number;
   anchorEnd?: number;
   quote?: string;
@@ -35,9 +35,10 @@ interface TabCommentsProps {
   onClearAnchor: () => void;
   onLocate: (anchor: CommentAnchor) => void;
   onPreview: (file: LibraryFile) => void;
+  onCommentsChange: (comments: TabComment[]) => void;
 }
 
-export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, onPreview }: TabCommentsProps) {
+export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, onPreview, onCommentsChange }: TabCommentsProps) {
   const { t, i18n } = useTranslation();
   const requestUploadName = useUploadName();
   const [attachments, setAttachments] = useState<LibraryFile[]>([]);
@@ -95,6 +96,8 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
       });
     }
   }, [comments]);
+
+  useEffect(() => { onCommentsChange(comments); }, [comments, onCommentsChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value, caret = e.target.selectionStart ?? value.length;
@@ -246,7 +249,7 @@ export function TabComments({ tabId, content, anchor, onClearAnchor, onLocate, o
                   {comment.quote && (() => {
                     const located = resolveAnchor(content, { start: comment.anchorStart ?? -1, end: comment.anchorEnd ?? -1, quote: comment.quote });
                     return <div className="mt-2 mb-1 border-l-2 border-primary/50 pl-2">
-                      <button type="button" disabled={!located} onClick={() => located && onLocate(located)} className="text-left text-xs text-primary hover:underline disabled:text-muted-foreground w-full">
+                      <button data-comment-locate type="button" disabled={!located} onClick={() => located && onLocate(located)} className="text-left text-xs text-primary hover:underline disabled:text-muted-foreground w-full">
                         <span className="block text-[10px] mb-1">{t(located ? 'workspace.see_passage' : 'workspace.passage_changed')}</span><span className="font-mono whitespace-pre-wrap line-clamp-3">{comment.quote}</span>
                       </button>
                     </div>;

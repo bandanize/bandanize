@@ -12,6 +12,7 @@ import {
   Eye, Pencil,
   Maximize, Minimize, ZoomIn, ZoomOut
 } from 'lucide-react';
+import type { TabComment } from './TabComments';
 import { TabRenderer } from './TabRenderer';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -96,6 +97,7 @@ function TablatureControls({ onInsert }: { onInsert: (text: string) => void }) {
 
 interface TabEditorProps {
   hideFiles?: boolean;
+  comments?: TabComment[];
   onAnnotate?: (anchor: CommentAnchor) => void;
   focusedAnchor?: CommentAnchor | null;
   uploading?: boolean;
@@ -116,7 +118,7 @@ export function TabEditor({
   isSaving, 
   onUpload, 
   onDeleteFile,
-  onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress, hideFiles = false
+  onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress, hideFiles = false, comments = []
 }: TabEditorProps) {
   const { t } = useTranslation();
   const [editingContent, setEditingContent] = useState(tab.content || '');
@@ -375,6 +377,7 @@ export function TabEditor({
             <TabRenderer
               content={editingContent}
               highlighted={focusedAnchor}
+              comments={hasChanges ? [] : comments}
               className={cn(
                 "min-h-[400px]",
                 fontSizes[fontSizeIndex],

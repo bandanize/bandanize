@@ -42,6 +42,22 @@ await context.route('**/api/**',async route=>{
 await page.goto(origin+'/project/1?tab=songs&listId=11&songId=21&tabId=31');
 const cookie=page.getByRole('button',{name:'Entendido',exact:true});if(await cookie.isVisible())await cookie.click();
 await page.locator('pre').waitFor();
+const marker = page.locator('[data-comment-marker] button').first();
+await marker.waitFor();
+await marker.hover();
+await page.locator('[data-comment-marker] [role=dialog]').waitFor();
+assert.equal(await page.locator('pre mark').textContent(), 'Una melodía para volver');
+assert.equal(await page.locator('pre').textContent(), content, 'Markers must not alter selection offsets');
+await page.getByRole('heading', { name: 'Luces de la ciudad', exact: true }).click();
+assert.equal(await page.locator('pre mark').count(), 0);
+await page.locator('[data-comment-locate]').first().click();
+assert.equal(await page.locator('pre mark').textContent(), 'Una melodía para volver');
+await page.getByRole('heading', { name: 'Luces de la ciudad', exact: true }).click();
+assert.equal(await page.locator('pre mark').count(), 0);
+await page.getByRole('button', { name: 'Opciones de la canción' }).click();
+await page.getByRole('menuitem', { name: 'Eliminar canción', exact: true }).waitFor();
+await page.keyboard.press('Escape');
+
 // Use real mouse selection, not a manually dispatched selectionchange event.
 const line=page.locator('pre > span').nth(1);await line.dblclick({position:{x:12,y:8}});
 const bubble=page.getByRole('button',{name:'Comentar selección',exact:true});await bubble.waitFor();
@@ -60,6 +76,12 @@ for(const width of [1440,390]){
  if(width===390)await page.screenshot({path:'test-results/comment-lines-mobile.png'});
  await picker.getByRole('button',{name:'Comentar estas líneas',exact:true}).click();await page.waitForTimeout(220);
  const input=page.locator('#tab-comment-input');assert(await input.evaluate(el=>document.activeElement===el));
+ if(width===390) {
+   await page.locator('[data-comment-marker] button').first().click();
+   await page.locator('[data-comment-marker] [role=dialog]').waitFor();
+   await page.getByRole('heading', { name: 'Luces de la ciudad', exact: true }).click();
+   assert.equal(await page.locator('[data-comment-marker] [role=dialog]').count(), 0);
+ }
  await input.fill('Antes @Al después');await input.evaluate(el=>{el.setSelectionRange(9,9);});await input.press('Backspace');await input.press('l');
  await page.getByRole('option',{name:'Alex',exact:true}).click();assert.equal(await input.inputValue(),'Antes @Alex  después');
  await page.getByRole('button',{name:'Enviar comentario'}).click();await page.waitForTimeout(200);assert.equal(comments.at(-1).quote,content.split('\n').slice(1,4).join('\n'));
@@ -92,6 +114,11 @@ console.log('PASS compact composer and solo-project selected comments with Enter
 const header=await page.getByText('Luces de la ciudad',{exact:true}).first().boundingBox(),songFiles=await page.locator('.song-media').boundingBox(),workspace=await page.locator('.song-workspace').boundingBox(),commentPanel=await page.locator('.song-comments > div').first().boundingBox(),tabFiles=await page.locator('.song-tab-media').boundingBox();
 assert(songFiles.y>header.y && songFiles.y+songFiles.height<=workspace.y);assert(tabFiles.y>=commentPanel.y+commentPanel.height);
 await page.screenshot({path:'test-results/song-files-reordered-mobile.png',fullPage:true});
-await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'test-results/song-files-reordered.png',fullPage:true});
+await page.setViewportSize({width:1440,height:1000});
+const headerShot = await page.screenshot({path:'test-results/song-files-reordered.png',fullPage:true});
+console.log('VISUAL_IMAGE revised-song-header ' + headerShot.toString('base64'));
+await page.locator('[data-comment-marker] button').first().hover();
+const markerShot = await page.screenshot({path:'test-results/comment-marker.png',fullPage:true});
+console.log('VISUAL_IMAGE passage-marker ' + markerShot.toString('base64'));
 assert.deepEqual(errors,[]);console.log('PASS floating selection, line picker desktop/mobile/fullscreen, mentions and submitted anchors');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

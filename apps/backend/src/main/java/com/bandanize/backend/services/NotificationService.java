@@ -39,7 +39,10 @@ public class NotificationService {
 
         return new com.bandanize.backend.dtos.NotificationDTO(
                 notification.getId(),
-                notification.getType().name(),
+                notification.getType() == Notification.NotificationType.CHAT_MENTION
+                        && notification.getMetadata() != null
+                        && "TAB_COMMENT_MENTION".equals(notification.getMetadata().get("mentionType"))
+                        ? Notification.NotificationType.TAB_COMMENT_MENTION.name() : notification.getType().name(),
                 notification.getMetadata(),
                 notification.getCreatedAt(),
                 actorDTO,
@@ -113,10 +116,13 @@ public class NotificationService {
         notification.setBand(band);
         notification.setActor(actor);
         notification.setRecipient(mentionedUser);
-        notification.setType(Notification.NotificationType.TAB_COMMENT_MENTION);
+        // Existing installations may retain an enum/check constraint without TAB_COMMENT_MENTION.
+        // Persist the established mention type and expose the precise subtype through the DTO.
+        notification.setType(Notification.NotificationType.CHAT_MENTION);
         Map<String, String> metadata = new HashMap<>();
         metadata.put("targetUserName", mentionedUser.getName());
         metadata.put("tabName", tab.getName());
+        metadata.put("mentionType", "TAB_COMMENT_MENTION");
         notification.setMetadata(metadata);
         notification.setTitle("New Mention");
         notification.setMessage(actor.getName() + " te mencionó en " + tab.getName());

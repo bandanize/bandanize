@@ -1,5 +1,5 @@
 import { MediaLibrary } from './song/MediaLibrary';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useProjects, Song } from '@/contexts/ProjectContext';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -15,7 +15,7 @@ import { SongEditDialog } from './song/SongEditDialog';
 import { FileList } from './song/FileList';
 import { TabList } from './song/TabList';
 import { TabEditor } from './song/TabEditor';
-import { TabComments } from './song/TabComments';
+import { TabComments, type TabComment } from './song/TabComments';
 import { MediaPreviewDialog } from './song/MediaPreviewDialog';
 import { INSTRUMENTS } from './song/constants';
 
@@ -48,6 +48,19 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   // Tab ID from URL
   const selectedTabId = searchParams.get('tabId');
   const selectedTab = song.tablatures.find(t => t.id === selectedTabId) || null;
+
+  const [tabComments, setTabComments] = useState<{ tabId: string | null; comments: TabComment[] }>({ tabId: null, comments: [] });
+  const receiveComments = useCallback((comments: TabComment[]) => setTabComments({ tabId: selectedTabId, comments }), [selectedTabId]);
+  useEffect(() => {
+    if (!focusedAnchor) return;
+    const clear = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('[data-comment-locate], [data-comment-marker]')) setFocusedAnchor(null);
+    };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setFocusedAnchor(null); };
+    document.addEventListener('pointerdown', clear);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('pointerdown', clear); document.removeEventListener('keydown', escape); };
+  }, [focusedAnchor]);
 
   const setSelectedTabId = (id: string | null) => {
       setSearchParams(prev => {
@@ -207,6 +220,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
         <div className="song-score min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4">
           {selectedTab ? <TabEditor key={selectedTab.id} tab={selectedTab} songName={song.name} onSave={handleSaveTabContent} isSaving={isSavingTab}
             hideFiles
+            comments={tabComments.tabId === selectedTab.id ? tabComments.comments : []}
             onUpload={tabId => handleFileUploadTrigger('tab', tabId)} uploading={isUploading && uploadTarget?.type === 'tab'} uploadProgress={uploadProgress}
             onDeleteFile={(tabId, url) => currentProject && deleteTablatureFile(currentProject.id, listId, song.id, tabId, url)} onPreview={setPreviewFile}
             focusedAnchor={focusedAnchor?.tabId === selectedTab.id ? focusedAnchor.anchor : null}
@@ -214,7 +228,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
             : <div className="min-h-64 flex items-center justify-center text-center text-sm text-muted-foreground p-6">{t('workspace.choose_tab')}</div>}
         </div>
         <div className="song-comments min-w-0 space-y-4">
-          {selectedTab && <TabComments key={selectedTab.id} tabId={selectedTab.id} content={selectedTab.content}
+          {selectedTab && <TabComments onCommentsChange={receiveComments} key={selectedTab.id} tabId={selectedTab.id} content={selectedTab.content}
             anchor={pendingAnchor?.tabId === selectedTab.id ? pendingAnchor.anchor : null} onClearAnchor={() => setPendingAnchor(null)}
             onLocate={anchor => setFocusedAnchor({ tabId: selectedTab.id, anchor })} onPreview={setPreviewFile} />}
           {selectedTab && <div className="song-tab-media"><MediaLibrary files={selectedTab.files || []} title={t('workspace.tab_files')}
