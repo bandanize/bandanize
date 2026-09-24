@@ -669,7 +669,8 @@ for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]]) {
     await capture(page,'reader-columns-'+name);
     // Increasing font size can require more columns; wheel and keyboard advance horizontally.
     await dialog.getByRole('combobox',{name:'Font size'}).selectOption('4');
-    await pre.hover(); await page.mouse.wheel(0,650);
+    const readingBounds = await pre.boundingBox();
+    await page.mouse.move(readingBounds.x+100,readingBounds.y+60); await page.mouse.wheel(0,650);
     await page.waitForFunction(()=>document.querySelector('[role="dialog"] pre')?.scrollLeft>0);
     assert.equal(await pre.evaluate(el=>el.scrollTop),0);
     assert.equal(await pre.textContent(),content);
