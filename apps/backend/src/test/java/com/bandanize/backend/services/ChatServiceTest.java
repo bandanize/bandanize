@@ -156,6 +156,7 @@ class ChatServiceTest {
         when(bandRepository.findById(10L)).thenReturn(Optional.of(band));
         when(userRepository.findById(1L)).thenReturn(Optional.of(sender));
 
+        when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(sender));
         chatService.markAsRead(10L, 1L);
 
         verify(chatReadStatusRepository).save(any(ChatReadStatus.class));
@@ -169,6 +170,7 @@ class ChatServiceTest {
 
         when(chatReadStatusRepository.findByBandIdAndUserId(10L, 1L)).thenReturn(Optional.of(existing));
 
+        when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(sender));
         chatService.markAsRead(10L, 1L);
 
         verify(chatReadStatusRepository).save(existing);

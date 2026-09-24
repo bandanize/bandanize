@@ -38,6 +38,7 @@ public class EventService {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        if (eventDetails.getId() != null) throw new IllegalArgumentException("New events cannot specify an ID");
         validateCalendarDate(eventDetails.getDate(), eventDetails.effectiveTimeZone());
         eventDetails.setTimeZone(eventDetails.effectiveTimeZone());
         eventDetails.setBand(band);

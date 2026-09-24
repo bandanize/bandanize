@@ -31,7 +31,7 @@ public class JwtService {
     }
 
     public String generateToken(String username) {
-        return Jwts.builder()
+        return Jwts.builder().claim("purpose", "access")
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
@@ -40,7 +40,7 @@ public class JwtService {
     }
 
     public String generateResetToken(String username) {
-        return Jwts.builder()
+        return Jwts.builder().claim("purpose", "reset")
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + resetTokenExpiration))
@@ -49,7 +49,7 @@ public class JwtService {
     }
 
     public String generateVerificationToken(String username) {
-        return Jwts.builder()
+        return Jwts.builder().claim("purpose", "verify")
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + verificationTokenExpiration))
@@ -66,9 +66,16 @@ public class JwtService {
                 .getSubject();
     }
 
+    public String extractPurposeUsername(String token, String purpose) {
+        var claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+        if (!purpose.equals(claims.get("purpose", String.class))) throw new io.jsonwebtoken.JwtException("Invalid token purpose");
+        return claims.getSubject();
+    }
     public boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        String purpose = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("purpose", String.class);
+        // Legacy sessions remain valid until expiry; new email tokens cannot authenticate API requests.
+        return (purpose == null || "access".equals(purpose)) && username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {

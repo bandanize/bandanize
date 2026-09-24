@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface TabCommentRepository extends JpaRepository<TabCommentModel, Long> {
+    List<TabCommentModel> findBySender(com.bandanize.backend.models.UserModel sender);
     interface ActivityId {
         Long getId();
         Long getSongId();

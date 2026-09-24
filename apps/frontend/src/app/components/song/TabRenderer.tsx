@@ -157,7 +157,7 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
           className="absolute left-6 w-56 max-w-[calc(100vw-80px)] max-h-60 overflow-y-auto rounded-lg border border-border bg-popover p-3 shadow-xl text-xs space-y-3"
           onKeyDown={event => { if (event.key === 'Escape') setActive(null); }}>
           {siblings.map(({ comment, anchor }) => <div key={comment.id} onMouseEnter={() => setHoveredQuote(anchor)}>
-            <p className="font-medium text-foreground">{comment.sender.name}</p>
+            <p className="font-medium text-foreground">{comment.sender?.name || t('deleted_user', 'Usuario eliminado')}</p>
             <p className="mt-1 whitespace-pre-wrap break-words text-foreground">{comment.message || t('workspace.attachments')}</p>
             <blockquote className="mt-2 border-l-2 border-primary/50 pl-2 font-mono text-primary whitespace-pre-wrap break-all line-clamp-3">{anchor.quote}</blockquote>
           </div>)}

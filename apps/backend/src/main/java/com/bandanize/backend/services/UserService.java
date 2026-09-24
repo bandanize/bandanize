@@ -26,6 +26,8 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
+    private final com.bandanize.backend.repositories.TabCommentRepository tabComments;
+    private final BandService bandService;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
@@ -49,7 +51,8 @@ public class UserService {
             NotificationRepository notificationRepository,
             org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
             EmailService emailService,
-            JwtService jwtService) {
+            JwtService jwtService, com.bandanize.backend.repositories.TabCommentRepository tabComments, BandService bandService) {
+        this.tabComments = tabComments; this.bandService = bandService;
         this.userRepository = userRepository;
         this.bandRepository = bandRepository;
         this.bandInvitationRepository = bandInvitationRepository;
@@ -167,6 +170,7 @@ public class UserService {
         }
         chatMessageRepository.saveAll(messages);
 
+        for (var comment : tabComments.findBySender(user)) comment.setSender(null);
         // 3. Delete chat read statuses for this user
         chatReadStatusRepository.deleteByUserId(user.getId());
 
@@ -183,11 +187,14 @@ public class UserService {
         // Note: user.getBands() returns ALL bands the user is part of (owned + member).
 
         List<BandModel> allBands = new java.util.ArrayList<>(user.getBands());
+        for (BandModel owned : bandRepository.findByOwner(user)) {
+            if (allBands.stream().noneMatch(b -> b.getId().equals(owned.getId()))) allBands.add(owned);
+        }
 
         for (BandModel band : allBands) {
             if (band.getOwner() != null && band.getOwner().getId().equals(user.getId())) {
                 // User is the owner -> Delete the band
-                bandRepository.delete(band);
+                bandService.deleteBand(band.getId(), user.getId());
             } else {
                 // User is just a member -> Remove from band
                 band.getUsers().remove(user);
@@ -195,8 +202,19 @@ public class UserService {
             }
         }
 
+        user.getBands().clear();
         // 7. Delete the user
         userRepository.delete(user);
+        String deletedEmail = user.getEmail();
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                new org.springframework.transaction.support.TransactionSynchronization() {
+                    @Override public void afterCommit() {
+                        try { emailService.sendAccountDeleted(deletedEmail); }
+                        catch (Exception ex) { logger.error("Account deleted but confirmation email delivery failed", ex); }
+                    }
+                });
+        }
     }
 
     /**
@@ -252,7 +270,7 @@ public class UserService {
     }
 
     public void resetPassword(String token, String newPassword) {
-        String username = jwtService.extractUsername(token); // Throws if invalid/expired
+        String username = jwtService.extractPurposeUsername(token, "reset"); // Throws if invalid/expired
         UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 

@@ -26,6 +26,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
+    @Mock private TabCommentRepository tabComments;
+    @Mock private BandService bandService;
 
     @Mock
     private UserRepository userRepository;
@@ -218,7 +220,7 @@ class UserServiceTest {
         verify(notificationRepository).deleteByRecipient(user);
         verify(notificationRepository).deleteByActor(user);
         verify(eventRepository).deleteByCreatorId(1L);
-        verify(bandRepository).delete(ownedBand); // owned band deleted
+        verify(bandService).deleteBand(10L, 1L); // owned band deleted
         verify(bandRepository).save(memberBand); // member band saved after removal
         verify(userRepository).delete(user);
 

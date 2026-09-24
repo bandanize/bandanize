@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface SongListRepository extends JpaRepository<SongListModel, Long> {
+    boolean existsBySongsId(Long songId);
     List<SongListModel> findByBandId(Long bandId);
 
     @org.springframework.data.jpa.repository.Query("SELECT s FROM SongListModel s LEFT JOIN FETCH s.songs WHERE s.id = :id")

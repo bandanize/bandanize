@@ -78,7 +78,9 @@ public class ChatService {
         return savedMessage;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void markAsRead(Long bandId, Long userId) {
+        userRepository.findByIdForUpdate(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         com.bandanize.backend.models.ChatReadStatus status = chatReadStatusRepository
                 .findByBandIdAndUserId(bandId, userId)
                 .orElse(new com.bandanize.backend.models.ChatReadStatus());

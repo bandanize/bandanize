@@ -240,6 +240,7 @@ class SongServiceTest {
 
         SongListModel targetList = new SongListModel();
         targetList.setId(102L);
+        targetList.setBand(band);
         targetList.setSongs(new ArrayList<>());
 
         when(songRepository.findById(200L)).thenReturn(Optional.of(song));

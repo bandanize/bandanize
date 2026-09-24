@@ -1,3 +1,4 @@
+import { ResendVerification } from '@/app/components/ResendVerification';
 import { LoaderCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -114,6 +115,7 @@ export function Login() {
             </div>
             <span role="status" className="sr-only">{isSubmitting ? t('auth.please_wait') : ''}</span>
           </form>
+          <Link to="/verify-email" className="block mt-4 text-sm text-center text-muted-foreground underline">{t('verification_resend', 'Reenviar correo de verificación')}</Link>
         </CardContent>
       </Card>
     </AuthLayout>
@@ -158,6 +160,7 @@ function Register({ onBack }: { onBack: () => void }) {
             </CardHeader>
             <CardContent className="p-0">
                <div className="text-center space-y-4">
+                    <ResendVerification />
                     <p className="text-foreground/80 text-[14px]">
                         {t('auth.verify_instructions')}
                     </p>

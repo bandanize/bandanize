@@ -61,9 +61,13 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
 
   const [tabComments, setTabComments] = useState<{ tabId: string | null; comments: TabComment[] }>({ tabId: null, comments: [] });
   const linkedCommentId = searchParams.get('commentId');
+  const [previousLinkedComment, setPreviousLinkedComment] = useState<string | null>(null);
+  if (previousLinkedComment !== linkedCommentId) {
+    setPreviousLinkedComment(linkedCommentId);
+    if (linkedCommentId) setCommentsVisible(true);
+  }
   useEffect(() => {
     if (!linkedCommentId || tabComments.tabId !== selectedTabId || !tabComments.comments.some(comment => String(comment.id) === linkedCommentId)) return;
-    setCommentsVisible(true);
     const frame = requestAnimationFrame(() => {
       const target = Array.from(document.querySelectorAll<HTMLElement>('[data-tab-comment-id]')).find(el => el.dataset.tabCommentId === linkedCommentId);
       target?.scrollIntoView({ block: 'center', behavior: 'smooth' });

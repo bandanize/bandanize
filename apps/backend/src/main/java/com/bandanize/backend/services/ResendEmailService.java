@@ -23,12 +23,21 @@ public class ResendEmailService implements EmailService {
     private String frontendUrl;
 
     public ResendEmailService(@Value("${resend.api.key}") String apiKey) {
-        if (apiKey == null || apiKey.isEmpty()) {
+        if (apiKey == null || apiKey.isBlank() || "placeholder".equals(apiKey)) {
             logger.warn("Resend API key is missing. Email sending will fail.");
             this.resend = null;
         } else {
             this.resend = new Resend(apiKey);
         }
+    }
+
+    @Override
+    public void sendAccountDeleted(String to) {
+        if (resend == null) throw new com.bandanize.backend.exceptions.EmailDeliveryException();
+        var params = CreateEmailOptions.builder().from(fromEmail).to(to).subject("Cuenta eliminada - Bandanize")
+            .html(getEmailTemplate("<h3>Tu cuenta ha sido eliminada</h3><p>Se ha completado la eliminación de tu cuenta de Bandanize.</p>")).build();
+        try { resend.emails().send(params); }
+        catch (Exception ex) { logger.error("Failed to send account deletion email", ex); throw new com.bandanize.backend.exceptions.EmailDeliveryException(); }
     }
 
     private String getEmailTemplate(String content) {
@@ -55,8 +64,7 @@ public class ResendEmailService implements EmailService {
     @Override
     public void sendPasswordReset(String to, String token) {
         if (resend == null) {
-            logger.warn("Skipping email send: Resend client not initialized.");
-            return;
+            throw new com.bandanize.backend.exceptions.EmailDeliveryException();
         }
 
         String resetLink = frontendUrl + "/reset-password?token=" + token;
@@ -83,14 +91,14 @@ public class ResendEmailService implements EmailService {
             logger.info("Password reset email sent. ID: " + data.getId());
         } catch (Exception e) {
             logger.error("Failed to send password reset email", e);
+            throw new com.bandanize.backend.exceptions.EmailDeliveryException();
         }
     }
 
     @Override
     public void sendBandInvitation(String to, String bandName, String inviterName, String inviteLink) {
         if (resend == null) {
-            logger.warn("Skipping email send: Resend client not initialized.");
-            return;
+            throw new com.bandanize.backend.exceptions.EmailDeliveryException();
         }
 
         String content = "<h3>¡Te han invitado a unirte!</h3>" +
@@ -117,14 +125,14 @@ public class ResendEmailService implements EmailService {
             logger.info("Band invitation email sent. ID: " + data.getId());
         } catch (Exception e) {
             logger.error("Failed to send band invitation email", e);
+            throw new com.bandanize.backend.exceptions.EmailDeliveryException();
         }
     }
 
     @Override
     public void sendVerificationEmail(String to, String token) {
         if (resend == null) {
-            logger.warn("Skipping email send: Resend client not initialized.");
-            return;
+            throw new com.bandanize.backend.exceptions.EmailDeliveryException();
         }
 
         String verifyLink = frontendUrl + "/verify-email?token=" + token;
@@ -151,6 +159,7 @@ public class ResendEmailService implements EmailService {
             logger.info("Verification email sent. ID: " + data.getId());
         } catch (Exception e) {
             logger.error("Failed to send verification email", e);
+            throw new com.bandanize.backend.exceptions.EmailDeliveryException();
         }
     }
 }

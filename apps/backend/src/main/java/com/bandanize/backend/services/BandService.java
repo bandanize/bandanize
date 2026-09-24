@@ -279,6 +279,8 @@ public class BandService {
             throw new ResourceNotFoundException("User is not in this band");
         }
 
+        if (band.getOwner() != null && band.getOwner().getId().equals(userId))
+            throw new IllegalArgumentException("Transfer ownership before leaving the project");
         // Remove relationship
         band.getUsers().remove(user);
         user.getBands().remove(band); // Important for consistency
@@ -368,13 +370,10 @@ public class BandService {
         BandModel band = bandRepository.findById(bandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Band not found with id: " + bandId));
 
-        if (band.getOwner() == null || !band.getOwner().getId().equals(requesterUserId)) {
-            // Only the owner can delete
-            if (band.getOwner() != null) {
-                throw new org.springframework.security.access.AccessDeniedException(
-                        "Only the owner can delete the band");
-            }
-        }
+        Long ownerId = band.getOwner() != null ? band.getOwner().getId()
+            : band.getUsers().isEmpty() ? null : band.getUsers().get(0).getId();
+        if (!java.util.Objects.equals(ownerId, requesterUserId))
+            throw new org.springframework.security.access.AccessDeniedException("Only the owner can delete the band");
 
         // Delete photo if exists
         if (band.getPhoto() != null && !band.getPhoto().isEmpty()) {
@@ -389,7 +388,13 @@ public class BandService {
                     if (parts.length >= 2) {
                         String filename = parts[parts.length - 1];
                         String folder = parts[parts.length - 2];
-                        storageService.deleteFile(filename, folder);
+                        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                        new org.springframework.transaction.support.TransactionSynchronization() {
+                            @Override public void afterCommit() {
+                                try { storageService.deleteFile(filename, folder); }
+                                catch (Exception ex) { logger.warn("Project photo cleanup failed", ex); }
+                            }
+                        });
                     }
                 }
             } catch (Exception e) {
@@ -405,6 +410,7 @@ public class BandService {
         }
         band.getSongLists().clear();
 
+        live.bandChanged(band, "projects");
         // Clear user associations and flush to ensure join table is clean
         band.getUsers().clear();
         bandRepository.saveAndFlush(band);

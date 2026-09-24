@@ -301,6 +301,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user) {
 
+      // Start session-scoped server synchronization, including its loading indicator.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchProjects();
       fetchInvitations();
     } else {

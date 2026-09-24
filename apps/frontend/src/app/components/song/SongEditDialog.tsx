@@ -23,7 +23,10 @@ export function SongEditDialog({ open, onOpenChange, song, onUpdate, isSaving }:
     key: song.key || '',
   });
 
-  React.useEffect(() => {
+  const [previousOpen, setPreviousOpen] = React.useState(open);
+  const [previousSong, setPreviousSong] = React.useState(song);
+  if (previousOpen !== open || previousSong !== song) {
+    setPreviousOpen(open); setPreviousSong(song);
     if (open) {
         setEditSongData({
             name: song.name || '',
@@ -32,7 +35,7 @@ export function SongEditDialog({ open, onOpenChange, song, onUpdate, isSaving }:
             key: song.key || '',
           });
     }
-  }, [song, open]);
+  }
 
   const handleSave = async () => {
     await onUpdate(editSongData);

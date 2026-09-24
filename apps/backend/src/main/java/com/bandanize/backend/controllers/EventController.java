@@ -17,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 public class EventController {
+    @Autowired private com.bandanize.backend.services.ResourceAccess access;
 
     @Autowired
     private EventService eventService;
@@ -34,6 +35,7 @@ public class EventController {
 
     @GetMapping("/bands/{bandId}/events")
     public ResponseEntity<List<EventDTO>> getEvents(@PathVariable Long bandId) {
+        access.band(bandId);
         List<EventDTO> dtos = eventService.getEventsByBand(bandId)
                 .stream()
                 .map(EventDTO::fromModel)
@@ -44,6 +46,7 @@ public class EventController {
     @PostMapping("/bands/{bandId}/events")
     public ResponseEntity<EventDTO> createEvent(@PathVariable Long bandId, @RequestBody EventModel event,
             Principal principal) {
+        access.band(bandId);
         EventModel created = eventService.createEvent(bandId, getCurrentUserId(principal), event);
         return ResponseEntity.ok(EventDTO.fromModel(created));
     }
@@ -51,12 +54,14 @@ public class EventController {
     @PutMapping("/events/{eventId}")
     public ResponseEntity<EventDTO> updateEvent(@PathVariable Long eventId, @RequestBody EventModel event,
             Principal principal) {
+        access.event(eventId);
         EventModel updated = eventService.updateEvent(eventId, getCurrentUserId(principal), event);
         return ResponseEntity.ok(EventDTO.fromModel(updated));
     }
 
     @DeleteMapping("/events/{eventId}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
+        access.event(eventId);
         eventService.deleteEvent(eventId);
         return ResponseEntity.ok().build();
     }
@@ -89,38 +94,7 @@ public class EventController {
     @Deprecated
     @GetMapping(value = "/bands/{bandId}/calendar.ics", produces = "text/calendar;charset=UTF-8")
     public ResponseEntity<String> getCalendarFeed(@PathVariable Long bandId) {
-        // We can either return 410 Gone, redirect, or keep working.
-        // For now, keeping it working but it won't have the custom name improvements to
-        // encourage migration if we wanted.
-        // But the user asked to "securizar", so maybe we should just return the new
-        // format but with generic name?
-        // Or actually, let's just make it work as before but deprecated.
-        // Actually, I'll update it to use the new generator so it benefits from fixes,
-        // but it remains insecure.
-
-        // However, I need the Band object for the name.
-        // existing service method getEventsByBand returns basic list, doesn't give me
-        // Band easily without another call.
-        // I'll just use "Bandanize" as fallback name for this legacy endpoint or fetch
-        // band.
-
-        List<EventModel> events = eventService.getEventsByBand(bandId);
-
-        // Fetch band name for the calendar title
-        String bandName = "Bandanize";
-        try {
-            com.bandanize.backend.dtos.BandDTO bandDTO = bandService.getBandById(bandId);
-            if (bandDTO != null) {
-                bandName = bandDTO.getName();
-            }
-        } catch (Exception e) {
-            // ignore if not found or other error, fallback to default
-        }
-
-        return ResponseEntity.ok()
-                .header("Cache-Control", "no-cache, max-age=0, must-revalidate")
-                .header("Content-Disposition", "attachment; filename=\"calendar.ics\"")
-                .body(com.bandanize.backend.services.CalendarFeedWriter.write(bandName, events));
+        return ResponseEntity.status(410).build();
     }
 
 }

@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class EventControllerTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean private com.bandanize.backend.services.ResourceAccess access;
 
     @LocalServerPort
     private int port;
@@ -117,13 +118,7 @@ public class EventControllerTest {
         Long bandId = band.getId();
 
         webClient.get().uri("/api/bands/" + bandId + "/calendar.ics")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class).consumeWith(response -> {
-                    String body = response.getResponseBody();
-                    assertThat(body).contains("X-WR-CALNAME:Legacy Band Name");
-                    assertThat(body).contains("SUMMARY:ConcertLegacy");
-                });
+                .exchange().expectStatus().isEqualTo(410);
     }
 
     @Test public void sameSubscriptionUrlReflectsNewChangedAndDeletedEvents() {

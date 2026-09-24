@@ -124,6 +124,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     }, [projectId]);
 
     useEffect(() => {
+        // Network synchronization: state changes only after the awaited request.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchEvents();
         fetchToken();
     }, [fetchEvents, fetchToken]);

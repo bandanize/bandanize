@@ -15,6 +15,14 @@ public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(EmailDeliveryException.class)
+    public ResponseEntity<ErrorResponse> emailUnavailable(EmailDeliveryException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ErrorResponse(ex.getMessage(), "Email unavailable"));
+    }
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> status(org.springframework.web.server.ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(new ErrorResponse(ex.getReason(), "Request failed"));
+    }
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
         logger.warn("Resource not found: {}", ex.getMessage());
@@ -47,7 +55,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         String rootMessage = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
         logger.error("Data integrity violation: {}", rootMessage);
-        ErrorResponse error = new ErrorResponse("Data integrity violation: " + rootMessage, "Conflict");
+        ErrorResponse error = new ErrorResponse("This change conflicts with existing data. Refresh and try again.", "Conflict");
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 

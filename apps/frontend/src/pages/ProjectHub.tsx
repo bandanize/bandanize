@@ -93,6 +93,8 @@ export function ProjectHub() {
 
     useEffect(() => {
         if (currentProject) {
+            // Network synchronization; the callback updates state after both requests finish.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchUnreadCount();
             // Poll every 30 seconds
             const interval = setInterval(fetchUnreadCount, 30000);

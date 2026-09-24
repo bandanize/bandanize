@@ -259,9 +259,11 @@ const SortableSongList = ({ listId, songs, onReorder, onSelectSong, onDeleteSong
         return () => window.clearInterval(timer);
     }, []);
 
-    useEffect(() => {
+    const [previousSongs, setPreviousSongs] = useState(songs);
+    if (previousSongs !== songs) {
+        setPreviousSongs(songs);
         setItems(songs);
-    }, [songs]);
+    }
 
     const moveSong = useCallback((dragIndex: number, hoverIndex: number) => {
         setItems((prevItems) => {
@@ -573,13 +575,13 @@ function SongManagerContent() {
   });
 
   // Local state for list reordering
-  const [localLists, setLocalLists] = useState<SongList[]>([]);
+  const [localLists, setLocalLists] = useState<SongList[]>(currentProject?.songLists || []);
 
-  useEffect(() => {
-      if (currentProject) {
-          setLocalLists(currentProject.songLists);
-      }
-  }, [currentProject]);
+  const [previousProject, setPreviousProject] = useState(currentProject);
+  if (previousProject !== currentProject) {
+      setPreviousProject(currentProject);
+      setLocalLists(currentProject?.songLists || []);
+  }
 
   // Auto-select first list if none selected (desktop only)
   useEffect(() => {
