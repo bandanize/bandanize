@@ -1,4 +1,3 @@
-import { getAuthToken } from '@/lib/auth-session';
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/app/components/ui/dialog';
 import { Card, CardContent } from '@/app/components/ui/card';
@@ -45,32 +44,6 @@ export function ExportListDialog({ isOpen, onOpenChange, list, onExportClipboard
             alert(t('export_spotify_error', 'Error conectando con el servidor'));
         }
         */
-    };
-
-    const exportToYouTube = async () => {
-        const newWindow = window.open('', '_blank');
-        try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-            const response = await fetch(`${apiUrl}/api/integrations/youtube/auth-url?listId=${list.id}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${getAuthToken()}`
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (newWindow) newWindow.location.href = data.url;
-            } else {
-                if (newWindow) newWindow.close();
-                console.error("Failed to get YouTube Auth URL");
-                alert(t('export_youtube_failed', 'Fallo al iniciar sesión con YouTube'));
-            }
-        } catch (error) {
-            if (newWindow) newWindow.close();
-            console.error(error);
-            alert(t('export_youtube_error', 'Error conectando con el servidor'));
-        }
     };
 
     return (
@@ -130,18 +103,18 @@ export function ExportListDialog({ isOpen, onOpenChange, list, onExportClipboard
 
                     {/* Option 3: YouTube */}
                     <Card
-                        className={`relative overflow-hidden cursor-pointer transition-all border-2 border-border hover:border-[#FF0000]/50 bg-background hover:bg-[#FF0000]/5`}
-                        onClick={exportToYouTube}
+                        role="button" aria-disabled="true" aria-label="YT Music"
+                        className="relative overflow-hidden cursor-not-allowed border-2 border-border bg-background/50 opacity-60 grayscale"
                     >
                         <CardContent className="p-4 flex flex-col items-center text-center h-full">
-                            <div className="size-10 rounded-full bg-[#FF0000]/10 flex items-center justify-center mb-3">
-                                <Youtube className="size-5 text-[#FF0000]" />
+                            <div className="size-10 rounded-full bg-muted flex items-center justify-center mb-3">
+                                <Youtube className="size-5 text-muted-foreground" />
                             </div>
                             <h4 className="font-semibold text-sm text-foreground mb-1">
                                 YT Music
                             </h4>
                             <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                {t('export_youtube_desc', 'Crea playlist')}
+                                {t('export_youtube_disabled', 'Deshabilitado temporalmente')}
                             </p>
                         </CardContent>
                     </Card>

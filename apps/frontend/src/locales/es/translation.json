@@ -519,5 +519,6 @@
     "short": "Cambios: {{time}}",
     "now": "ahora",
     "includes": "Incluye ediciones, comentarios y archivos."
-  }
+  },
+  "export_youtube_disabled": "Deshabilitado temporalmente"
 }

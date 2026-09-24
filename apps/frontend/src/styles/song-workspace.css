@@ -32,3 +32,29 @@
 .tab-comments-scroll::-webkit-scrollbar-thumb:hover,
 .tab-comments-panel [data-media-items]::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 .tab-comments-scroll::-webkit-scrollbar-button { display: none; }
+
+/* Fullscreen desktop score: fill the available height, then continue to the right.
+   Keep one text flow so copying, chord popovers and comment offsets stay intact. */
+@media (min-width: 1024px) {
+  pre.tab-reader-columns {
+    column-count: 2;
+    column-gap: 48px;
+    column-fill: auto;
+    column-rule: 1px solid var(--border);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--primary) 45%, var(--card)) var(--card);
+  }
+  pre.tab-reader-columns:focus-visible { outline: 1px solid var(--primary); outline-offset: -2px; }
+}
+@media (min-width: 1800px) {
+  pre.tab-reader-columns { column-count: 3; }
+}
+@media (min-width: 2400px) {
+  pre.tab-reader-columns { column-count: 4; }
+}

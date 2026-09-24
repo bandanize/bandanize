@@ -11,6 +11,7 @@ import { cn } from '@/app/components/ui/utils';
 const EMPTY_COMMENTS: TabComment[] = [];
 
 interface TabRendererProps {
+  columns?: boolean;
   highlighted?: CommentAnchor | null;
   comments?: TabComment[];
   content: string;
@@ -21,12 +22,12 @@ interface TabRendererProps {
  * Renders tab content as read-only monospace text with chord names
  * detected and wrapped in hoverable popovers showing chord diagrams.
  */
-export function TabRenderer({ content, className, highlighted, comments = EMPTY_COMMENTS }: TabRendererProps) {
+export function TabRenderer({ content, className, highlighted, comments = EMPTY_COMMENTS, columns = false }: TabRendererProps) {
   const { t } = useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
   const [active, setActive] = useState<number | null>(null);
-  const [positions, setPositions] = useState<{ id: number; top: number; above: boolean }[]>([]);
+  const [positions, setPositions] = useState<{ id: number; top: number; left: number; above: boolean }[]>([]);
   const annotated = useMemo(() => comments.flatMap(comment => {
     const anchor = resolveAnchor(content, { start: comment.anchorStart ?? -1, end: comment.anchorEnd ?? -1, quote: comment.quote || '' });
     return anchor ? [{ comment, anchor }] : [];
@@ -45,7 +46,16 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
     if (!pre || !container) return;
     const measure = () => {
       const origin = container.getBoundingClientRect();
-      const taken = new Map<number, number>();
+      const scaleX = origin.width / container.offsetWidth || 1;
+      const scaleY = origin.height / container.offsetHeight || 1;
+      const taken = new Set<string>();
+      const style = getComputedStyle(pre);
+      const count = Number.parseInt(style.columnCount) || 1;
+      const gap = Number.parseFloat(style.columnGap) || 0;
+      const padding = Number.parseFloat(style.paddingLeft) || 0;
+      const innerWidth = pre.clientWidth - padding - (Number.parseFloat(style.paddingRight) || 0);
+      const step = (innerWidth - gap * (count - 1)) / count + gap;
+      const preBounds = pre.getBoundingClientRect();
       setPositions(annotated.flatMap(({ comment, anchor }) => {
         const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT);
         let node: Node | null; let offset = 0;
@@ -55,13 +65,16 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
             const range = document.createRange();
             range.setStart(node, anchor.start - offset); range.setEnd(node, Math.min(length, anchor.start - offset + 1));
             const rect = range.getBoundingClientRect();
-            const top = rect.top - origin.top;
+            const top = (rect.top - origin.top) / scaleY;
             if (top < 0 || top > container.clientHeight - 20) return [];
             // One marker per visual row; its preview includes every comment on that row.
-            const row = Math.round(top);
+            const column = count > 1 ? Math.max(0, Math.floor(((rect.left - preBounds.left) / scaleX + pre.scrollLeft - padding + 2) / step)) : 0;
+            const left = count > 1 ? (preBounds.left - origin.left) / scaleX + padding + column * step - pre.scrollLeft - 32 : 4;
+            if (left < 0 || left + 24 > container.clientWidth) return [];
+            const row = Math.round(top) + ':' + column;
             if (taken.has(row)) return [];
-            taken.set(row, comment.id);
-            return [{ id: comment.id, top, above: top > container.clientHeight - 240 }];
+            taken.add(row);
+            return [{ id: comment.id, top, left, above: top > container.clientHeight - 240 }];
           }
           offset += length;
         }
@@ -71,7 +84,23 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
     const observer = new ResizeObserver(measure); observer.observe(pre);
     pre.addEventListener('scroll', measure); measure();
     return () => { observer.disconnect(); pre.removeEventListener('scroll', measure); };
-  }, [annotated, className, shownAnchor]);
+  }, [annotated, className, shownAnchor, columns]);
+
+
+  useEffect(() => {
+    const pre = preRef.current;
+    if (!pre || !columns) return;
+    const wheel = (event: WheelEvent) => {
+      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
+          || !(Number.parseInt(getComputedStyle(pre).columnCount) >= 2)
+          || pre.scrollWidth <= pre.clientWidth + 1) return;
+      event.preventDefault();
+      const scale = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? pre.clientWidth : 1;
+      pre.scrollLeft += event.deltaY * scale;
+    };
+    pre.addEventListener('wheel', wheel, { passive: false });
+    return () => pre.removeEventListener('wheel', wheel);
+  }, [columns]);
 
   const renderedLines = useMemo(() => {
     const lines: { parts: React.ReactNode[]; start: number; end: number }[] = [];
@@ -86,9 +115,19 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
   return (
     <div ref={host} className="relative min-w-0 h-full min-h-0">
     <pre ref={preRef}
+      tabIndex={columns ? 0 : undefined}
+      onKeyDown={event => {
+        const pre = event.currentTarget;
+        if (!columns || event.target !== pre || event.ctrlKey || event.metaKey || event.altKey
+            || !(Number.parseInt(getComputedStyle(pre).columnCount) >= 2)) return;
+        const delta = { ArrowDown: 48, ArrowUp: -48, PageDown: pre.clientWidth * 0.9, PageUp: -pre.clientWidth * 0.9 }[event.key];
+        if (delta !== undefined) { event.preventDefault(); pre.scrollLeft += delta; }
+        else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); pre.scrollLeft = event.key === 'Home' ? 0 : pre.scrollWidth; }
+      }}
       className={cn(
         'font-mono whitespace-pre-wrap break-words max-sm:break-all leading-relaxed p-4 bg-background border border-border rounded-md text-foreground overflow-auto',
         className,
+        columns && 'tab-reader-columns',
       )}
       style={annotated.length ? { paddingLeft: 36 } : undefined}
     >
@@ -105,7 +144,7 @@ export function TabRenderer({ content, className, highlighted, comments = EMPTY_
       const note = annotated.find(item => item.comment.id === position.id);
       if (!note) return null;
       const siblings = annotated.filter(item => content.slice(0, item.anchor.start).split('\n').length === content.slice(0, note.anchor.start).split('\n').length);
-      return <div key={position.id} data-comment-marker className="absolute left-1 z-20" style={{ top: position.top }}
+      return <div key={position.id} data-comment-marker data-comment-marker-id={position.id} className="absolute z-20" style={{ top: position.top, left: position.left }}
         onMouseEnter={() => { setHoveredQuote(null); setActive(position.id); }} onMouseLeave={() => { setActive(null); setHoveredQuote(null); }}
         onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setActive(null); }}>
         <button type="button" aria-label={t('comments_ui.marker', { count: siblings.length })} aria-expanded={active === position.id}
