@@ -229,7 +229,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
         type="file" 
         ref={fileInputRef} 
         onChange={handleFileChange} 
-        accept="audio/*,image/*,.pdf,.doc,.docx,.txt,.gp,.gp3,.gp4,.gp5,.gpx,.xml,.mxl,.musicxml"
+        accept="audio/*,.mpeg,.mpg,image/*,.pdf,.doc,.docx,.txt,.gp,.gp3,.gp4,.gp5,.gpx,.xml,.mxl,.musicxml"
         className="hidden" 
       />
       

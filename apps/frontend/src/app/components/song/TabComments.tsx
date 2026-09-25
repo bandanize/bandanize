@@ -342,7 +342,7 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
               ))}
           </div>
         )}
-        <input type="file" ref={attachmentInput} onChange={attach} accept="audio/*,image/*,.pdf,.doc,.docx,.txt" className="hidden" />
+        <input type="file" ref={attachmentInput} onChange={attach} accept="audio/*,.mpeg,.mpg,image/*,.pdf,.doc,.docx,.txt" className="hidden" />
         {anchor && <div className="mb-3 border-l-2 border-primary bg-primary/5 p-2 text-xs flex gap-2">
           <div className="flex-1 min-w-0"><span className="text-primary">{t('workspace.commenting_on')}</span><p className="font-mono whitespace-pre-wrap line-clamp-3 mt-1">{anchor.quote}</p></div>
           <button type="button" onClick={onClearAnchor} aria-label={t('workspace.clear_selection')}><X className="size-4" /></button>
