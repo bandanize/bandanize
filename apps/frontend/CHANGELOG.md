@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.3](https://github.com/bandanize/bandanize/compare/web@v1.20.2...web@v1.20.3) (2026-09-25)
+
+
+### Bug Fixes
+
+* recover chat independently from stalled invitation requests ([6251c31](https://github.com/bandanize/bandanize/commit/6251c3145e2e53163f3cb49d80dcf3edd4e593e1))
+* recover chat independently from stalled requests ([6c9fda6](https://github.com/bandanize/bandanize/commit/6c9fda6cb2789e3b779818b3213e15deeb0ee84e))
+
 ## [1.20.2](https://github.com/bandanize/bandanize/compare/web@v1.20.1...web@v1.20.2) (2026-09-24)
 
 

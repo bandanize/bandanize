@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.1](https://github.com/bandanize/bandanize/compare/api@v1.14.0...api@v1.14.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* recover chat independently from stalled requests ([6c9fda6](https://github.com/bandanize/bandanize/commit/6c9fda6cb2789e3b779818b3213e15deeb0ee84e))
+
 ## [1.14.0](https://github.com/bandanize/bandanize/compare/api@v1.13.2...api@v1.14.0) (2026-09-25)
 
 
