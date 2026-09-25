@@ -250,4 +250,34 @@ class DatabaseLifecycleTest {
         } finally { pool.shutdownNow(); }
     }
 
+    @Test void concurrentTabAttachmentsAndContentPreserveLeaseAndAllFiles() throws Exception {
+        String token = editToken(owner, "Am\nLyrics");
+        var gate = new java.util.concurrent.CountDownLatch(1);
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(3);
+        try {
+            var first = pool.submit(() -> { gate.await(); return member.post().uri("/api/tabs/"+tabId+"/files")
+                .bodyValue(Map.of("name","A.pdf","type","application/pdf","url","/api/uploads/files/a.pdf"))
+                .exchange().returnResult(String.class).getStatus().value(); });
+            var second = pool.submit(() -> { gate.await(); return owner.post().uri("/api/tabs/"+tabId+"/files")
+                .bodyValue(Map.of("name","B.pdf","type","application/pdf","url","/api/uploads/files/b.pdf"))
+                .exchange().returnResult(String.class).getStatus().value(); });
+            var save = pool.submit(() -> { gate.await(); return owner.put().uri("/api/tabs/"+tabId)
+                .header("X-Tab-Edit-Token",token).bodyValue(Map.of("content","Concurrent save"))
+                .exchange().returnResult(String.class).getStatus().value(); });
+            gate.countDown();
+            for (var future : List.of(first, second, save)) assertEquals(200, future.get(15, java.util.concurrent.TimeUnit.SECONDS));
+        } finally { pool.shutdownNow(); }
+        // Retry a completed association after its response was lost: no duplicate entry.
+        member.post().uri("/api/tabs/"+tabId+"/files")
+            .bodyValue(Map.of("name","A.pdf","type","application/pdf","url","/api/uploads/files/a.pdf"))
+            .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(3)
+            .jsonPath("$.content").isEqualTo("Concurrent save").jsonPath("$.editToken").doesNotExist();
+        owner.post().uri("/api/tabs/"+tabId+"/edit-lock").bodyValue(Map.of("token",token))
+            .exchange().expectStatus().isOk();
+        member.delete().uri(uri -> uri.path("/api/tabs/"+tabId+"/files").queryParam("url","/api/uploads/files/a.pdf").build())
+            .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(2);
+        owner.put().uri("/api/tabs/"+tabId).header("X-Tab-Edit-Token",token).bodyValue(Map.of("content","Still mine"))
+            .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(2);
+    }
+
 }

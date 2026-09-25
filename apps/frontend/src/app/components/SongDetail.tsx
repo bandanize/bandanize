@@ -157,9 +157,11 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
   const handleDeleteTab = async (tabId: string) => {
       if (!currentProject) return;
       if (confirm(t('delete_tab_confirmation', "¿Eliminar tablatura?"))) {
-          await deleteTablature(currentProject.id, listId, song.id, tabId);
-          if (selectedTabId === tabId) setSelectedTabId(null);
-          toast.success(t('tab_deleted', 'Tablatura eliminada'));
+          try {
+              await deleteTablature(currentProject.id, listId, song.id, tabId);
+              if (selectedTabId === tabId) setSelectedTabId(null);
+              toast.success(t('tab_deleted', 'Tablatura eliminada'));
+          } catch { toast.error(t('delete_error', 'No se pudo eliminar. Puede haber una edición en curso.')); }
       }
   };
   

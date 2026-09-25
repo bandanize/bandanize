@@ -14,6 +14,13 @@ import java.util.List;
 @org.springframework.transaction.annotation.Transactional
 public class SongService {
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
+    private void lockFresh(Object entity) {
+        entityManager.refresh(entity, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(SongService.class);
 
     @Autowired
@@ -428,7 +435,8 @@ public class SongService {
     public SongModel addFileToSong(Long songId, MediaFile file) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
-        song.getFiles().add(file);
+        lockFresh(song);
+        if (song.getFiles().stream().noneMatch(existing -> java.util.Objects.equals(existing.getUrl(), file.getUrl()))) song.getFiles().add(file);
         song.touch();
         return songRepository.save(song);
     }
@@ -437,7 +445,8 @@ public class SongService {
     public TablatureModel addFileToTablature(Long tabId, MediaFile file) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
-        tab.getFiles().add(file);
+        lockFresh(tab);
+        if (tab.getFiles().stream().noneMatch(existing -> java.util.Objects.equals(existing.getUrl(), file.getUrl()))) tab.getFiles().add(file);
         tab.getSong().touch();
         return tablatureRepository.save(tab);
     }
@@ -449,6 +458,7 @@ public class SongService {
     public SongModel removeFileFromSong(Long songId, String fileUrl) {
         SongModel song = songRepository.findById(songId)
                 .orElseThrow(() -> new ResourceNotFoundException("Song not found"));
+        lockFresh(song);
 
         MediaFile fileToRemove = song.getFiles().stream()
                 .filter(f -> f.getUrl().equals(fileUrl))
@@ -468,6 +478,7 @@ public class SongService {
     public TablatureModel removeFileFromTablature(Long tabId, String fileUrl) {
         TablatureModel tab = tablatureRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tablature not found"));
+        lockFresh(tab);
 
         MediaFile fileToRemove = tab.getFiles().stream()
                 .filter(f -> f.getUrl().equals(fileUrl))
