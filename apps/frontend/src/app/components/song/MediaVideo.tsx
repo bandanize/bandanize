@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Download, LoaderCircle } from 'lucide-react';
 import { getMediaUrl } from '@/services/api';
-import { isMpeg, type MediaFile } from '@/lib/media-kind';
+import { type MediaFile } from '@/lib/media-kind';
 
 const time = (value: number) => {
   const seconds = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
@@ -87,7 +87,6 @@ export function MediaVideo({ file, onAudio, onError, className }: {
         <button type="button" className={icon} onClick={() => void expand()} aria-label={t(fullscreen ? 'media_viewer.exit_fullscreen' : 'media_viewer.fullscreen')}>{fullscreen ? <Minimize size={17} /> : <Maximize size={17} />}</button>
       </div>
       {failed && <p role="alert" className="text-xs text-muted-foreground py-2">{t('workspace.media_failed')}</p>}
-      {isMpeg(file) && <button type="button" onClick={transfer} className="pb-1 text-xs text-primary hover:underline">{t('player.listen_as_audio')}</button>}
     </div>
   </div>;
 }
