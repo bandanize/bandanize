@@ -85,6 +85,34 @@ for(const width of [390,320]){await page.setViewportSize({width,height:844});awa
 await page.setViewportSize({width:1440,height:1000});await page.goto(origin+'/dashboard');await page.getByText('The Sodawaves',{exact:true}).waitFor();await page.screenshot({path:'test-results/circular-logo.png',fullPage:true});
 await page.getByRole('button',{name:'Nuevo Proyecto',exact:true}).click();await page.locator('#create-upload-image').setInputFiles({name:'logo.png',mimeType:'image/png',buffer:Buffer.from('fixture')});await page.locator('#upload-name').fill('Nueva banda');await page.getByRole('button',{name:'Subir archivo',exact:true}).click();await page.waitForTimeout(200);assert(requests.filter(r=>r.path.endsWith('/upload/image')).at(-1).data.includes('Nueva banda.png'));await page.keyboard.press('Escape');
 await page.goto(origin+'/profile');await page.locator('input[type=file]').setInputFiles({name:'profile.png',mimeType:'image/png',buffer:Buffer.from('fixture')});await page.locator('#upload-name').fill('Foto perfil');await page.getByRole('button',{name:'Subir archivo',exact:true}).click();await page.waitForTimeout(200);assert(requests.filter(r=>r.path.endsWith('/upload/image')).at(-1).data.includes('Foto perfil.png'));
+
+await page.goto(origin+'/project/1?tab=songs&listId=11&songId=21&tabId=31');
+const fileDelete=page.locator('.song-media').getByRole('button',{name:'Eliminar: Notas.txt',exact:true});
+await fileDelete.waitFor();
+await page.route('**/api/songs/21/files?*',route=>route.fulfill({status:503}));
+await fileDelete.click();
+await page.getByText('No se pudo eliminar este elemento. Inténtalo de nuevo.',{exact:true}).waitFor();
+assert(await fileDelete.isVisible(),'Failed deletion must keep the file');
+await page.unroute('**/api/songs/21/files?*');
+let releaseCatalogue, catalogueStarted, catalogueCaptured=false;
+const capturedCatalogue=new Promise(resolve=>{catalogueStarted=resolve;});
+await page.route('**/api/bands/my-bands?*',async route=>{
+ if(catalogueCaptured)return route.fallback();
+ catalogueCaptured=true;
+ const old=structuredClone(band);
+ catalogueStarted();
+ await new Promise(resolve=>{releaseCatalogue=resolve;});await route.fulfill({json:[old]});
+});
+await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+await capturedCatalogue;
+await page.route('**/api/songs/21/files?*',async route=>{
+ const song=band.songLists[0].songs[0];song.files=song.files.filter(file=>file.url!==new URL(route.request().url()).searchParams.get('url'));
+ await route.fulfill({json:song});
+});
+await fileDelete.click();await fileDelete.waitFor({state:'detached'});
+releaseCatalogue();await page.waitForTimeout(250);
+assert.equal(await fileDelete.count(),0,'A late project response must not resurrect the deleted file');
+console.log('PASS file deletion failure is visible; delayed catalogue cannot resurrect a removed file');
 assert.deepEqual(errors,[]);fs.writeFileSync('test-results/workspace-results.json',JSON.stringify({passed:true,requests:requests.length,comments:comments.length,errors}));console.log('Workspace browser checks passed');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
 

@@ -167,5 +167,38 @@ for(const width of [1440,390]){
 }
 console.log('PASS roomy comment layout and branded scrollbars at desktop/mobile widths');
 
+// Remote comments and deletions are recovered without remounting the tablature.
+comments.push({id:9991,sender:{id:2,name:'Alex'},message:'Remote comment without reload',timestamp:new Date().toISOString(),attachments:[]});
+await page.getByText('Remote comment without reload',{exact:true}).waitFor({timeout:10000});
+await page.locator('#tab-comment-input').fill('Keep this unsent draft');
+comments=comments.filter(comment=>comment.id!==9991);
+await page.getByText('Remote comment without reload',{exact:true}).waitFor({state:'detached',timeout:10000});
+assert.equal(await page.locator('#tab-comment-input').inputValue(),'Keep this unsent draft');
+console.log('PASS remote comment creation/deletion recovery preserves drafts');
+// A history response captured before a send must never erase the new comment.
+let releaseHistory, historyStarted, historyCaptured=false;
+const started = new Promise(resolve => { historyStarted = resolve; });
+await page.route('**/api/tabs/31/comments?*',async route => {
+ if(route.request().method()!=='GET'||historyCaptured)return route.fallback();
+ historyCaptured=true;
+ const snapshot=structuredClone(comments);
+ historyStarted();
+ await new Promise(resolve => { releaseHistory = resolve; });
+ await route.fulfill({json:snapshot});
+});
+await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+await started;
+await page.locator('#tab-comment-input').fill('Saved while history was delayed');
+await page.getByRole('button',{name:'Enviar comentario'}).click();
+await page.getByText('Saved while history was delayed',{exact:true}).waitFor();
+releaseHistory();
+await page.waitForTimeout(250);
+assert.equal(await page.getByText('Saved while history was delayed',{exact:true}).count(),1);
+failComment=true;
+await page.locator('#tab-comment-input').fill('Retryable failed comment');
+await page.getByRole('button',{name:'Enviar comentario'}).click();
+await page.locator('[role=alert]').waitFor();
+assert.equal(await page.locator('#tab-comment-input').inputValue(),'Retryable failed comment');
+console.log('PASS delayed history cannot erase a saved comment; rejected send retains the draft');
 assert.deepEqual(errors,[]);console.log('PASS floating selection, line picker desktop/mobile/fullscreen, mentions and submitted anchors');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

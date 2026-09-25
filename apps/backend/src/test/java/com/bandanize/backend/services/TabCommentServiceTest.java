@@ -22,6 +22,7 @@ class TabCommentServiceTest {
     @Mock TablatureRepository tablatureRepository;
     @Mock UserRepository userRepository;
     @Mock NotificationService notificationService;
+    @Mock jakarta.persistence.EntityManager entityManager;
     @InjectMocks TabCommentService service;
     TablatureModel tab;
     UserModel member;

@@ -17,6 +17,9 @@ import java.util.List;
 @Service
 public class TabCommentService {
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     @Autowired
     private TabCommentRepository tabCommentRepository;
 
@@ -38,6 +41,8 @@ public class TabCommentService {
     @Transactional
     public TabCommentModel addComment(Long tabId, Long userId, TabCommentRequest request) {
         TablatureModel tablature = requireAccess(tabId, userId);
+        // Validate the selection against content protected from concurrent saves until commit.
+        entityManager.refresh(tablature, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
         String message = request.message() == null ? "" : request.message().trim();
         List<MediaFile> attachments = request.attachments() == null ? List.of() : request.attachments();
         if ((message.isEmpty() && attachments.isEmpty()) || message.length() > 10000 || attachments.size() > 5)

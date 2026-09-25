@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import { authStorage, clearAuthSession, getAuthToken, saveAuthSession } from '@/lib/auth-session';
 import React, { createContext, useContext, useState } from 'react';
 import api from '@/services/api';
@@ -49,7 +50,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           // We use the new /me endpoint which requires authentication
           await api.get('/auth/me');
-        } catch {
+        } catch (failure) {
+          if (!isAxiosError(failure) || failure.response?.status !== 401 || getAuthToken() !== token) return;
+          // Only an explicit rejection of this session ends it; offline/5xx retain drafts.
           // Token verification failed, logging out
           // Logout logic duplicated here to avoid dependency cycle or closure issues before logout is defined
           setUser(null);

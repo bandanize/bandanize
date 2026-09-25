@@ -59,7 +59,8 @@ class DatabaseLifecycleTest {
         });
     }
     @Test void updatingTabTextPreservesAttachments() {
-        owner.put().uri("/api/tabs/"+tabId).bodyValue(Map.of("content", "Updated"))
+        String token = editToken(owner, "Am\nLyrics");
+        owner.put().uri("/api/tabs/"+tabId).header("X-Tab-Edit-Token", token).bodyValue(Map.of("content", "Updated"))
             .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(1);
     }
     @Test void deletingSharedListPreservesSongAndItsPhysicalFiles() {
@@ -191,4 +192,92 @@ class DatabaseLifecycleTest {
         owner.delete().uri("/api/songs/"+id+"?listId="+target).exchange().expectStatus().isNoContent(); assertTrue(songs.existsById(Long.valueOf(id)));
         owner.delete().uri("/api/songs/"+id+"?listId="+listId).exchange().expectStatus().isNoContent(); assertFalse(songs.existsById(Long.valueOf(id)));
     }
+    String editToken(WebTestClient client, String content) {
+        var result = client.post().uri("/api/tabs/"+tabId+"/edit-lock").bodyValue(Map.of("content", content))
+            .exchange().expectStatus().isOk().expectBody(Map.class).returnResult().getResponseBody();
+        return (String) result.get("token");
+    }
+    @Test void editLeasePreventsConcurrentAndExpiredWritesWithoutLosingFiles() {
+        String token = editToken(owner, "Am\nLyrics");
+        member.get().uri("/api/tabs/"+tabId+"/edit-lock").exchange().expectStatus().isOk()
+            .expectBody().jsonPath("$.locked").isEqualTo(true).jsonPath("$.ownerName").isEqualTo("owner")
+            .jsonPath("$.token").isEmpty();
+        member.post().uri("/api/tabs/"+tabId+"/edit-lock").bodyValue(Map.of("content", "Am\nLyrics"))
+            .exchange().expectStatus().isEqualTo(409);
+        owner.post().uri("/api/tabs/"+tabId+"/edit-lock").bodyValue(Map.of("content", "Am\nLyrics"))
+            .exchange().expectStatus().isEqualTo(409); // A second browser tab is also excluded.
+        member.put().uri("/api/tabs/"+tabId).header("X-Tab-Edit-Token", token).bodyValue(Map.of("content", "Wrong"))
+            .exchange().expectStatus().isEqualTo(409);
+        member.put().uri("/api/tabs/"+tabId).bodyValue(Map.of("name", "Rename during edit"))
+            .exchange().expectStatus().isEqualTo(409);
+        member.delete().uri("/api/tabs/"+tabId).exchange().expectStatus().isEqualTo(409);
+        owner.delete().uri("/api/songs/"+songId+"?listId="+listId).exchange().expectStatus().isEqualTo(409);
+        owner.delete().uri("/api/songlists/"+listId).exchange().expectStatus().isEqualTo(409);
+        owner.delete().uri("/api/bands/"+bandId).exchange().expectStatus().isEqualTo(409);
+        assertTrue(songs.existsById(songId)); assertTrue(lists.existsById(listId)); assertTrue(bands.existsById(bandId));
+        stranger.get().uri("/api/tabs/"+tabId+"/edit-lock").exchange().expectStatus().isForbidden();
+        owner.put().uri("/api/tabs/"+tabId).header("X-Tab-Edit-Token", token).bodyValue(Map.of("content", "Saved"))
+            .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(1);
+        new TransactionTemplate(transactions).executeWithoutResult(tx ->
+            tabs.findById(tabId).orElseThrow().setEditExpiresAt(java.time.Instant.now().minusSeconds(1)));
+        owner.post().uri("/api/tabs/"+tabId+"/edit-lock").bodyValue(Map.of("token", token))
+            .exchange().expectStatus().isEqualTo(409);
+        member.post().uri("/api/tabs/"+tabId+"/edit-lock").bodyValue(Map.of("content", "Am\nLyrics"))
+            .exchange().expectStatus().isEqualTo(409); // Stale viewers must reload before acquiring.
+        String next = editToken(member, "Saved");
+        owner.put().uri("/api/tabs/"+tabId).header("X-Tab-Edit-Token", token).bodyValue(Map.of("content", "Old draft"))
+            .exchange().expectStatus().isEqualTo(409);
+        owner.delete().uri("/api/tabs/"+tabId+"/edit-lock").header("X-Tab-Edit-Token", token)
+            .exchange().expectStatus().isOk();
+        member.put().uri("/api/tabs/"+tabId).header("X-Tab-Edit-Token", next).bodyValue(Map.of("content", "Member saved"))
+            .exchange().expectStatus().isOk();
+        member.delete().uri("/api/tabs/"+tabId+"/edit-lock").header("X-Tab-Edit-Token", next)
+            .exchange().expectStatus().isOk();
+        owner.get().uri("/api/tabs/"+tabId+"/edit-lock").exchange().expectStatus().isOk()
+            .expectBody().jsonPath("$.locked").isEqualTo(false);
+    }
+    @Test void simultaneousEditorsHaveExactlyOneWinner() throws Exception {
+        var gate = new java.util.concurrent.CountDownLatch(1);
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            var first = pool.submit(() -> { gate.await(); return owner.post().uri("/api/tabs/"+tabId+"/edit-lock")
+                .bodyValue(Map.of("content", "Am\nLyrics")).exchange().returnResult(String.class).getStatus().value(); });
+            var second = pool.submit(() -> { gate.await(); return member.post().uri("/api/tabs/"+tabId+"/edit-lock")
+                .bodyValue(Map.of("content", "Am\nLyrics")).exchange().returnResult(String.class).getStatus().value(); });
+            gate.countDown();
+            var statuses = new ArrayList<>(List.of(first.get(15, java.util.concurrent.TimeUnit.SECONDS), second.get(15, java.util.concurrent.TimeUnit.SECONDS))); Collections.sort(statuses);
+            assertEquals(List.of(200, 409), statuses);
+        } finally { pool.shutdownNow(); }
+    }
+
+    @Test void concurrentTabAttachmentsAndContentPreserveLeaseAndAllFiles() throws Exception {
+        String token = editToken(owner, "Am\nLyrics");
+        var gate = new java.util.concurrent.CountDownLatch(1);
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(3);
+        try {
+            var first = pool.submit(() -> { gate.await(); return member.post().uri("/api/tabs/"+tabId+"/files")
+                .bodyValue(Map.of("name","A.pdf","type","application/pdf","url","/api/uploads/files/a.pdf"))
+                .exchange().returnResult(String.class).getStatus().value(); });
+            var second = pool.submit(() -> { gate.await(); return owner.post().uri("/api/tabs/"+tabId+"/files")
+                .bodyValue(Map.of("name","B.pdf","type","application/pdf","url","/api/uploads/files/b.pdf"))
+                .exchange().returnResult(String.class).getStatus().value(); });
+            var save = pool.submit(() -> { gate.await(); return owner.put().uri("/api/tabs/"+tabId)
+                .header("X-Tab-Edit-Token",token).bodyValue(Map.of("content","Concurrent save"))
+                .exchange().returnResult(String.class).getStatus().value(); });
+            gate.countDown();
+            for (var future : List.of(first, second, save)) assertEquals(200, future.get(15, java.util.concurrent.TimeUnit.SECONDS));
+        } finally { pool.shutdownNow(); }
+        // Retry a completed association after its response was lost: no duplicate entry.
+        member.post().uri("/api/tabs/"+tabId+"/files")
+            .bodyValue(Map.of("name","A.pdf","type","application/pdf","url","/api/uploads/files/a.pdf"))
+            .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(3)
+            .jsonPath("$.content").isEqualTo("Concurrent save").jsonPath("$.editToken").doesNotExist();
+        owner.post().uri("/api/tabs/"+tabId+"/edit-lock").bodyValue(Map.of("token",token))
+            .exchange().expectStatus().isOk();
+        member.delete().uri(uri -> uri.path("/api/tabs/"+tabId+"/files").queryParam("url","/api/uploads/files/a.pdf").build())
+            .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(2);
+        owner.put().uri("/api/tabs/"+tabId).header("X-Tab-Edit-Token",token).bodyValue(Map.of("content","Still mine"))
+            .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(2);
+    }
+
 }

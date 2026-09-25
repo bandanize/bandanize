@@ -143,6 +143,8 @@ public class UploadController {
             String result = storageService.storeChunk(file, uploadId, chunkIndex, totalChunks, originalFilename,
                     targetFolder);
             return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid upload chunk");
         } catch (Exception e) {
             logger.error("Error uploading chunk: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

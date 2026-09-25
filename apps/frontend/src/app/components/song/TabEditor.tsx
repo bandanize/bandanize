@@ -1,3 +1,5 @@
+import { useAuth } from '@/contexts/AuthContext';
+import { useTabEditLease } from '@/lib/use-tab-edit-lease';
 import { useSeenContent } from '@/contexts/SongUnreadContext';
 import { createPortal } from 'react-dom';
 import { PassagePicker } from './PassagePicker';
@@ -108,7 +110,7 @@ interface TabEditorProps {
   uploadProgress?: number;
   tab: Tablature;
   songName: string;
-  onSave: (content: string) => Promise<void>;
+  onSave: (content: string, editToken: string) => Promise<void>;
   isSaving: boolean;
   onUpload: (tabId: string) => void;
   onDeleteFile: (tabId: string, fileUrl: string) => void;
@@ -125,7 +127,19 @@ export function TabEditor({ songId,
   onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress, hideFiles = false, comments = [], commentsVisible = true, onToggleComments
 }: TabEditorProps) {
   const { t } = useTranslation();
-  const [editingContent, setEditingContent] = useState(tab.content || '');
+  const { user } = useAuth();
+  const draftKey = 'bandanize.tab-draft.' + user?.id + '.' + tab.id;
+  const [restored] = useState(() => {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(draftKey) || 'null');
+      return value && typeof value.content === 'string' && typeof value.base === 'string' ? value : null;
+    } catch { return null; }
+  });
+  const [editingContent, setEditingContent] = useState<string>(restored?.content ?? tab.content ?? '');
+  const [baseContent, setBaseContent] = useState<string>(restored?.base ?? tab.content ?? '');
+  const [draftStorageFailed, setDraftStorageFailed] = useState(false);
+  const savingRef = useRef(false);
+  const lease = useTabEditLease(tab.id);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -138,7 +152,50 @@ export function TabEditor({ songId,
   const fontSizes = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl'];
   const [fontSizeIndex, setFontSizeIndex] = useState(1); // Default to text-sm
 
-  const hasChanges = editingContent !== (tab.content || '');
+  const hasChanges = editingContent !== baseContent;
+  useEffect(() => {
+    try {
+      if (hasChanges) sessionStorage.setItem(draftKey, JSON.stringify({ content: editingContent, base: baseContent }));
+      else sessionStorage.removeItem(draftKey);
+    } catch {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDraftStorageFailed(true);
+    }
+    if (!hasChanges) return;
+    const beforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [draftKey, editingContent, baseContent, hasChanges]);
+  useEffect(() => {
+    if (!hasChanges && viewMode === 'view') {
+      // Refresh a clean viewer without replacing an unsaved draft.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setEditingContent(tab.content || '');
+      setBaseContent(tab.content || '');
+    }
+  }, [tab.content, hasChanges, viewMode]);
+  const toggleEdit = async () => {
+    if (viewMode === 'edit') {
+      if (hasChanges) { toast.error(t('tab_edit.finish_first', 'Guarda o descarga tu borrador antes de salir de edición.')); return; }
+      await lease.release(); setViewMode('view'); return;
+    }
+    if (await lease.acquire(hasChanges ? baseContent : tab.content || '')) {
+      if (!hasChanges) { setEditingContent(tab.content || ''); setBaseContent(tab.content || ''); }
+      setViewMode('edit');
+    }
+  };
+  const save = async () => {
+    if (!lease.held || !lease.token.current || isSaving || savingRef.current) return;
+    savingRef.current = true;
+    const saved = editingContent;
+    try { await onSave(saved, lease.token.current); setBaseContent(saved); }
+    catch { /* The parent shows the save failure; keep the draft and lease. */ }
+    finally { savingRef.current = false; }
+  };
+  const discard = async () => {
+    if (hasChanges && !window.confirm(t('tab_edit.discard_confirm', '¿Descartar los cambios sin guardar?'))) return;
+    await lease.release(); setEditingContent(tab.content || ''); setBaseContent(tab.content || ''); setViewMode('view');
+  };
 
   const increaseFontSize = () => {
     setFontSizeIndex((prev) => Math.min(prev + 1, fontSizes.length - 1));
@@ -151,7 +208,7 @@ export function TabEditor({ songId,
   const toggleFullscreen = () => setIsFullscreen(previous => !previous);
 
   const handleInsertText = (text: string) => {
-    if (!textareaRef.current) return;
+    if (!textareaRef.current || !lease.held || isSaving) return;
     
     const textarea = textareaRef.current;
     const start = textarea.selectionStart;
@@ -252,13 +309,13 @@ export function TabEditor({ songId,
           className="bg-card border border-border rounded-md text-sm h-10 px-1">
           {[12, 14, 16, 18, 20].map((size, index) => <option key={size} value={index}>{size} px</option>)}
         </select>
-        <Button variant="ghost" size="icon" className="size-10 shrink-0" onClick={() => setViewMode(mode => mode === 'view' ? 'edit' : 'view')}
+        <Button variant="ghost" size="icon" className="size-10 shrink-0" disabled={lease.busy || (viewMode === 'view' && !!lease.owner)} onClick={() => { void toggleEdit(); }}
           aria-label={viewMode === 'view' ? t('reader.edit') : t('reader.view')} title={viewMode === 'view' ? t('reader.edit') : t('reader.view')}>
           {viewMode === 'view' ? <Pencil className="size-4" /> : <Eye className="size-4" />}
         </Button>
         <Button variant="ghost" size="icon" className="size-10 shrink-0" onClick={copyContent} aria-label={t('reader.copy')} title={t('reader.copy')}><FileText className="size-4" /></Button>
         <Button variant="ghost" size="icon" className="size-10 shrink-0" onClick={exportContent} aria-label={t('reader.export')} title={t('reader.export')}><Download className="size-4" /></Button>
-        {hasChanges && <Button size="icon" className="size-10 shrink-0" onClick={() => onSave(editingContent)} disabled={isSaving} aria-label={t(isSaving ? 'saving' : 'reader.save')} title={t('reader.save')}><Save className="size-4" /></Button>}
+        {hasChanges && <Button size="icon" className="size-10 shrink-0" onClick={() => { void save(); }} disabled={isSaving || !lease.held} aria-label={t(isSaving ? 'saving' : 'reader.save')} title={t('reader.save')}><Save className="size-4" /></Button>}
         <Button variant="outline" size="icon" className="size-10 shrink-0 ml-auto" onClick={toggleFullscreen} aria-label={t('exit_fullscreen')} title={t('exit_fullscreen')}><Minimize className="size-4" /></Button>
       </div>}
       <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0", isFullscreen && "hidden")}>
@@ -309,7 +366,8 @@ export function TabEditor({ songId,
                         ? 'bg-primary/15 text-primary border-primary/30'
                         : 'bg-card text-foreground'
                 )}
-                onClick={() => setViewMode(prev => prev === 'edit' ? 'view' : 'edit')}
+                disabled={lease.busy || (viewMode === 'view' && !!lease.owner)} onClick={() => { void toggleEdit(); }}
+                aria-label={viewMode === 'edit' ? t('reader.view') : t('reader.edit')}
                 title={viewMode === 'edit' ? t('reader.view', 'Ver acordes') : t('reader.edit', 'Editar tablatura')}
             >
                 {viewMode === 'edit' ? <Eye className="size-4 mr-2" /> : <Pencil className="size-4 mr-2" />}
@@ -331,8 +389,8 @@ export function TabEditor({ songId,
             {hasChanges && (
                 <Button 
                     size="sm" 
-                    onClick={() => onSave(editingContent)} 
-                    disabled={isSaving}
+                    onClick={() => { void save(); }} 
+                    disabled={isSaving || !lease.held}
                     className="flex-1 sm:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                     <Save className="size-4 mr-2" />
@@ -359,6 +417,15 @@ export function TabEditor({ songId,
         </div>
       </div>
 
+      {draftStorageFailed && <p role="alert">{t('tab_edit.storage_failed', 'No se puede conservar el borrador al cerrar esta página. Descarga una copia antes de salir.')}</p>}
+      {hasChanges && viewMode === 'view' && <p role="status">{t('tab_edit.restored', 'Tienes un borrador sin guardar. Pulsa Editar para recuperarlo. Si alguien cambió la tablatura, descarga tu copia antes de descartarlo.')}</p>}
+      {lease.owner && viewMode === 'view' && <p role="status" className="text-xs text-primary">{t('tab_edit.owner', { defaultValue: '{{name}} está editando esta tablatura', name: lease.owner })}</p>}
+      {lease.error && <p role="alert" className="text-xs text-amber-400">{lease.error}</p>}
+      {viewMode === 'edit' && <div className="flex flex-wrap items-center gap-2">
+        <p role="status" className="text-xs text-muted-foreground">{t(lease.held ? 'tab_edit.yours' : 'tab_edit.lost', lease.held ? 'Edición reservada para ti' : 'Edición pausada. Tu borrador se conserva. Reconecta y pulsa Reanudar edición.')}</p>
+        {!lease.held && <Button type="button" size="sm" disabled={lease.busy || isSaving} onClick={() => { void lease.acquire(baseContent); }}>{t('tab_edit.resume', 'Reanudar edición')}</Button>}
+        <Button type="button" size="sm" variant="ghost" disabled={isSaving} onClick={() => { void discard(); }}>{t('tab_edit.close', 'Cerrar edición')}</Button>
+      </div>}
       {(onAnnotate || onToggleComments) && <div className="flex flex-wrap shrink-0 items-center gap-2 p-1">
         {commentToggle}
         {commentsVisible && onAnnotate && <PassagePicker content={editingContent} disabled={hasChanges} onChoose={anchor => { setSelection(null); setIsFullscreen(false); onAnnotate(anchor); }} />}
@@ -401,6 +468,7 @@ export function TabEditor({ songId,
             />
           ) : (
             <Textarea
+              readOnly={!lease.held || isSaving}
               ref={textareaRef}
               style={{ fontSize: [12, 14, 16, 18, 20][fontSizeIndex] }}
               value={editingContent}

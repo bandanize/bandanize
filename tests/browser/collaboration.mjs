@@ -49,6 +49,12 @@ async function setup(browser, mobile = false, auth = true, optional = false, tim
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     requests.push({ path, url: request.url(), method: request.method(), data: request.postData() });
+    if (path.endsWith('/edit-lock')) {
+      if (request.method() === 'DELETE') return route.fulfill({status:204});
+      return route.fulfill({json: request.method() === 'POST'
+        ? {locked:true,ownerName:'Owner',token:'fixture-edit-token',expiresAt:new Date(Date.now()+90000).toISOString()}
+        : {locked:false}});
+    }
     if (path === '/api/bands/1/song-unread') {
       await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(controls.unread)});return;
     }
@@ -541,6 +547,67 @@ try {
     console.log('PASS tab comment notifications link to score, mark only opened item and remain clickable when read');
   } finally {await activity.context.close();}
 
+
+
+
+  const notificationFailure = await setup(browser);
+  try {
+    const {page,controls,errors}=notificationFailure;
+    controls.notifications=[{id:81,type:'TAB_COMMENT_ADDED',actor:owner,metadata:{tabId:'31',songId:'21',commentId:'1'},isRead:false,createdAt:new Date().toISOString()}];
+    await page.route('**/api/projects/1/notifications',route=>route.fulfill({status:503}));
+    await page.goto(origin+'/project/1?tab=notifications');await dismiss(page);
+    await page.getByText('Could not refresh notifications. Reconnect or try again.',{exact:true}).waitFor();
+    await page.unroute('**/api/projects/1/notifications');
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+    await page.locator('[data-notification-id="81"]').waitFor();
+    await page.route('**/api/projects/1/notifications/81/read',route=>route.fulfill({status:503}));
+    await page.locator('[data-notification-id="81"]').click();
+    await page.waitForURL(/tabId=31/);
+    assert.equal(controls.notifications[0].isRead,false);
+    await page.getByRole('tab',{name:'Notifications',exact:true}).click();
+    await page.locator('[data-notification-id="81"][data-read="false"]').waitFor();
+    assert.deepEqual(errors,[]);
+    console.log('PASS notification fetch/read failures remain visible and do not mark unread items as read');
+  } finally {await notificationFailure.context.close();}
+
+  const delayedCalendar = await setup(browser);
+  try {
+    const {page,controls,errors}=delayedCalendar;
+    controls.events=[{id:71,name:'Delete without resurrection',date:'2027-07-20T20:00:00',type:'ENSAYO'}];
+    await page.goto(origin+'/project/1?tab=calendar');await dismiss(page);
+    await page.locator('[data-calendar-event="71"]').waitFor();
+    let release,started,historyCaptured=false;
+    const captured=new Promise(resolve=>{started=resolve;});
+    await page.route('**/api/bands/1/events',async route=>{
+      if(route.request().method()!=='GET'||historyCaptured)return route.fallback();
+      historyCaptured=true;
+      const old=structuredClone(controls.events);
+      started();
+      await new Promise(resolve=>{release=resolve;});
+      await route.fulfill({json:old});
+    });
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+    await captured;
+    await page.locator('[data-calendar-event="71"]').click();
+    page.once('dialog',dialog=>dialog.accept());
+    await page.getByRole('dialog').getByRole('button',{name:'Delete event',exact:true}).click();
+    await page.getByRole('dialog').waitFor({state:'detached'});
+    await page.locator('[data-calendar-event="71"]').waitFor({state:'detached'});
+    release();
+    await page.waitForTimeout(250);
+    assert.equal(await page.locator('[data-calendar-event="71"]').count(),0);
+    controls.events=[{id:72,name:'Remote calendar change',date:'2027-08-20T20:00:00',type:'ENSAYO'}];
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+    await page.locator('[data-calendar-event="72"]').waitFor();
+    await page.route('**/api/bands/1/events',route=>route.fulfill({status:503}));
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+    await page.getByRole('alert').waitFor();
+    await page.unroute('**/api/bands/1/events');
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+    await page.getByRole('alert').waitFor({state:'detached'});
+    assert.deepEqual(errors,[]);
+    console.log('PASS delayed calendar history cannot resurrect deletion; remote changes and visible failure recover');
+  } finally {await delayedCalendar.context.close();}
 
   for (const [zone, expected] of [['Europe/Madrid','20:00'],['America/New_York','14:00']]) {
     const calendar = await setup(browser,false,true,false,zone);

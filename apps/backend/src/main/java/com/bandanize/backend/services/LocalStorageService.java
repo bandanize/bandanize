@@ -144,63 +144,64 @@ public class LocalStorageService implements FileStorageService {
         }
     }
 
+    private final Object[] uploadLocks = java.util.stream.IntStream.range(0, 64)
+            .mapToObj(index -> new Object()).toArray();
+
     @Override
     public String storeChunk(MultipartFile file, String uploadId, int chunkIndex, int totalChunks,
             String originalFilename, String folder) {
-        try {
-            Path tempDir = rootLocation.resolve("temp").resolve(uploadId);
-            if (!Files.exists(tempDir)) {
+        if (uploadId == null || !uploadId.matches("[a-fA-F0-9-]{36}")
+                || !UUID.fromString(uploadId).toString().equalsIgnoreCase(uploadId)
+                || !java.util.Set.of("images", "audio", "videos", "files").contains(folder)
+                || totalChunks < 1 || totalChunks > 2048 || chunkIndex < 0 || chunkIndex >= totalChunks
+                || originalFilename == null || originalFilename.isBlank()
+                || originalFilename.length() > 200 || originalFilename.contains("..")
+                || originalFilename.contains("/") || originalFilename.contains("\\")
+                || file.isEmpty() || file.getSize() > 5L * 1024 * 1024) {
+            throw new IllegalArgumentException("Invalid upload chunk");
+        }
+        String safeName = originalFilename.replaceAll("[^\\p{L}\\p{N}._ -]", "_");
+        String filename = uploadId + "_" + safeName;
+        synchronized (uploadLocks[Math.floorMod(uploadId.hashCode(), uploadLocks.length)]) {
+            try {
+                Path tempDir = rootLocation.resolve("temp").resolve(uploadId);
                 Files.createDirectories(tempDir);
-            }
+                Path metadata = tempDir.resolve("metadata");
+                String identity = folder + "\n" + totalChunks + "\n" + originalFilename;
+                if (Files.exists(metadata)) {
+                    if (!Files.readString(metadata).equals(identity))
+                        throw new IllegalArgumentException("Upload session does not match");
+                } else Files.writeString(metadata, identity);
 
-            Path chunkPath = tempDir.resolve("chunk_" + chunkIndex);
-            Files.copy(file.getInputStream(), chunkPath, StandardCopyOption.REPLACE_EXISTING);
-
-            // Check if all chunks are uploaded
-            boolean allChunksPresent = true;
-            for (int i = 0; i < totalChunks; i++) {
-                if (!Files.exists(tempDir.resolve("chunk_" + i))) {
-                    allChunksPresent = false;
-                    break;
-                }
-            }
-
-            if (allChunksPresent) {
-                // Merge chunks
-                String uniqueFilename = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(originalFilename);
                 Path targetFolder = rootLocation.resolve(folder);
-                if (!Files.exists(targetFolder)) {
-                    Files.createDirectories(targetFolder);
+                Files.createDirectories(targetFolder);
+                Path targetFile = targetFolder.resolve(filename);
+                // A lost HTTP response may cause the last chunk to be retried after completion.
+                if (Files.exists(targetFile)) return filename;
+                try (InputStream input = file.getInputStream()) {
+                    Files.copy(input, tempDir.resolve("chunk_" + chunkIndex), StandardCopyOption.REPLACE_EXISTING);
                 }
-                Path targetFile = targetFolder.resolve(uniqueFilename);
+                for (int i = 0; i < totalChunks; i++)
+                    if (!Files.exists(tempDir.resolve("chunk_" + i))) return "Chunk received";
 
-                try (var outputStream = Files.newOutputStream(targetFile)) {
-                    for (int i = 0; i < totalChunks; i++) {
-                        Path chunk = tempDir.resolve("chunk_" + i);
-                        Files.copy(chunk, outputStream);
-                        // Files.delete(chunk); // Optional: delete as we go, or separate cleanup
-                    }
+                Path assembled = tempDir.resolve("assembled");
+                try (var output = Files.newOutputStream(assembled)) {
+                    for (int i = 0; i < totalChunks; i++) Files.copy(tempDir.resolve("chunk_" + i), output);
                 }
-
-                // Cleanup temp dir
-                try (var stream = Files.walk(tempDir)) {
-                    stream.sorted((p1, p2) -> -p1.compareTo(p2)) // reverse order to delete files before dirs
-                            .forEach(path -> {
-                                try {
-                                    Files.delete(path);
-                                } catch (IOException e) {
-                                    // ignore
-                                }
-                            });
+                try {
+                    Files.move(assembled, targetFile, StandardCopyOption.ATOMIC_MOVE);
+                } catch (java.nio.file.AtomicMoveNotSupportedException unsupported) {
+                    Files.move(assembled, targetFile);
                 }
-
-                return uniqueFilename;
+                // Retain the tiny session identity so retries remain idempotent across restarts.
+                for (int i = 0; i < totalChunks; i++) {
+                    try { Files.deleteIfExists(tempDir.resolve("chunk_" + i)); }
+                    catch (IOException ignored) { /* The completed file is already durable. */ }
+                }
+                return filename;
+            } catch (IOException error) {
+                throw new RuntimeException("Failed to store chunk", error);
             }
-
-            return "Chunk received"; // Not done yet
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store chunk", e);
         }
     }
 }

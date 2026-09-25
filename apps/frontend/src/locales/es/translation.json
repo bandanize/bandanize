@@ -396,7 +396,8 @@
     "loading": "Cargando…",
     "new_activity": "Nueva actividad",
     "selection_hint": "Selecciona un fragmento del texto para comentarlo.",
-    "invalid_name": "Escribe un nombre sin caracteres especiales de ruta (#, %, /, \\, ?, etc.) ni dos puntos seguidos."
+    "invalid_name": "Escribe un nombre sin caracteres especiales de ruta (#, %, /, \\, ?, etc.) ni dos puntos seguidos.",
+    "delete_failed": "No se pudo eliminar este elemento. Inténtalo de nuevo."
   },
   "comments_ui": {
     "choose_part": "Comentar una parte",
@@ -439,7 +440,8 @@
     "read": "Leída",
     "unread": "Sin leer",
     "failed": "No se pudo marcar como leída",
-    "unknown": "Un miembro"
+    "unknown": "Un miembro",
+    "load_failed": "No se pudieron actualizar las notificaciones. Reconecta o vuelve a intentarlo."
   },
   "guide_ui": {
     "menu": "Guía de Bandanize",
@@ -561,5 +563,14 @@
   },
   "verification_resend": "Reenviar correo de verificación",
   "verification_resend_hint": "¿No te llegó el correo o ha caducado el enlace? Pide uno nuevo con el email de tu cuenta.",
-  "verification_resend_sent": "Si tu cuenta está pendiente de verificación, te hemos enviado un enlace nuevo. Revisa también spam."
+  "verification_resend_sent": "Si tu cuenta está pendiente de verificación, te hemos enviado un enlace nuevo. Revisa también spam.",
+  "tab_edit": {
+    "owner": "{{name}} está editando esta tablatura",
+    "yours": "Edición reservada para ti",
+    "lost": "Edición pausada. Tu borrador se conserva. Reconecta y pulsa Reanudar edición.",
+    "resume": "Reanudar edición",
+    "close": "Cerrar edición",
+    "restored": "Tienes un borrador sin guardar. Pulsa Editar para recuperarlo. Si alguien cambió la tablatura, descarga tu copia antes de descartarlo.",
+    "storage_failed": "No se puede conservar el borrador al cerrar esta página. Descarga una copia antes de salir."
+  }
 }

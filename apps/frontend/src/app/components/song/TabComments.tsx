@@ -6,7 +6,7 @@ import { resolveAnchor, type CommentAnchor } from '@/lib/comment-anchor';
 import { MediaLibrary, type LibraryFile } from './MediaLibrary';
 import { toast } from 'sonner';
 import { MemberAvatar } from '../MemberAvatar';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
@@ -75,6 +75,11 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
   const [loadedTabId, setLoadedTabId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState('');
+  const [loadFailed, setLoadFailed] = useState(false);
+  const mutations = useRef(0);
+  const revision = useRef(0);
+  const nearBottom = useRef(true);
+  const mentionCaret = useRef<number | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   useSeenContent(scrollAreaRef, loadedTabId === tabId ? songId : undefined, 'comments', JSON.stringify(comments.map(comment => comment.id)));
@@ -91,19 +96,46 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
 
   useEffect(() => {
     let cancelled = false;
-    api.get(`/tabs/${tabId}/comments`).then(response => {
-      if (!cancelled) { setComments(response.data); setLoadedTabId(tabId); }
-    }).catch(() => { if (!cancelled) toast.error(t('workspace.comments_failed')); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
-    return () => { cancelled = true; };
-  }, [tabId, t]);
+    let pending = false;
+    const controller = new AbortController();
+    const refresh = async () => {
+      if (pending || mutations.current || document.visibilityState === 'hidden') return;
+      pending = true;
+      const version = revision.current;
+      try {
+        const response = await api.get(`/tabs/${tabId}/comments`, {
+          signal: controller.signal, timeout: 8000, params: { _fresh: Date.now() },
+        });
+        if (cancelled || version !== revision.current) return;
+        if (!Array.isArray(response.data)) throw new Error('Invalid comments response');
+        setComments(previous => JSON.stringify(previous) === JSON.stringify(response.data) ? previous : response.data);
+        setLoadedTabId(tabId); setLoadFailed(false);
+      } catch {
+        if (!cancelled) setLoadFailed(true);
+      } finally {
+        pending = false;
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    void refresh();
+    const timer = setInterval(refresh, 5000);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('online', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      cancelled = true; controller.abort(); clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('online', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [tabId]);
 
   useEffect(() => {
     if (loadedTabId === tabId) updateTabCommentCount(tabId, comments.length);
   }, [tabId, comments.length, loadedTabId, updateTabCommentCount]);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
+    if (scrollAreaRef.current && nearBottom.current) {
       scrollAreaRef.current.scrollTo({
         top: scrollAreaRef.current.scrollHeight,
         behavior: 'smooth'
@@ -128,8 +160,14 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
     const insertion = prefix + '@' + name + ' ';
     setMessage(message.slice(0, start) + insertion + message.slice(end));
     setShowMentions(false); setMentionRange(null);
-    requestAnimationFrame(() => { inputRef.current?.focus(); inputRef.current?.setSelectionRange(start + insertion.length, start + insertion.length); });
+    mentionCaret.current = start + insertion.length;
   };
+  useLayoutEffect(() => {
+    if (mentionCaret.current === null) return;
+    inputRef.current?.focus();
+    inputRef.current?.setSelectionRange(mentionCaret.current, mentionCaret.current);
+    mentionCaret.current = null;
+  }, [message]);
   const mentionsVisible = showMentions && mentionFilteredMembers.length > 0;
 
   const [previousAnchor, setPreviousAnchor] = useState(anchor);
@@ -151,10 +189,11 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
 
   const handleSendComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!message.trim() && !attachments.length) || !user || isSending || uploading) return;
+    if ((!message.trim() && !attachments.length) || !user || mutations.current || isSending || uploading) return;
 
     setSendError('');
     setIsSending(true);
+    mutations.current++; revision.current++;
     try {
       const response = await api.post(`/tabs/${tabId}/comments`, {
         message: message.trim(),
@@ -162,7 +201,8 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
         ...((anchor || attachments.length) ? { attachments } : {}),
         ...(anchor ? { anchorStart: anchor.start, anchorEnd: anchor.end, quote: anchor.quote } : {})
       });
-      setComments(prev => [...prev, response.data]);
+      nearBottom.current = true;
+      setComments(prev => [...prev.filter(comment => comment.id !== response.data.id), response.data]);
       setMessage(''); setAttachments([]); setShowMentions(false); onClearAnchor();
     } catch (error) {
       console.error('Error sending comment', error);
@@ -171,18 +211,21 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
       const stale = response?.status === 400 && typeof reason === 'string' && reason.includes('selected passage has changed');
       setSendError(t(stale ? 'comments_ui.stale_error' : !response ? 'comments_ui.network_error' : 'comments_ui.send_error'));
     } finally {
+      mutations.current--; revision.current++;
       setIsSending(false);
     }
   };
 
   const handleDeleteComment = async (commentId: number) => {
+    if (mutations.current) return;
+    mutations.current++; revision.current++;
     try {
       await api.delete(`/tabs/${tabId}/comments/${commentId}`);
       setComments(prev => prev.filter(c => c.id !== commentId));
     } catch (error) {
       console.error('Error deleting comment', error);
       toast.error(t('workspace.comment_failed'));
-    }
+    } finally { mutations.current--; revision.current++; }
   };
 
   const highlightMentions = (text: string) => {
@@ -218,7 +261,9 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
         </span>
       </div>
 
+      {loadFailed && <p role="status" className="px-4 py-2 text-xs text-amber-400">{t('workspace.comments_failed')}</p>}
       <div 
+        onScroll={event => { const area = event.currentTarget; nearBottom.current = area.scrollHeight - area.scrollTop - area.clientHeight < 80; }}
         ref={scrollAreaRef} 
         className="tab-comments-scroll max-h-[min(32rem,65dvh)] overflow-y-auto px-4 divide-y divide-border/60"
       >

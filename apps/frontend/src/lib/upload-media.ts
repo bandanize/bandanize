@@ -18,7 +18,13 @@ export async function uploadMedia(file: File, progress: (value: number) => void 
     data.append('chunkIndex', String(index)); data.append('totalChunks', String(count));
     data.append('uploadId', uploadId); data.append('originalFilename', file.name); data.append('folder', kind);
     const response = await uploadFileWithRetry('/upload/chunk', data);
-    if (index === count - 1) filename = String(response.data);
+    if (index === count - 1) {
+      if (typeof response.data !== 'string' || !response.data.trim() || response.data === 'Chunk received'
+          || /[/\\\\?#%]/.test(response.data) || [...response.data].some(char => char.charCodeAt(0) < 32) || response.data.includes('..')) {
+        throw new Error('The server did not confirm a completed upload');
+      }
+      filename = response.data;
+    }
     progress(Math.round((index + 1) / count * 100));
   }
   return { name: file.name, type: file.type || 'application/octet-stream', url: `/api/uploads/${folder}/${filename}` };

@@ -150,7 +150,7 @@ interface ProjectContextType {
   addSongFile: (projectId: string, listId: string, songId: string, file: Omit<MediaFile, 'id'>) => void;
   deleteSongFile: (projectId: string, listId: string, songId: string, fileUrl: string) => void;
   createTablature: (projectId: string, listId: string, songId: string, tablature: Omit<Tablature, 'id' | 'files'>) => void;
-  updateTablature: (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>) => void;
+  updateTablature: (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>, editToken?: string) => Promise<void>;
   deleteTablature: (projectId: string, listId: string, songId: string, tabId: string) => void;
   addTablatureFile: (projectId: string, listId: string, songId: string, tabId: string, file: Omit<MediaFile, 'id'>) => void;
   deleteTablatureFile: (projectId: string, listId: string, songId: string, tabId: string, fileUrl: string) => void;
@@ -164,15 +164,18 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const invitationRequest = useRef(0);
+  const projectRequest = useRef(0);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [chatSyncFailed, setChatSyncFailed] = useState(false);
 
   const fetchProjects = useCallback(async (throwOnError = false, background = false) => {
+    const request = ++projectRequest.current;
     if (!background) setIsLoading(true);
     try {
-      const response = await api.get('/bands/my-bands');
+      const response = await api.get('/bands/my-bands', { params: { _fresh: Date.now() } });
+      if (request !== projectRequest.current) return;
       // Map API response to Project interface
       const mappedProjects: Project[] = response.data.map((band: BandApiResponse) => ({
         id: String(band.id),
@@ -231,7 +234,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       console.error("Error fetching projects", error);
       if (throwOnError) throw error;
     } finally {
-      if (!background) setIsLoading(false);
+      if (request === projectRequest.current) setIsLoading(false);
     }
   }, [user]);
   
@@ -299,11 +302,21 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     recover();
     const timer = setInterval(recover, 3000);
     const invitationTimer = setInterval(recoverInvitations, 10000);
+    let cataloguePending = false;
+    const recoverCatalogue = async () => {
+      if (!active || cataloguePending || document.visibilityState === 'hidden') return;
+      cataloguePending = true;
+      try { await fetchProjects(false, true); } finally { cataloguePending = false; }
+    };
+    const catalogueTimer = setInterval(recoverCatalogue, 15000);
+    window.addEventListener('online', recoverCatalogue);
+    window.addEventListener('focus', recoverCatalogue);
     window.addEventListener('online', recover);
     window.addEventListener('focus', recover);
     document.addEventListener('visibilitychange', recover);
     return () => {
-      active = false; disconnect(); clearInterval(timer); clearInterval(invitationTimer);
+      active = false; disconnect(); clearInterval(timer); clearInterval(invitationTimer); clearInterval(catalogueTimer);
+      window.removeEventListener('online', recoverCatalogue); window.removeEventListener('focus', recoverCatalogue);
       window.removeEventListener('online', recover); window.removeEventListener('focus', recover);
       document.removeEventListener('visibilitychange', recover);
     };
@@ -322,6 +335,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setInvitations([]);
       setIsLoading(false);
     }
+    return () => { ++projectRequest.current; ++invitationRequest.current; };
   }, [user, fetchProjects, fetchInvitations]);
 
   const createProject = async (name: string, description: string, imageUrl?: string) => {
@@ -354,6 +368,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date() 
       };
 
+      ++projectRequest.current;
       setProjects(prev => [...prev, newProject]);
       // Explicitly select it? Or let the user do it?
       // User flow usually redirects to dashboard or the new project.
@@ -361,6 +376,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       
     } catch (error) {
       console.error("Error creating project", error);
+      throw error;
     }
   };
 
@@ -374,6 +390,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         await api.put(`/bands/${projectId}`, bandData);
         // Optimize: just update local state instead of refetching or use response
         
+        ++projectRequest.current;
         setProjects(prev => prev.map(p => {
             if (p.id === projectId) {
               return { ...p, ...data };
@@ -406,8 +423,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const acceptInvitation = async (invitationId: string) => {
       try {
           await api.post(`/invitations/${invitationId}/accept`);
-          await fetchInvitations();
-          await fetchProjects(); // Refresh projects to see the new one
+          await Promise.all([fetchInvitations(), fetchProjects()]);
       } catch (error) {
           console.error("Error accepting invitation", error);
           throw error;
@@ -864,7 +880,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             songs: l.songs.map(s => s.id === songId ? { 
                 ...s, 
                 updatedAt: updatedSong.updatedAt ?? s.updatedAt,
-                files: updatedSong.files || []
+                files: s.files.some(existing => existing.url === file.url) ? s.files : [...s.files, file]
             } : s)
           }))
         }));
@@ -905,9 +921,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
-  const updateTablature = async (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>) => {
+  const updateTablature = async (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>, editToken?: string) => {
       try {
-          await api.put(`/tabs/${tabId}`, data);
+          await api.put(`/tabs/${tabId}`, data, { headers: editToken ? { 'X-Tab-Edit-Token': editToken } : undefined });
            updateLocalProject(projectId, (p) => ({
             ...p,
             songLists: p.songLists.map(l => ({
@@ -945,8 +961,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   
   const addTablatureFile = async (projectId: string, listId: string, songId: string, tabId: string, file: Omit<MediaFile, 'id'>) => {
       try {
-        const response = await api.post(`/tabs/${tabId}/files`, file);
-        const updatedTab = response.data;
+        await api.post(`/tabs/${tabId}/files`, file);
         
          updateLocalProject(projectId, (p) => ({
             ...p,
@@ -956,7 +971,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                     ...s, 
                     tablatures: s.tablatures.map(t => t.id === tabId ? {
                         ...t,
-                        files: updatedTab.files || []
+                        files: t.files.some(existing => existing.url === file.url) ? t.files : [...t.files, file]
                     } : t)
                 } : s)
             }))
@@ -982,7 +997,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 songs: l.songs.map(s => s.id === songId ? { 
                     ...s, 
                     updatedAt: updatedSong.updatedAt ?? s.updatedAt,
-                files: updatedSong.files || []
+                files: s.files.filter(existing => existing.url !== fileUrl)
                 } : s)
               }))
             }));
@@ -994,8 +1009,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
 
   const deleteTablatureFile = async (projectId: string, listId: string, songId: string, tabId: string, fileUrl: string) => {
       try {
-          const response = await api.delete(`/tabs/${tabId}/files`, { params: { url: fileUrl } });
-          const updatedTab = response.data;
+          await api.delete(`/tabs/${tabId}/files`, { params: { url: fileUrl } });
           
            updateLocalProject(projectId, (p) => ({
               ...p,
@@ -1005,7 +1019,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                       ...s, 
                       tablatures: s.tablatures.map(t => t.id === tabId ? {
                           ...t,
-                          files: updatedTab.files || []
+                          files: t.files.filter(existing => existing.url !== fileUrl)
                       } : t)
                   } : s)
               }))
@@ -1026,12 +1040,14 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         }))
       }))
     });
+    ++projectRequest.current;
     setProjects(previous => previous.map(update));
     setCurrentProject(previous => previous ? update(previous) : previous);
   }, []);
 
   // Helper to update local state
   const updateLocalProject = (projectId: string, updater: (p: Project) => Project) => {
+    ++projectRequest.current; // A catalogue fetched before this acknowledged change is obsolete.
     setProjects(prev => prev.map(p => {
       if (p.id === projectId) {
         return updater(p);

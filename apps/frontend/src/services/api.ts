@@ -29,6 +29,7 @@ export function extractErrorMessage(err: unknown, fallback = 'Ha ocurrido un err
 }
 
 const api = axios.create({
+    timeout: 20000,
     baseURL: import.meta.env.VITE_API_URL || '/api', // Use env var or fallback to proxy
     headers: {
         'Content-Type': 'application/json',
@@ -55,7 +56,7 @@ api.interceptors.response.use(
     async (error) => {
         const _res = error.response;
         // A forbidden project action is not an expired authentication session.
-        if (_res?.status === 401) {
+        if (_res?.status === 401 && error.config?.headers?.Authorization === 'Bearer ' + getAuthToken()) {
             // Don't redirect if it's a login attempt failure (invalid credentials)
             const isPublicRoute = PUBLIC_ROUTES.some(route => window.location.pathname.startsWith(route));
 
@@ -98,6 +99,7 @@ export const uploadFile = async (file: File, type: 'image' | 'audio' | 'video' |
     const formData = new FormData();
     formData.append('file', file);
     const response = await api.post(`/upload/${type}`, formData, {
+        timeout: 1000 * 60 * 5,
         headers: {
             'Content-Type': 'multipart/form-data',
         },
