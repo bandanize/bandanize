@@ -1,6 +1,7 @@
 import { useSeenContent } from '@/contexts/SongUnreadContext';
 import { useUploadName } from '../UploadNameProvider';
 import { uploadMedia } from '@/lib/upload-media';
+import { isVideoFile } from '@/lib/media-kind';
 import { resolveAnchor, type CommentAnchor } from '@/lib/comment-anchor';
 import { MediaLibrary, type LibraryFile } from './MediaLibrary';
 import { toast } from 'sonner';
@@ -50,10 +51,20 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
   const attach = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const picked = event.target.files?.[0]; event.target.value = '';
     if (!picked || uploading || attachments.length >= 5) return;
+    if (isVideoFile(picked)) {
+      toast.error(t('workspace.video_upload_disabled'));
+      return;
+    }
     const file = await requestUploadName(picked); if (!file) return;
     setUploading(true); setUploadProgress(0);
     try { const uploaded = await uploadMedia(file, setUploadProgress); setAttachments(previous => [...previous, uploaded]); }
-    catch { toast.error(t('workspace.upload_failed')); }
+    catch (err: any) {
+      if (err?.message === 'VIDEO_NOT_ALLOWED' || err?.response?.status === 403) {
+        toast.error(t('workspace.video_upload_disabled'));
+      } else {
+        toast.error(t('workspace.upload_failed'));
+      }
+    }
     finally { setUploading(false); }
   };
   const { currentProject, updateTabCommentCount } = useProjects();
@@ -286,7 +297,7 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
               ))}
           </div>
         )}
-        <input type="file" ref={attachmentInput} onChange={attach} className="hidden" />
+        <input type="file" ref={attachmentInput} onChange={attach} accept="audio/*,image/*,.pdf,.doc,.docx,.txt" className="hidden" />
         {anchor && <div className="mb-3 border-l-2 border-primary bg-primary/5 p-2 text-xs flex gap-2">
           <div className="flex-1 min-w-0"><span className="text-primary">{t('workspace.commenting_on')}</span><p className="font-mono whitespace-pre-wrap line-clamp-3 mt-1">{anchor.quote}</p></div>
           <button type="button" onClick={onClearAnchor} aria-label={t('workspace.clear_selection')}><X className="size-4" /></button>

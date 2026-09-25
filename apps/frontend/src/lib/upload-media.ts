@@ -1,7 +1,11 @@
 import { uploadFileWithRetry } from '@/services/api';
+import { isVideoFile } from './media-kind';
 
 export async function uploadMedia(file: File, progress: (value: number) => void = () => {}) {
   if (!file.size) throw new Error('El archivo está vacío / The file is empty');
+  if (isVideoFile(file)) {
+    throw new Error('VIDEO_NOT_ALLOWED');
+  }
   const kind = file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : file.type.startsWith('video/') ? 'video' : 'file';
   const folder = { image: 'images', audio: 'audio', video: 'videos', file: 'files' }[kind];
   const chunkSize = 5 * 1024 * 1024;

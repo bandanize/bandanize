@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { uploadMedia } from '@/lib/upload-media';
+import { isVideoFile } from '@/lib/media-kind';
 import { useUploadName } from './UploadNameProvider';
 import type { CommentAnchor } from '@/lib/comment-anchor';
 import '@/styles/song-workspace.css';
@@ -195,6 +196,10 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
     const picked = event.target.files?.[0];
     event.target.value = '';
     if (!picked || !uploadTarget || !currentProject || isUploading) return;
+    if (isVideoFile(picked)) {
+      toast.error(t('workspace.video_upload_disabled'));
+      return;
+    }
     const target = uploadTarget;
     const file = await requestUploadName(picked);
     if (!file) return;
@@ -205,7 +210,13 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
       if (target.type === 'song') await addSongFile(currentProject.id, listId, song.id, media);
       else if (target.tabId) await addTablatureFile(currentProject.id, listId, song.id, target.tabId, media);
       toast.success(t('workspace.uploaded'), { id: toastId });
-    } catch { toast.error(t('workspace.upload_failed'), { id: toastId }); }
+    } catch (err: any) {
+      if (err?.message === 'VIDEO_NOT_ALLOWED' || err?.response?.status === 403) {
+        toast.error(t('workspace.video_upload_disabled'), { id: toastId });
+      } else {
+        toast.error(t('workspace.upload_failed'), { id: toastId });
+      }
+    }
     finally { setIsUploading(false); setUploadTarget(null); }
   };
 
@@ -215,6 +226,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
         type="file" 
         ref={fileInputRef} 
         onChange={handleFileChange} 
+        accept="audio/*,image/*,.pdf,.doc,.docx,.txt,.gp,.gp3,.gp4,.gp5,.gpx,.xml,.mxl,.musicxml"
         className="hidden" 
       />
       

@@ -19,3 +19,7 @@ export function mediaKind(file: MediaFile): 'audio' | 'video' | 'image' | 'docum
 export function isMpeg(file: MediaFile) {
   return ['mpeg', 'mpg'].includes(mediaExtension(file)) || file.type?.split(';')[0].trim().toLowerCase() === 'video/mpeg';
 }
+
+export function isVideoFile(file: { name?: string; url?: string; type?: string }): boolean {
+  return mediaKind(file as MediaFile) === 'video';
+}
