@@ -198,7 +198,7 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   assert.equal(await page.locator('video').count(),0);
   assert((await page.locator('input[type=file]').first().getAttribute('accept')).includes('.mpeg,.mpg'));
   const chooserReady=page.waitForEvent('filechooser');
-  await page.locator('.song-media').getByRole('button',{name:'Añadir archivo',exact:true}).click();
+  await page.locator('.song-media').getByRole('button',{name:'Añadir',exact:true}).click();
   await (await chooserReady).setFiles({name:'Subida.mpeg',mimeType:'video/mpeg',buffer:encodedAudio});
   await page.locator('#upload-name').waitFor();
   await page.getByRole('button',{name:'Subir archivo',exact:true}).click();
