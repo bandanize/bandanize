@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.21.0](https://github.com/bandanize/bandanize/compare/web@v1.20.3...web@v1.21.0) (2026-09-25)
+
+
+### Features
+
+* disable video uploads across frontend and backend with error ha… ([9e7e619](https://github.com/bandanize/bandanize/commit/9e7e61958eafa8040a09f456a4d74dc06d16dc80))
+* disable video uploads across frontend and backend with error handling ([252ca02](https://github.com/bandanize/bandanize/commit/252ca029fef84213788a09dba2a1ba6de8d01734))
+
 ## [1.20.3](https://github.com/bandanize/bandanize/compare/web@v1.20.2...web@v1.20.3) (2026-09-25)
 
 
