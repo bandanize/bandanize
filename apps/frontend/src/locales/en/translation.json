@@ -347,6 +347,7 @@
     "uploading": "Uploading…",
     "uploaded": "File uploaded",
     "upload_failed": "Could not upload the file. Please try again.",
+    "video_upload_disabled": "Video uploads are currently disabled.",
     "add_file": "Add file",
     "filter_files": "Filter files",
     "all": "All",

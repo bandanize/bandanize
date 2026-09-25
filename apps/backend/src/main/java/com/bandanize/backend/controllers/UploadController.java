@@ -26,6 +26,25 @@ public class UploadController {
         this.storageService = storageService;
     }
 
+    private static final String VIDEO_DISABLED_MESSAGE = "La subida de vídeos no está disponible actualmente / Video uploads are currently disabled.";
+
+    private boolean isVideoUpload(MultipartFile file, String folder, String filename) {
+        if ("video".equalsIgnoreCase(folder) || "videos".equalsIgnoreCase(folder)) {
+            return true;
+        }
+        if (file != null && file.getContentType() != null && file.getContentType().toLowerCase().startsWith("video/")) {
+            return true;
+        }
+        String nameToCheck = filename != null ? filename : (file != null ? file.getOriginalFilename() : null);
+        if (nameToCheck != null) {
+            String lower = nameToCheck.toLowerCase();
+            return lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".avi")
+                    || lower.endsWith(".mkv") || lower.endsWith(".webm") || lower.endsWith(".wmv")
+                    || lower.endsWith(".m4v") || lower.endsWith(".flv") || lower.endsWith(".3gp");
+        }
+        return false;
+    }
+
     /**
      * Uploads an image file.
      *
@@ -56,7 +75,7 @@ public class UploadController {
      */
     @PostMapping("/video")
     public ResponseEntity<String> uploadVideo(@RequestParam("file") MultipartFile file) {
-        return uploadFileInternal(file, "videos");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(VIDEO_DISABLED_MESSAGE);
     }
 
     /**
@@ -74,6 +93,9 @@ public class UploadController {
      * Internal helper method to delegate the upload to the service.
      */
     private ResponseEntity<String> uploadFileInternal(MultipartFile file, String folder) {
+        if (isVideoUpload(file, folder, null)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(VIDEO_DISABLED_MESSAGE);
+        }
         try {
             String filename = storageService.uploadFile(file, folder);
             // Return just the filename so frontend can easily use it
@@ -103,6 +125,9 @@ public class UploadController {
             @RequestParam("uploadId") String uploadId,
             @RequestParam("originalFilename") String originalFilename,
             @RequestParam(value = "folder", defaultValue = "files") String folder) {
+        if (isVideoUpload(file, folder, originalFilename)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(VIDEO_DISABLED_MESSAGE);
+        }
         try {
             // Map frontend folder names to backend folder names if needed
             String targetFolder = folder;

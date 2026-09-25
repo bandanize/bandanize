@@ -1,5 +1,7 @@
 import { createContext, useContext, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { isVideoFile } from '@/lib/media-kind';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -16,6 +18,11 @@ export function UploadNameProvider({ children }: { children: ReactNode }) {
   const extension = file?.name.match(/\.[^.]+$/)?.[0] || '';
   const finish = (value: File | null) => { resolve.current?.(value); resolve.current = null; setFile(null); };
   const request = (next: File) => new Promise<File | null>(done => {
+    if (isVideoFile(next)) {
+      toast.error(t('workspace.video_upload_disabled'));
+      done(null);
+      return;
+    }
     resolve.current?.(null);
     resolve.current = done;
     setName(next.name.replace(/\.[^.]+$/, ''));
