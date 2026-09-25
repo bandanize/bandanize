@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.0](https://github.com/bandanize/bandanize/compare/api@v1.13.2...api@v1.14.0) (2026-09-25)
+
+
+### Features
+
+* make user registration transactional to roll back if email deli… ([720da62](https://github.com/bandanize/bandanize/commit/720da624ec64cfa92b81bde711748bc8a95b73de))
+* make user registration transactional to roll back if email delivery fails ([d5022a9](https://github.com/bandanize/bandanize/commit/d5022a9f6ab54ee79293af24320361af682defd6))
+
 ## [1.13.2](https://github.com/bandanize/bandanize/compare/api@v1.13.1...api@v1.13.2) (2026-09-24)
 
 
