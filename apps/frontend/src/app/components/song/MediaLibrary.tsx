@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { mediaKind } from '@/lib/media-kind';
 import { MediaVideo } from './MediaVideo';
 import { useAudioPlayer } from '@/contexts/audio-player';
@@ -16,6 +17,15 @@ export function MediaLibrary({ songId, activityScope, files, title, onUpload, on
 }) {
   const { t } = useTranslation();
   const player = useAudioPlayer();
+  const deleting = useRef(new Set<string>());
+  const [deletingUrls, setDeletingUrls] = useState<string[]>([]);
+  const remove = async (url: string) => {
+    if (!onDelete || deleting.current.has(url)) return;
+    deleting.current.add(url); setDeletingUrls([...deleting.current]);
+    try { await onDelete(url); }
+    catch { toast.error(t('delete_error', 'No se pudo eliminar el archivo')); }
+    finally { deleting.current.delete(url); setDeletingUrls([...deleting.current]); }
+  };
   const [filter, setFilter] = useState('all');
   const [active, setActive] = useState<string | null>(null);
   const [audioOnly, setAudioOnly] = useState<Set<string>>(() => new Set());
@@ -49,7 +59,7 @@ export function MediaLibrary({ songId, activityScope, files, title, onUpload, on
               {type === 'video' && <ChevronDown className={`size-3 ml-auto shrink-0 ${open ? 'rotate-180' : ''}`} />}
             </button>
             <a href={getMediaUrl(file.url)} download={file.name} target="_blank" rel="noopener noreferrer" className="p-2 text-muted-foreground hover:text-primary" aria-label={`${t('workspace.download')}: ${file.name}`}><Download className="size-4" /></a>
-            {onDelete && <Button size="icon" variant="ghost" className="size-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(file.url)} aria-label={`${t('workspace.delete')}: ${file.name}`}><Trash2 className="size-3.5" /></Button>}
+            {onDelete && <Button size="icon" variant="ghost" className="size-8 text-muted-foreground hover:text-destructive" disabled={deletingUrls.includes(file.url)} onClick={() => { void remove(file.url); }} aria-label={`${t('workspace.delete')}: ${file.name}`}><Trash2 className="size-3.5" /></Button>}
           </div>
           {type === 'video' && open && <div className="pt-2 pb-1">
             <MediaVideo key={file.url} file={file} className="w-full max-h-52 rounded-lg" onAudio={() => {

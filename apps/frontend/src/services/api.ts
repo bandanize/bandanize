@@ -29,6 +29,7 @@ export function extractErrorMessage(err: unknown, fallback = 'Ha ocurrido un err
 }
 
 const api = axios.create({
+    timeout: 20000,
     baseURL: import.meta.env.VITE_API_URL || '/api', // Use env var or fallback to proxy
     headers: {
         'Content-Type': 'application/json',
@@ -98,6 +99,7 @@ export const uploadFile = async (file: File, type: 'image' | 'audio' | 'video' |
     const formData = new FormData();
     formData.append('file', file);
     const response = await api.post(`/upload/${type}`, formData, {
+        timeout: 1000 * 60 * 5,
         headers: {
             'Content-Type': 'multipart/form-data',
         },

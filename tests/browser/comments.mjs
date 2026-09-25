@@ -167,5 +167,13 @@ for(const width of [1440,390]){
 }
 console.log('PASS roomy comment layout and branded scrollbars at desktop/mobile widths');
 
+// Remote comments and deletions are recovered without remounting the tablature.
+comments.push({id:9991,sender:{id:2,name:'Alex'},message:'Remote comment without reload',timestamp:new Date().toISOString(),attachments:[]});
+await page.getByText('Remote comment without reload',{exact:true}).waitFor({timeout:10000});
+await page.locator('#tab-comment-input').fill('Keep this unsent draft');
+comments=comments.filter(comment=>comment.id!==9991);
+await page.getByText('Remote comment without reload',{exact:true}).waitFor({state:'detached',timeout:10000});
+assert.equal(await page.locator('#tab-comment-input').inputValue(),'Keep this unsent draft');
+console.log('PASS remote comment creation/deletion recovery preserves drafts');
 assert.deepEqual(errors,[]);console.log('PASS floating selection, line picker desktop/mobile/fullscreen, mentions and submitted anchors');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

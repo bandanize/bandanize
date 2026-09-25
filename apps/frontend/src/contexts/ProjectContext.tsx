@@ -164,15 +164,18 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const invitationRequest = useRef(0);
+  const projectRequest = useRef(0);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [chatSyncFailed, setChatSyncFailed] = useState(false);
 
   const fetchProjects = useCallback(async (throwOnError = false, background = false) => {
+    const request = ++projectRequest.current;
     if (!background) setIsLoading(true);
     try {
-      const response = await api.get('/bands/my-bands');
+      const response = await api.get('/bands/my-bands', { params: { _fresh: Date.now() } });
+      if (request !== projectRequest.current) return;
       // Map API response to Project interface
       const mappedProjects: Project[] = response.data.map((band: BandApiResponse) => ({
         id: String(band.id),
@@ -231,7 +234,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       console.error("Error fetching projects", error);
       if (throwOnError) throw error;
     } finally {
-      if (!background) setIsLoading(false);
+      if (request === projectRequest.current) setIsLoading(false);
     }
   }, [user]);
   
@@ -361,6 +364,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       
     } catch (error) {
       console.error("Error creating project", error);
+      throw error;
     }
   };
 
@@ -406,8 +410,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const acceptInvitation = async (invitationId: string) => {
       try {
           await api.post(`/invitations/${invitationId}/accept`);
-          await fetchInvitations();
-          await fetchProjects(); // Refresh projects to see the new one
+          await Promise.all([fetchInvitations(), fetchProjects()]);
       } catch (error) {
           console.error("Error accepting invitation", error);
           throw error;

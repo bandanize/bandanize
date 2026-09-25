@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { getProjectNotifications, markNotificationRead } from '@/services/api';
 import { Notification } from '@/types';
 import { ScrollArea } from '@/app/components/ui/scroll-area';
@@ -25,21 +25,36 @@ export function NotificationFeed({ projectId, onRead }: NotificationFeedProps) {
     const { currentProject } = useProjects();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
+    const readRevision = useRef(0);
 
     useEffect(() => {
+        let active = true, pending = false;
         const fetchNotifications = async () => {
+            if (pending || document.visibilityState === 'hidden') return;
+            pending = true;
+            const revision = readRevision.current;
             try {
-                // Fetch notifications (they will come as isRead=false if not marked yet)
                 const data = await getProjectNotifications(projectId);
-                setNotifications(data);
-            } catch (error) {
-                console.error('Failed to load notifications', error);
+                if (!active || revision !== readRevision.current) return;
+                if (!Array.isArray(data)) throw new Error('Invalid notifications response');
+                setNotifications(data); setLoadFailed(false);
+            } catch {
+                if (active) setLoadFailed(true);
             } finally {
-                setLoading(false);
+                pending = false;
+                if (active) setLoading(false);
             }
         };
-
-        fetchNotifications();
+        void fetchNotifications();
+        const timer = setInterval(fetchNotifications, 10000);
+        window.addEventListener('focus', fetchNotifications);
+        window.addEventListener('online', fetchNotifications);
+        return () => {
+            active = false; clearInterval(timer);
+            window.removeEventListener('focus', fetchNotifications);
+            window.removeEventListener('online', fetchNotifications);
+        };
     }, [projectId]);
 
     const getNotificationStyle = (type: Notification['type']) => {
@@ -139,7 +154,9 @@ export function NotificationFeed({ projectId, onRead }: NotificationFeedProps) {
     const read = async (notification: Notification) => {
         if (notification.isRead) return;
         try {
+            readRevision.current++;
             await markNotificationRead(projectId, notification.id);
+            readRevision.current++;
             setNotifications(items => items.map(item => item.id === notification.id ? { ...item, isRead: true } : item));
             onRead?.();
         } catch { toast.error(t('notification_ui.failed')); }
@@ -148,6 +165,8 @@ export function NotificationFeed({ projectId, onRead }: NotificationFeedProps) {
     if (loading) {
         return <div className="p-4 text-center text-sm text-muted-foreground">Loading notifications...</div>;
     }
+
+    if (loadFailed) return <p role="status" className="p-4 text-sm text-amber-400">{t('notification_ui.failed')}</p>;
 
     if (notifications.length === 0) {
         return <div className="p-4 text-center text-sm text-muted-foreground">No recent activity</div>;
@@ -178,7 +197,7 @@ export function NotificationFeed({ projectId, onRead }: NotificationFeedProps) {
                                     {getMessage(notification)}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    {format(new Date(notification.createdAt), 'MMM d, yyyy • h:mm a')} · {t(notification.isRead ? 'notification_ui.read' : 'notification_ui.unread')}
+                                    {Number.isNaN(new Date(notification.createdAt).getTime()) ? '—' : format(new Date(notification.createdAt), 'MMM d, yyyy • h:mm a')} · {t(notification.isRead ? 'notification_ui.read' : 'notification_ui.unread')}
                                 </p>
                             </div>
                         </Link>
