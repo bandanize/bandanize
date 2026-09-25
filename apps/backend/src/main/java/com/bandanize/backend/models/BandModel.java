@@ -220,4 +220,19 @@ public class BandModel {
     public void setCalendarToken(String calendarToken) {
         this.calendarToken = calendarToken;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof BandModel))
+            return false;
+        BandModel band = (BandModel) o;
+        return getId() != null && getId().equals(band.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

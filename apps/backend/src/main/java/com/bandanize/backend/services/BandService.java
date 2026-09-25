@@ -170,7 +170,7 @@ public class BandService {
     private void executeInvitation(BandModel band, UserModel user, String inviterName) {
         Long bandId = band.getId();
 
-        if (band.getUsers().contains(user)) {
+        if (band.getUsers().stream().anyMatch(u -> u.getId().equals(user.getId()))) {
             throw new IllegalArgumentException("User is already a member");
         }
 
@@ -275,18 +275,22 @@ public class BandService {
         UserModel user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!band.getUsers().contains(user)) {
+        boolean isMember = band.getUsers().stream().anyMatch(u -> u.getId().equals(userId));
+        if (!isMember) {
             throw new ResourceNotFoundException("User is not in this band");
         }
 
         if (band.getOwner() != null && band.getOwner().getId().equals(userId))
             throw new IllegalArgumentException("Transfer ownership before leaving the project");
         // Remove relationship
-        band.getUsers().remove(user);
-        user.getBands().remove(band); // Important for consistency
+        band.getUsers().removeIf(u -> u.getId().equals(userId));
+        user.getBands().removeIf(b -> b.getId().equals(bandId));
 
         bandRepository.save(band);
         userRepository.save(user);
+
+        live.bandChanged(band, "projects");
+        live.userChanged(user.getUsername(), "projects", band.getId());
     }
 
     @org.springframework.transaction.annotation.Transactional
@@ -316,16 +320,20 @@ public class BandService {
         UserModel member = userRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!band.getUsers().contains(member)) {
+        boolean isMember = band.getUsers().stream().anyMatch(u -> u.getId().equals(memberId));
+        if (!isMember) {
             throw new ResourceNotFoundException("User is not in this band");
         }
 
         // Remove relationship
-        band.getUsers().remove(member);
-        member.getBands().remove(band);
+        band.getUsers().removeIf(u -> u.getId().equals(memberId));
+        member.getBands().removeIf(b -> b.getId().equals(bandId));
 
         bandRepository.save(band);
         userRepository.save(member);
+
+        live.bandChanged(band, "projects");
+        live.userChanged(member.getUsername(), "projects", band.getId());
     }
 
     @org.springframework.transaction.annotation.Transactional
@@ -360,6 +368,7 @@ public class BandService {
 
         band.setOwner(newOwner);
         bandRepository.save(band);
+        live.bandChanged(band, "projects");
     }
 
     // Method addChatMessage was moved to ChatService and BandController to handle
