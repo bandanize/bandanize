@@ -297,6 +297,21 @@ public class UserService {
         logger.debug("User enabled and saved: {}", username);
     }
 
+    /**
+     * Registers a new user transactionally: saves the user and sends the
+     * verification email. If the email fails, the entire transaction is
+     * rolled back so the user is not left stuck as disabled in the database.
+     *
+     * @param user The user entity (already validated and with encoded password).
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void registerNewUser(UserModel user) {
+        userRepository.save(user);
+
+        String token = jwtService.generateVerificationToken(user.getUsername());
+        emailService.sendVerificationEmail(user.getEmail(), token);
+    }
+
     public void sendVerificationEmail(UserModel user, String token) {
         emailService.sendVerificationEmail(user.getEmail(), token);
     }
