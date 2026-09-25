@@ -395,7 +395,8 @@
     "loading": "Loading…",
     "new_activity": "New activity",
     "selection_hint": "Select a passage in the text to comment on it.",
-    "invalid_name": "Enter a name without path characters (#, %, /, \\, ?, etc.) or consecutive dots."
+    "invalid_name": "Enter a name without path characters (#, %, /, \\, ?, etc.) or consecutive dots.",
+    "delete_failed": "Could not delete this item. Try again."
   },
   "comments_ui": {
     "choose_part": "Comment on a passage",

@@ -91,7 +91,7 @@ const fileDelete=page.locator('.song-media').getByRole('button',{name:'Eliminar:
 await fileDelete.waitFor();
 await page.route('**/api/songs/21/files?*',route=>route.fulfill({status:503}));
 await fileDelete.click();
-await page.getByText('Error al eliminar proyecto',{exact:true}).waitFor();
+await page.getByText('No se pudo eliminar este elemento. Inténtalo de nuevo.',{exact:true}).waitFor();
 assert(await fileDelete.isVisible(),'Failed deletion must keep the file');
 await page.unroute('**/api/songs/21/files?*');
 let releaseCatalogue, catalogueStarted;

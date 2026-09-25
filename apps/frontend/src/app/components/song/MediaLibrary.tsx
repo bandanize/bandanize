@@ -23,7 +23,7 @@ export function MediaLibrary({ songId, activityScope, files, title, onUpload, on
     if (!onDelete || deleting.current.has(url)) return;
     deleting.current.add(url); setDeletingUrls([...deleting.current]);
     try { await onDelete(url); }
-    catch { toast.error(t('delete_error', 'No se pudo eliminar el archivo')); }
+    catch { toast.error(t('workspace.delete_failed')); }
     finally { deleting.current.delete(url); setDeletingUrls([...deleting.current]); }
   };
   const [filter, setFilter] = useState('all');

@@ -26,6 +26,7 @@ for (const [engineName, engine] of [['chromium',chromium],['webkit',webkit]]) {
  const fixture = structuredClone(band), tab = fixture.songLists[0].songs[0].tablatures[0];
  let lease = null, failRenew = false, failSave = false, failAuth = false, saveCount = 0, serial = 0;
  const errors = [];
+ let deferAcquire = null, releaseObserved = null;
  async function session(id,name) {
   const context = await browser.newContext({serviceWorkers:'block'});
   await context.addCookies([{name:'i18next',value:'en',url:origin}]);
@@ -40,12 +41,14 @@ for (const [engineName, engine] of [['chromium',chromium],['webkit',webkit]]) {
    if(path.endsWith('/edit-lock')) {
     if(lease && lease.until<Date.now()) lease=null;
     if(method==='GET')return json(lease?{locked:true,ownerName:lease.name,expiresAt:new Date(lease.until).toISOString()}:{locked:false});
-    if(method==='DELETE'){if(lease?.token===request.headers()['x-tab-edit-token']&&lease.id===id)lease=null;return route.fulfill({status:200});}
+    if(method==='DELETE'){if(lease?.token===request.headers()['x-tab-edit-token']&&lease.id===id){lease=null;releaseObserved?.();}return route.fulfill({status:200});}
     if(data.token && failRenew)return route.fulfill({status:503,json:{message:'Renewal temporarily unavailable'}});
     if(data.token ? !lease||lease.token!==data.token||lease.id!==id : lease||data.content!==tab.content)
      return route.fulfill({status:409,json:{message:'Editing conflict. Preserve your draft.'}});
     lease={id,name,token:data.token||'lease-'+(++serial),until:Date.now()+90000};
-    return json({locked:true,ownerName:name,token:lease.token,expiresAt:new Date(lease.until).toISOString()});
+    const acquired={locked:true,ownerName:name,token:lease.token,expiresAt:new Date(lease.until).toISOString()};
+    if(!data.token && deferAcquire)await deferAcquire();
+    return json(acquired);
    }
    if(path==='/api/tabs/31'&&method==='PUT'){
     saveCount++;
@@ -116,6 +119,19 @@ for (const [engineName, engine] of [['chromium',chromium],['webkit',webkit]]) {
   assert.equal(await b.page.getByRole('button',{name:'Save',exact:true}).isEnabled(),false);
   assert.equal(tab.content,'New remote version');
   await b.page.screenshot({path:'test-results/'+engineName+'-edit-draft-conflict.png'});
+  const c=await session('3','Jules');
+  let acquired,continueAcquire;
+  const acquisitionStarted=new Promise(resolve=>{acquired=resolve;});
+  const released=new Promise(resolve=>{releaseObserved=resolve;});
+  deferAcquire=()=>{acquired();return new Promise(resolve=>{continueAcquire=resolve;});};
+  await c.page.getByRole('button',{name:'Edit tablature',exact:true}).click();
+  await acquisitionStarted;
+  await c.page.getByRole('button',{name:'Back to Dashboard',exact:true}).click();
+  await c.page.waitForURL('**/dashboard');
+  continueAcquire();
+  await Promise.race([released,new Promise((_,reject)=>setTimeout(()=>reject(new Error('Late acquisition was not released')),5000))]);
+  assert.equal(lease,null,'An unmounted editor must release its late acquisition');
+  deferAcquire=null;
   assert.deepEqual(errors,[]);
   console.log('PASS '+engineName+' two editor UI ownership, failed save/renewal, read-only lease loss, reload draft, release and stale draft conflict (API fixtures)');
  } finally {await browser.close();}

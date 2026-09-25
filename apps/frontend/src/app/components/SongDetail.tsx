@@ -161,7 +161,7 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
               await deleteTablature(currentProject.id, listId, song.id, tabId);
               if (selectedTabId === tabId) setSelectedTabId(null);
               toast.success(t('tab_deleted', 'Tablatura eliminada'));
-          } catch { toast.error(t('delete_error', 'No se pudo eliminar. Puede haber una edición en curso.')); }
+          } catch { toast.error(t('workspace.delete_failed')); }
       }
   };
   

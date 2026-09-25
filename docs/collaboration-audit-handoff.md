@@ -1,36 +1,60 @@
-# Collaboration audit handoff (2026-09-25)
+# Collaboration release audit — PR #193
 
-PR #193, branch fix/collaboration-release-audit. DRAFT: do not merge/deploy until completion.
+Branch: `fix/collaboration-release-audit`. Continue through GitHub MCP.
+No local application/test execution. No merge, backend deployment or migration is authorized.
+Never use `test@bandanize.com`. Do not message another real user as a test.
 
-## User requirements
-Audit comments, file uploads, notifications, chat, invitations and similar cross-feature failures before publishing. Prevent simultaneous tablature editing and show who is editing. No local web testing; use GitHub CI and deployed previews. Conventional feat:/fix:/chore: commits/PR titles. Explicitly say when backend deploy/migration is required. Do not activate test@bandanize.com; user deferred that account. Do not merge or deploy without authorization.
+## Implemented protection
 
-## Implemented
-- Comments: independent 5-second refresh, 8-second timeout, focus/online recovery, reject late reads across mutations, preserve drafts, deduplicate saved comments; scroll only near bottom. Mention caret moved to layout effect to avoid delayed cursor jumps.
-- Notifications: 10-second refresh, cancellation guard, failure UI, defensive date display, read revision guard.
-- General API: 20-second default timeout, uploads keep 5-minute timeout. Project reads ignore superseded responses. Invitation acceptance refreshes independent data concurrently.
-- File deletion: visible errors and duplicate-click guard. Upload client rejects incomplete/invalid completion filenames.
-- Local chunk storage: validate metadata/paths, atomic assembly, stable filename per upload, retain small session metadata, repeated last chunk after lost response/restart returns same complete filename. JVM striped locking. Multiple service replicas need shared storage AND cross-process coordination; current locking is single-JVM, not a distributed guarantee.
-- Edit leases WIP: four nullable fields on TablatureModel, DB pessimistic row lock plus refresh, 90-second lease, acquire/renew/status/release endpoints. Token bound to user and browser editing session; token not exposed in ordinary JSON/status. Acquire checks expected original content. Controller transactions protect content saves and prevent metadata edits/deleting a tab while another session holds its lease.
-- Frontend WIP: useTabEditLease hook renews every 10 seconds, owner indication, save token, readonly on lost lease, copy/download retained draft; close/discard releases. SongDetail rethrows failed content saves. Old clients without lease tokens cannot save content after backend deployment.
+- Tablature editing uses a database row lock and a 90-second renewable lease. Identity is bound to both the authenticated user and a random editing token; tokens are excluded from normal models and status responses. The original content must match on acquisition. Old clients without a lease cannot save content.
+- The editor shows the active owner, renews every 10 seconds, pauses writes on renewal/network failure and supports explicit resume. Separate effect lifetimes prevent late acquisition/renewal responses from affecting a replacement editor. A late successful acquisition after unmount is released.
+- Unsaved text and its original base are preserved in user/tab-scoped session storage. Reload restores the draft; stale bases cannot overwrite another user's text. Storage failures are visible, and copy/export remain available. Session storage does not survive closing the browser tab and is not a cloud backup.
+- Authentication verification no longer clears a session on a network/5xx failure. A 401 for an obsolete authentication token cannot clear a newer session.
+- Deleting a tablature, its orphaned song/list, or its project checks active leases within the transaction. Whole-project deletion checks orphan songs as well.
+- Attachment mutations lock and refresh their parent database row, preserving concurrent uploads/deletions. Repeating association of the same uploaded URL does not duplicate the item. Frontend file updates apply the particular add/delete instead of replacing the entire file list with a potentially stale response.
+- Comments poll independently every five seconds, reject history responses spanning a local mutation, preserve failed-send drafts and report failures. Selected anchors are checked against a locked current tablature. Song activity updates use dynamic SQL updates so comments/files cannot rewrite unrelated song metadata.
+- Project snapshots are invalidated by acknowledged mutations and recovered periodically (15 seconds), on focus and reconnect. Chat recovery remains independent (three seconds); invitations use their own refresh (10 seconds). A slow catalogue/invitation request does not block chat.
+- Calendar requests reject obsolete responses, reset when changing project and recover on focus/reconnect/every ten seconds. Save/delete share an immediate operation guard. A late pre-delete response cannot resurrect an event; failed reads and writes remain visible.
+- Notifications refresh independently, protect read acknowledgements against stale reads and show distinct refresh/read errors.
+- Chunk completion is stable across retry/restart, validates session identity and assembles atomically. The final filename cannot be the incomplete-upload sentinel.
 
-## Validation
-First commit (before edit leases) passed backend tests, PostgreSQL tests and frontend lint; browser/build results need re-check.
-Second commit (edit leases and concurrency tests) is unvalidated at handoff.
-Added ChunkUploadRecoveryTest, remote-comment recovery tests in comments.mjs, and DatabaseLifecycleTest lease tests including simultaneous acquisition and expiry.
-No local app/tests have been run.
+## Validation and evidence
 
-## Required next work
-1. Read PR #193 current head/checks and any new main changes; resolve any conflicts without dropping others' work.
-2. Complete browser tests for two simultaneous editors, owner display, renew failure/expired lease, draft preservation, release and reacquire. Existing mocked browser routes may need edit-lock fixtures when they enter editing. Do NOT weaken existing tests.
-3. Run/fix CI, including actual PostgreSQL concurrency test. Inspect Java compilation and frontend lint on WIP.
-4. Review lock access paths: content and metadata save, deletion, files/comments during editing; verify no stale entity can overwrite lease fields. Review lease hook lifecycle/unmount and slow acquisitions/renewals. No guarantee yet for all destructive song/list/project operations during editing.
-5. Add migration SQL/docs for tablature_model edit_owner_id BIGINT, edit_owner_name VARCHAR(255), edit_token VARCHAR(255), edit_expires_at TIMESTAMP WITH TIME ZONE. Existing ddl-auto=update may create them; production validate/manual needs explicit migration. Backend/frontend must ship together; tell user.
-6. Finish audit of calendar stale responses and media/project cross-user updates. File state still relies on project invalidations/reconnect; no new push events added for comments/files. Comments/notifications use polling. Calendar audit is not complete.
-7. Chunk storage metadata is retained for retry idempotency; document cleanup/storage strategy. Lost response AFTER attaching metadata (POST song/tab/comment) still has no generic idempotency key: do not claim all writes are exactly-once. Check frontend retry behavior.
-8. Extend browser tests for upload/attachment association failure and notification failure; test late history versus comment save/delete.
-9. Publish concise audit evidence/report: what is verified, what remains unverified in production. Do not claim readiness for publication just because mocked browser CI passes.
-10. When done, update PR description with final behavior, CI evidence and deployment instructions; mark ready, do not merge.
+All execution is on GitHub Actions. No local tests were run.
+The database workflow runs `DatabaseLifecycleTest` and `TabCommentHttpTest` against PostgreSQL 16 and real HTTP endpoints. Only email delivery/storage boundaries in lifecycle tests are mocked.
+The normal CI runs the full backend suite plus frontend lint/build.
+Browser checks run Chromium/WebKit on a GitHub runner with explicitly intercepted API fixtures. These demonstrate UI behaviour, not production integration.
 
-## Production evidence from prior chat work
-PR #189 (merged into current main) decouples chat polling from invitations, timeout8s and fallback every3s. Real user session showed sent messages appearing but timestamps about2h old. Friend reports missing messages until reload, sometimes even after reload. Two real authenticated users have NOT verified production delivery. UTC/naive chat timestamp issue remains unresolved. User's original session was in app.bandanize.com/project/23?tab=chat; a new PC may require login. Do not send messages to their colleague unless explicitly authorized.
+Regression coverage added during this continuation:
+- simultaneous lease acquisition: exactly one winner;
+- wrong-user token, expired token, stale base, old release and forbidden access;
+- song/list/project delete rollback during an active lease;
+- two concurrent attachments plus content save, retry association, delete and retained lease;
+- browser ownership, failed save/renewal, paused edits, reload draft, expired-base conflict and late acquisition cleanup;
+- delayed comments history across a send and failed-send draft retention;
+- delayed calendar history across deletion, remote event refresh and outage recovery;
+- notification fetch/read failure and retained unread state;
+- failed file deletion and late catalogue response after deletion.
+
+Check the latest Actions run for the final commit before considering review complete. Earlier green runs must not be substituted for a newer failing revision.
+
+## Required coordinated backend/frontend release
+
+**Backend deployment and an additive PostgreSQL migration are required. They have NOT been performed.**
+Apply `docs/migrations/2026-09-25-tab-edit-leases.sql` before the matching backend/frontend rollout:
+`tablature_model.edit_owner_id BIGINT`, `edit_owner_name VARCHAR(255)`,
+`edit_token VARCHAR(255)`, `edit_expires_at TIMESTAMP WITH TIME ZONE`.
+Hibernate update may already create them; verify the schema instead of assuming. No data rewrite is needed.
+Backend and frontend must be rolled out together: new frontend against old backend cannot acquire a lease; old frontend against new backend cannot save content.
+The existing PR Cloudflare preview is automatically generated by the repository integration; no production rollout was initiated.
+
+## Outstanding deployment checks and limitations
+
+- Preview frontend found at https://fix-collaboration-release-au.bandanize.pages.dev and opened successfully at login. No authenticated staging backend/two authorized test accounts have been supplied. Two real users against the deployed new backend remain unverified. Do not declare production fixed.
+- After authorization, test two browser sessions on staging with distinct disposable accounts: edit/save/expiry/reconnect, comments/attachments, invitations, notifications, chat and calendar. Verify backend revision, schema, CORS and storage configuration before use.
+- Historical chat timestamps without a zone are still ambiguous. The reported two-hour offset and real-user missed-message symptom need deployed-server evidence; do not rewrite old timestamps based on an assumed time zone.
+- Calendar event edits do not have a version/conflict protocol between two users; sequential last-writer-wins is unchanged. The audit fixes stale client reads and overlapping operations, not collaborative event editing.
+- Chunk locking is within one JVM. Multiple backend replicas require shared storage AND cross-process upload coordination. Do not enable multi-replica chunk handling based on these tests.
+- Completed chunk session identity metadata is deliberately retained for retry/restart recovery. Do not delete it during in-flight uploads or the retry window. Choose and document an operational retention window before scheduling cleanup; no destructive cleanup job was created.
+- File-upload completion and file association are separate operations. A successful upload followed by a failed association can leave an orphaned physical file. Comment creation has no generic idempotency key: an ambiguous lost response still requires checking history before retrying. Do not claim exactly-once delivery.
+- Physical storage cleanup after transaction commit can fail independently and is logged; production storage permissions/cleanup and actual email delivery were not verified by mocked boundaries.

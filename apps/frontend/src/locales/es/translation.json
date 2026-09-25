@@ -395,7 +395,8 @@
     "loading": "Cargando…",
     "new_activity": "Nueva actividad",
     "selection_hint": "Selecciona un fragmento del texto para comentarlo.",
-    "invalid_name": "Escribe un nombre sin caracteres especiales de ruta (#, %, /, \\, ?, etc.) ni dos puntos seguidos."
+    "invalid_name": "Escribe un nombre sin caracteres especiales de ruta (#, %, /, \\, ?, etc.) ni dos puntos seguidos.",
+    "delete_failed": "No se pudo eliminar este elemento. Inténtalo de nuevo."
   },
   "comments_ui": {
     "choose_part": "Comentar una parte",
