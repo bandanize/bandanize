@@ -196,7 +196,7 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   assert.equal(await page.getByRole('button',{name:'Escuchar como audio',exact:true}).count(),0);
   console.log('PASS '+engineName+' MPEG opens directly as audio, including legacy video/mpeg metadata, without video or a format prompt');
   assert.equal(await page.locator('video').count(),0);
-  assert.match(await page.locator('input[type=file]').first().getAttribute('accept'),/\\.mpeg,\\.mpg/);
+  assert((await page.locator('input[type=file]').first().getAttribute('accept')).includes('.mpeg,.mpg'));
   await page.locator('input[type=file]').first().setInputFiles({name:'Subida.mpeg',mimeType:'video/mpeg',buffer:encodedAudio});
   await page.locator('#upload-name').waitFor();
   await page.getByRole('button',{name:'Subir archivo',exact:true}).click();
