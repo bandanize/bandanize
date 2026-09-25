@@ -24,7 +24,7 @@ await mkdir('test-results', {recursive:true});
 for (const [engineName, engine] of [['chromium',chromium],['webkit',webkit]]) {
  const browser = await engine.launch();
  const fixture = structuredClone(band), tab = fixture.songLists[0].songs[0].tablatures[0];
- let lease = null, failRenew = false, failSave = false, saveCount = 0, serial = 0;
+ let lease = null, failRenew = false, failSave = false, failAuth = false, saveCount = 0, serial = 0;
  const errors = [];
  async function session(id,name) {
   const context = await browser.newContext({serviceWorkers:'block'});
@@ -53,6 +53,7 @@ for (const [engineName, engine] of [['chromium',chromium],['webkit',webkit]]) {
     if(!lease||lease.id!==id||lease.token!==request.headers()['x-tab-edit-token'])return route.fulfill({status:409});
     tab.content=data.content;return json(tab);
    }
+   if(path.endsWith('/auth/me')&&failAuth)return route.fulfill({status:503});
    if(path.endsWith('/auth/me')||path.endsWith('/users/'+id))return json({id,name});
    if(path.endsWith('/bands/my-bands'))return json([fixture]);
    if(path.endsWith('/heartbeat'))return json({onlineCount:2});
@@ -88,13 +89,14 @@ for (const [engineName, engine] of [['chromium',chromium],['webkit',webkit]]) {
   assert.equal(await a.page.getByRole('button',{name:'Save',exact:true}).isEnabled(),false);
   assert.equal(saveCount,1);
   // Reload with a persisted draft and an expired server lease.
-  lease=null;failRenew=false;failSave=false;
+  lease=null;failRenew=false;failSave=false;failAuth=true;
   await a.page.reload();
   await a.page.getByText(/You have an unsaved draft/).waitFor();
+  assert.match(a.page.url(),/project/);failAuth=false;
   await a.page.getByRole('button',{name:'Edit tablature',exact:true}).click();
   assert.equal(await a.page.locator('textarea').inputValue(),'Offline draft survives');
   await a.page.getByRole('button',{name:'Save',exact:true}).click();
-  await a.page.waitForFunction(()=>!document.querySelector('[title="Save"]'));
+  await a.page.getByRole('button',{name:'Save',exact:true}).waitFor({state:'detached'});
   assert.equal(tab.content,'Offline draft survives');
   await a.page.getByRole('button',{name:'Close editor',exact:true}).click();
   await a.page.locator('pre').waitFor();

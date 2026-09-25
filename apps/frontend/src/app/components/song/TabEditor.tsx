@@ -367,6 +367,7 @@ export function TabEditor({ songId,
                         : 'bg-card text-foreground'
                 )}
                 disabled={lease.busy || (viewMode === 'view' && !!lease.owner)} onClick={() => { void toggleEdit(); }}
+                aria-label={viewMode === 'edit' ? t('reader.view') : t('reader.edit')}
                 title={viewMode === 'edit' ? t('reader.view', 'Ver acordes') : t('reader.edit', 'Editar tablatura')}
             >
                 {viewMode === 'edit' ? <Eye className="size-4 mr-2" /> : <Pencil className="size-4 mr-2" />}
