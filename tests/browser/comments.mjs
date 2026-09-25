@@ -176,12 +176,12 @@ await page.getByText('Remote comment without reload',{exact:true}).waitFor({stat
 assert.equal(await page.locator('#tab-comment-input').inputValue(),'Keep this unsent draft');
 console.log('PASS remote comment creation/deletion recovery preserves drafts');
 // A history response captured before a send must never erase the new comment.
-let releaseHistory, historyStarted;
+let releaseHistory, historyStarted, historyCaptured=false;
 const started = new Promise(resolve => { historyStarted = resolve; });
 await page.route('**/api/tabs/31/comments?*',async route => {
- if(route.request().method()!=='GET')return route.fallback();
+ if(route.request().method()!=='GET'||historyCaptured)return route.fallback();
+ historyCaptured=true;
  const snapshot=structuredClone(comments);
- await page.unroute('**/api/tabs/31/comments?*');
  historyStarted();
  await new Promise(resolve => { releaseHistory = resolve; });
  await route.fulfill({json:snapshot});

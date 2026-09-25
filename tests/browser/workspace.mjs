@@ -94,11 +94,13 @@ await fileDelete.click();
 await page.getByText('No se pudo eliminar este elemento. Inténtalo de nuevo.',{exact:true}).waitFor();
 assert(await fileDelete.isVisible(),'Failed deletion must keep the file');
 await page.unroute('**/api/songs/21/files?*');
-let releaseCatalogue, catalogueStarted;
+let releaseCatalogue, catalogueStarted, catalogueCaptured=false;
 const capturedCatalogue=new Promise(resolve=>{catalogueStarted=resolve;});
 await page.route('**/api/bands/my-bands?*',async route=>{
+ if(catalogueCaptured)return route.fallback();
+ catalogueCaptured=true;
  const old=structuredClone(band);
- await page.unroute('**/api/bands/my-bands?*');catalogueStarted();
+ catalogueStarted();
  await new Promise(resolve=>{releaseCatalogue=resolve;});await route.fulfill({json:[old]});
 });
 await page.evaluate(()=>window.dispatchEvent(new Event('focus')));

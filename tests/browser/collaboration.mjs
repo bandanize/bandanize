@@ -576,12 +576,12 @@ try {
     controls.events=[{id:71,name:'Delete without resurrection',date:'2027-07-20T20:00:00',type:'ENSAYO'}];
     await page.goto(origin+'/project/1?tab=calendar');await dismiss(page);
     await page.locator('[data-calendar-event="71"]').waitFor();
-    let release,started;
+    let release,started,historyCaptured=false;
     const captured=new Promise(resolve=>{started=resolve;});
     await page.route('**/api/bands/1/events',async route=>{
-      if(route.request().method()!=='GET')return route.fallback();
+      if(route.request().method()!=='GET'||historyCaptured)return route.fallback();
+      historyCaptured=true;
       const old=structuredClone(controls.events);
-      await page.unroute('**/api/bands/1/events');
       started();
       await new Promise(resolve=>{release=resolve;});
       await route.fulfill({json:old});
