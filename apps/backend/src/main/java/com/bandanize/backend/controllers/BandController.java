@@ -222,7 +222,8 @@ public class BandController {
     public ResponseEntity<List<com.bandanize.backend.models.ChatMessageModel>> getChat(
             @PathVariable Long bandId, @AuthenticationPrincipal UserDetails userDetails) {
         chatService.requireMember(bandId, userService.getUserByUsername(userDetails.getUsername()).getId());
-        return ResponseEntity.ok(chatService.getChatHistory(bandId));
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(chatService.getChatHistory(bandId));
     }
 
     @PostMapping("/{bandId}/chat")
