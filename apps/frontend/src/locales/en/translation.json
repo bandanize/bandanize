@@ -560,5 +560,14 @@
   },
   "verification_resend": "Resend verification email",
   "verification_resend_hint": "No email or an expired link? Request a new link using your account email.",
-  "verification_resend_sent": "If your account needs verification, a new link has been sent. Check your spam folder too."
+  "verification_resend_sent": "If your account needs verification, a new link has been sent. Check your spam folder too.",
+  "tab_edit": {
+    "owner": "{{name}} is editing this tablature",
+    "yours": "Editing reserved for you",
+    "lost": "Editing paused. Your draft is preserved. Reconnect and press Resume editing.",
+    "resume": "Resume editing",
+    "close": "Close editor",
+    "restored": "You have an unsaved draft. Press Edit to recover it. If the score has changed, download your draft before discarding it.",
+    "storage_failed": "This browser cannot preserve the draft after closing the page. Download a copy before leaving."
+  }
 }

@@ -560,5 +560,14 @@
   },
   "verification_resend": "Reenviar correo de verificación",
   "verification_resend_hint": "¿No te llegó el correo o ha caducado el enlace? Pide uno nuevo con el email de tu cuenta.",
-  "verification_resend_sent": "Si tu cuenta está pendiente de verificación, te hemos enviado un enlace nuevo. Revisa también spam."
+  "verification_resend_sent": "Si tu cuenta está pendiente de verificación, te hemos enviado un enlace nuevo. Revisa también spam.",
+  "tab_edit": {
+    "owner": "{{name}} está editando esta tablatura",
+    "yours": "Edición reservada para ti",
+    "lost": "Edición pausada. Tu borrador se conserva. Reconecta y pulsa Reanudar edición.",
+    "resume": "Reanudar edición",
+    "close": "Cerrar edición",
+    "restored": "Tienes un borrador sin guardar. Pulsa Editar para recuperarlo. Si alguien cambió la tablatura, descarga tu copia antes de descartarlo.",
+    "storage_failed": "No se puede conservar el borrador al cerrar esta página. Descarga una copia antes de salir."
+  }
 }

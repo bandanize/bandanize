@@ -49,6 +49,12 @@ async function setup(browser, mobile = false, auth = true, optional = false, tim
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     requests.push({ path, url: request.url(), method: request.method(), data: request.postData() });
+    if (path.endsWith('/edit-lock')) {
+      if (request.method() === 'DELETE') return route.fulfill({status:204});
+      return route.fulfill({json: request.method() === 'POST'
+        ? {locked:true,ownerName:'Owner',token:'fixture-edit-token',expiresAt:new Date(Date.now()+90000).toISOString()}
+        : {locked:false}});
+    }
     if (path === '/api/bands/1/song-unread') {
       await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(controls.unread)});return;
     }

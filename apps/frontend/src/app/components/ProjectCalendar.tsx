@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { CalendarEvent, EventType } from '@/types';
 import { getProjectEvents, createProjectEvent, updateProjectEvent, deleteProjectEvent, getCalendarToken } from '@/services/api';
 import { Card } from '@/app/components/ui/card';
@@ -97,38 +97,49 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         location: '',
     });
 
+    const requestRevision = useRef(0);
+    const lifetime = useRef(0);
+    const mutationPending = useRef(false);
     const locale = i18n.language?.startsWith('es') ? es : enUS;
     const dayNames = i18n.language?.startsWith('es') ? DAY_NAMES_ES : DAY_NAMES_EN;
     const dayNamesShort = i18n.language?.startsWith('es') ? DAY_NAMES_ES_SHORT : DAY_NAMES_EN_SHORT;
 
     const fetchEvents = useCallback(async () => {
+        if (mutationPending.current) return;
+        const revision = ++requestRevision.current;
         try {
             const data = await getProjectEvents(projectId);
-            setEvents(data);
-            setLoadError(false);
+            if (revision !== requestRevision.current) return;
+            if (!Array.isArray(data) || data.some(event => !Number.isFinite(Date.parse(eventDateValue(event))))) throw new Error('Invalid calendar response');
+            setEvents(data); setLoadError(false);
         } catch (error) {
+            if (revision !== requestRevision.current) return;
             console.error('Failed to load events', error);
             setLoadError(true);
         } finally {
-            setLoading(false);
-        }
-    }, [projectId]);
-
-    const fetchToken = useCallback(async () => {
-        try {
-            const token = await getCalendarToken(projectId);
-            setCalendarToken(token);
-        } catch (error) {
-            console.error('Failed to load calendar token', error);
+            if (revision === requestRevision.current) setLoading(false);
         }
     }, [projectId]);
 
     useEffect(() => {
-        // Network synchronization: state changes only after the awaited request.
+        const generation = ++lifetime.current;
+        mutationPending.current = false;
+        // Reset project-scoped presentation before its requests can complete.
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        fetchEvents();
-        fetchToken();
-    }, [fetchEvents, fetchToken]);
+        setEvents([]); setCalendarToken(null); setLoading(true); setSaving(false); setDialogOpen(false);
+        void fetchEvents();
+        void getCalendarToken(projectId).then(value => {
+            if (generation === lifetime.current) setCalendarToken(value);
+        }).catch(error => console.error('Failed to load calendar token', error));
+        const recover = () => { if (document.visibilityState !== 'hidden') void fetchEvents(); };
+        const timer = setInterval(recover, 10000);
+        window.addEventListener('focus', recover); window.addEventListener('online', recover);
+        return () => {
+            ++lifetime.current; ++requestRevision.current;
+            clearInterval(timer);
+            window.removeEventListener('focus', recover); window.removeEventListener('online', recover);
+        };
+    }, [projectId, fetchEvents]);
 
     // Calendar grid generation
     const calendarDays = useMemo(() => {
@@ -196,11 +207,13 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     };
 
     const handleSubmit = async () => {
-        if (saving || !formData.name.trim()) return;
+        if (mutationPending.current || !formData.name.trim()) return;
         if (!formData.date || !formData.time) return;
         try { new Intl.DateTimeFormat('en', { timeZone: formData.timeZone }); } catch { toast.error(t('calendar_link.invalid_zone')); return; }
         const dateTime = `${formData.date}T${formData.time}:00`;
 
+        const generation = lifetime.current;
+        mutationPending.current = true; ++requestRevision.current;
         setSaving(true);
         try {
             if (editingEvent) {
@@ -212,6 +225,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     type: formData.type,
                     location: formData.location,
                 });
+                if (generation !== lifetime.current) return;
                 toast.success(t('event_updated'));
             } else {
                 await createProjectEvent(projectId, {
@@ -222,27 +236,38 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                     type: formData.type,
                     location: formData.location,
                 });
+                if (generation !== lifetime.current) return;
                 toast.success(t('event_created'));
             }
             setDialogOpen(false);
-            fetchEvents();
         } catch (error) {
             console.error('Error saving event:', error);
-            toast.error(t('calendar_link.save_error'));
-        } finally { setSaving(false); }
+            if (generation === lifetime.current) toast.error(t('calendar_link.save_error'));
+        } finally {
+            if (generation === lifetime.current) {
+                mutationPending.current = false; setSaving(false);
+                void fetchEvents();
+            }
+        }
     };
 
     const handleDelete = async (eventId: number) => {
-        if (!window.confirm(t('confirm_delete_event'))) return false;
+        if (mutationPending.current || !window.confirm(t('confirm_delete_event'))) return false;
+        const generation = lifetime.current;
+        mutationPending.current = true; ++requestRevision.current; setSaving(true);
         try {
             await deleteProjectEvent(eventId);
+            if (generation !== lifetime.current) return false;
             toast.success(t('event_deleted'));
-            fetchEvents();
             return true;
         } catch (error) {
             console.error('Error deleting event:', error);
-            toast.error(t('delete_error', 'Error'));
+            if (generation === lifetime.current) toast.error(t('delete_error', 'Error'));
             return false;
+        } finally {
+            if (generation === lifetime.current) {
+                mutationPending.current = false; setSaving(false); void fetchEvents();
+            }
         }
     };
 
@@ -466,6 +491,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                             {editingEvent && (
                                 <Button
                                     variant="destructive"
+                                    disabled={saving}
                                     className="bg-destructive/20 text-destructive hover:bg-destructive/40 border border-destructive/50 text-[13px]"
                                     onClick={async () => {
                                         if (await handleDelete(editingEvent.id)) setDialogOpen(false);

@@ -375,6 +375,10 @@ public class BandService {
         if (!java.util.Objects.equals(ownerId, requesterUserId))
             throw new org.springframework.security.access.AccessDeniedException("Only the owner can delete the band");
 
+        // Hold all affected tab rows until deletion commits, including orphan songs.
+        band.getSongs().stream().sorted(java.util.Comparator.comparing(com.bandanize.backend.models.SongModel::getId))
+            .forEach(songService::requireNoActiveEdits);
+
         // Delete photo if exists
         if (band.getPhoto() != null && !band.getPhoto().isEmpty()) {
             // Helper method for cleaning up URL like in SongService?

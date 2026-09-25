@@ -211,6 +211,10 @@ class DatabaseLifecycleTest {
         member.put().uri("/api/tabs/"+tabId).bodyValue(Map.of("name", "Rename during edit"))
             .exchange().expectStatus().isEqualTo(409);
         member.delete().uri("/api/tabs/"+tabId).exchange().expectStatus().isEqualTo(409);
+        owner.delete().uri("/api/songs/"+songId+"?listId="+listId).exchange().expectStatus().isEqualTo(409);
+        owner.delete().uri("/api/songlists/"+listId).exchange().expectStatus().isEqualTo(409);
+        owner.delete().uri("/api/bands/"+bandId).exchange().expectStatus().isEqualTo(409);
+        assertTrue(songs.existsById(songId)); assertTrue(lists.existsById(listId)); assertTrue(bands.existsById(bandId));
         stranger.get().uri("/api/tabs/"+tabId+"/edit-lock").exchange().expectStatus().isForbidden();
         owner.put().uri("/api/tabs/"+tabId).header("X-Tab-Edit-Token", token).bodyValue(Map.of("content", "Saved"))
             .exchange().expectStatus().isOk().expectBody().jsonPath("$.files.length()").isEqualTo(1);
@@ -241,7 +245,7 @@ class DatabaseLifecycleTest {
             var second = pool.submit(() -> { gate.await(); return member.post().uri("/api/tabs/"+tabId+"/edit-lock")
                 .bodyValue(Map.of("content", "Am\nLyrics")).exchange().returnResult(String.class).getStatus().value(); });
             gate.countDown();
-            var statuses = new ArrayList<>(List.of(first.get(), second.get())); Collections.sort(statuses);
+            var statuses = new ArrayList<>(List.of(first.get(15, java.util.concurrent.TimeUnit.SECONDS), second.get(15, java.util.concurrent.TimeUnit.SECONDS))); Collections.sort(statuses);
             assertEquals(List.of(200, 409), statuses);
         } finally { pool.shutdownNow(); }
     }

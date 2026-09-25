@@ -29,6 +29,14 @@ public class SongService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private TabEditService tabEdits;
+
+    public void requireNoActiveEdits(SongModel song) {
+        song.getTablatures().stream().map(TablatureModel::getId).sorted()
+            .forEach(id -> tabEdits.requireWritable(id, null, false));
+    }
+
     // --- SongList ---
     public SongListModel createSongList(Long bandId, Long userId, SongListModel songList) {
         BandModel band = bandRepository.findById(bandId)
@@ -75,6 +83,7 @@ public class SongService {
         songListRepository.flush();
         for (SongModel song : candidates) {
             if (!songListRepository.existsBySongsId(song.getId())) {
+                requireNoActiveEdits(song);
                 cleanupSongFiles(song);
                 song.getBand().getSongs().removeIf(item -> item.getId().equals(song.getId()));
                 songRepository.delete(song);
@@ -159,6 +168,7 @@ public class SongService {
         }
 
         if (isOrphaned) {
+            requireNoActiveEdits(song);
             cleanupSongFiles(song);
             song.getBand().getSongs().removeIf(item -> item.getId().equals(songId));
             songRepository.delete(song);

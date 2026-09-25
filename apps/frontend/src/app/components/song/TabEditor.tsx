@@ -1,3 +1,4 @@
+import { useAuth } from '@/contexts/AuthContext';
 import { useTabEditLease } from '@/lib/use-tab-edit-lease';
 import { useSeenContent } from '@/contexts/SongUnreadContext';
 import { createPortal } from 'react-dom';
@@ -126,8 +127,18 @@ export function TabEditor({ songId,
   onPreview, onAnnotate, focusedAnchor, uploading, uploadProgress, hideFiles = false, comments = [], commentsVisible = true, onToggleComments
 }: TabEditorProps) {
   const { t } = useTranslation();
-  const [editingContent, setEditingContent] = useState(tab.content || '');
-  const [baseContent, setBaseContent] = useState(tab.content || '');
+  const { user } = useAuth();
+  const draftKey = 'bandanize.tab-draft.' + user?.id + '.' + tab.id;
+  const [restored] = useState(() => {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(draftKey) || 'null');
+      return value && typeof value.content === 'string' && typeof value.base === 'string' ? value : null;
+    } catch { return null; }
+  });
+  const [editingContent, setEditingContent] = useState<string>(restored?.content ?? tab.content ?? '');
+  const [baseContent, setBaseContent] = useState<string>(restored?.base ?? tab.content ?? '');
+  const [draftStorageFailed, setDraftStorageFailed] = useState(false);
+  const savingRef = useRef(false);
   const lease = useTabEditLease(tab.id);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<'edit' | 'view'>('view');
@@ -143,6 +154,19 @@ export function TabEditor({ songId,
 
   const hasChanges = editingContent !== baseContent;
   useEffect(() => {
+    try {
+      if (hasChanges) sessionStorage.setItem(draftKey, JSON.stringify({ content: editingContent, base: baseContent }));
+      else sessionStorage.removeItem(draftKey);
+    } catch {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDraftStorageFailed(true);
+    }
+    if (!hasChanges) return;
+    const beforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [draftKey, editingContent, baseContent, hasChanges]);
+  useEffect(() => {
     if (!hasChanges && viewMode === 'view') {
       // Refresh a clean viewer without replacing an unsaved draft.
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -155,15 +179,18 @@ export function TabEditor({ songId,
       if (hasChanges) { toast.error(t('tab_edit.finish_first', 'Guarda o descarga tu borrador antes de salir de edición.')); return; }
       await lease.release(); setViewMode('view'); return;
     }
-    if (await lease.acquire(tab.content || '')) {
-      setEditingContent(tab.content || ''); setBaseContent(tab.content || ''); setViewMode('edit');
+    if (await lease.acquire(hasChanges ? baseContent : tab.content || '')) {
+      if (!hasChanges) { setEditingContent(tab.content || ''); setBaseContent(tab.content || ''); }
+      setViewMode('edit');
     }
   };
   const save = async () => {
-    if (!lease.held || !lease.token.current || isSaving) return;
+    if (!lease.held || !lease.token.current || isSaving || savingRef.current) return;
+    savingRef.current = true;
     const saved = editingContent;
     try { await onSave(saved, lease.token.current); setBaseContent(saved); }
     catch { /* The parent shows the save failure; keep the draft and lease. */ }
+    finally { savingRef.current = false; }
   };
   const discard = async () => {
     if (hasChanges && !window.confirm(t('tab_edit.discard_confirm', '¿Descartar los cambios sin guardar?'))) return;
@@ -389,10 +416,13 @@ export function TabEditor({ songId,
         </div>
       </div>
 
+      {draftStorageFailed && <p role="alert">{t('tab_edit.storage_failed', 'No se puede conservar el borrador al cerrar esta página. Descarga una copia antes de salir.')}</p>}
+      {hasChanges && viewMode === 'view' && <p role="status">{t('tab_edit.restored', 'Tienes un borrador sin guardar. Pulsa Editar para recuperarlo. Si alguien cambió la tablatura, descarga tu copia antes de descartarlo.')}</p>}
       {lease.owner && viewMode === 'view' && <p role="status" className="text-xs text-primary">{t('tab_edit.owner', { defaultValue: '{{name}} está editando esta tablatura', name: lease.owner })}</p>}
       {lease.error && <p role="alert" className="text-xs text-amber-400">{lease.error}</p>}
       {viewMode === 'edit' && <div className="flex flex-wrap items-center gap-2">
-        <p role="status" className="text-xs text-muted-foreground">{t(lease.held ? 'tab_edit.yours' : 'tab_edit.lost', lease.held ? 'Edición reservada para ti' : 'Edición pausada. Conserva una copia del borrador y vuelve a abrir el editor.')}</p>
+        <p role="status" className="text-xs text-muted-foreground">{t(lease.held ? 'tab_edit.yours' : 'tab_edit.lost', lease.held ? 'Edición reservada para ti' : 'Edición pausada. Tu borrador se conserva. Reconecta y pulsa Reanudar edición.')}</p>
+        {!lease.held && <Button type="button" size="sm" disabled={lease.busy || isSaving} onClick={() => { void lease.acquire(baseContent); }}>{t('tab_edit.resume', 'Reanudar edición')}</Button>}
         <Button type="button" size="sm" variant="ghost" disabled={isSaving} onClick={() => { void discard(); }}>{t('tab_edit.close', 'Cerrar edición')}</Button>
       </div>}
       {(onAnnotate || onToggleComments) && <div className="flex flex-wrap shrink-0 items-center gap-2 p-1">
