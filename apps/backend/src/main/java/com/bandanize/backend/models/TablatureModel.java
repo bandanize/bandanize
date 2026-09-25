@@ -6,10 +6,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@org.hibernate.annotations.DynamicUpdate
 public class TablatureModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Long editOwnerId;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String editOwnerName;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String editToken;
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private java.time.Instant editExpiresAt;
 
     private String name;
     private String instrument;
@@ -31,6 +41,22 @@ public class TablatureModel {
     @CollectionTable(name = "tablature_files", joinColumns = @JoinColumn(name = "tablature_id"))
     @org.hibernate.annotations.BatchSize(size = 64)
     private List<MediaFile> files = new ArrayList<>();
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public Long getEditOwnerId() { return editOwnerId; }
+    public void setEditOwnerId(Long value) { editOwnerId = value; }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getEditOwnerName() { return editOwnerName; }
+    public void setEditOwnerName(String value) { editOwnerName = value; }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public String getEditToken() { return editToken; }
+    public void setEditToken(String value) { editToken = value; }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public java.time.Instant getEditExpiresAt() { return editExpiresAt; }
+    public void setEditExpiresAt(java.time.Instant value) { editExpiresAt = value; }
 
     public int getCommentCount() {
         return comments.size();

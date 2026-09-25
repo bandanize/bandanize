@@ -150,7 +150,7 @@ interface ProjectContextType {
   addSongFile: (projectId: string, listId: string, songId: string, file: Omit<MediaFile, 'id'>) => void;
   deleteSongFile: (projectId: string, listId: string, songId: string, fileUrl: string) => void;
   createTablature: (projectId: string, listId: string, songId: string, tablature: Omit<Tablature, 'id' | 'files'>) => void;
-  updateTablature: (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>) => void;
+  updateTablature: (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>, editToken?: string) => Promise<void>;
   deleteTablature: (projectId: string, listId: string, songId: string, tabId: string) => void;
   addTablatureFile: (projectId: string, listId: string, songId: string, tabId: string, file: Omit<MediaFile, 'id'>) => void;
   deleteTablatureFile: (projectId: string, listId: string, songId: string, tabId: string, fileUrl: string) => void;
@@ -908,9 +908,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
-  const updateTablature = async (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>) => {
+  const updateTablature = async (projectId: string, listId: string, songId: string, tabId: string, data: Partial<Tablature>, editToken?: string) => {
       try {
-          await api.put(`/tabs/${tabId}`, data);
+          await api.put(`/tabs/${tabId}`, data, { headers: editToken ? { 'X-Tab-Edit-Token': editToken } : undefined });
            updateLocalProject(projectId, (p) => ({
             ...p,
             songLists: p.songLists.map(l => ({

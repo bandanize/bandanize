@@ -19,6 +19,7 @@ import java.security.Principal;
 @RequestMapping("/api")
 public class SongController {
     @Autowired private com.bandanize.backend.services.ResourceAccess access;
+    @Autowired private com.bandanize.backend.services.TabEditService edits;
 
     private static final Logger logger = LoggerFactory.getLogger(SongController.class);
 
@@ -132,18 +133,22 @@ public class SongController {
         return ResponseEntity.ok(songService.addTablature(songId, tab));
     }
 
+    @org.springframework.transaction.annotation.Transactional
     @PutMapping("/tabs/{tabId}")
     public ResponseEntity<TablatureModel> updateTablature(@PathVariable Long tabId,
-            @RequestBody TablatureModel details) {
+            @RequestBody TablatureModel details, @RequestHeader(value = "X-Tab-Edit-Token", required = false) String editToken) {
         access.tab(tabId);
+        edits.requireWritable(tabId, editToken, details.getContent() != null);
         logger.debug("Received update for tabId: {}, name={}, instrument={}", tabId, details.getName(),
                 details.getInstrument());
         return ResponseEntity.ok(songService.updateTablature(tabId, details));
     }
 
+    @org.springframework.transaction.annotation.Transactional
     @DeleteMapping("/tabs/{tabId}")
     public ResponseEntity<Void> deleteTablature(@PathVariable Long tabId) {
         access.tab(tabId);
+        edits.requireWritable(tabId, null, false);
         songService.deleteTablature(tabId);
         return ResponseEntity.ok().build();
     }
@@ -177,7 +182,8 @@ public class SongController {
     @GetMapping("/tabs/{tabId}/comments")
     public ResponseEntity<List<TabCommentModel>> getTabComments(@PathVariable Long tabId, Principal principal) {
         access.tab(tabId);
-        return ResponseEntity.ok(tabCommentService.getComments(tabId, getCurrentUserId(principal)));
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(tabCommentService.getComments(tabId, getCurrentUserId(principal)));
     }
 
     @PostMapping("/tabs/{tabId}/comments")

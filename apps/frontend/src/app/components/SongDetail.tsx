@@ -173,14 +173,15 @@ export function SongDetail({ listId, song, onBack }: SongDetailProps) {
        }
   };
 
-  const handleSaveTabContent = async (content: string) => {
+  const handleSaveTabContent = async (content: string, editToken: string) => {
       if (!currentProject || !selectedTabId) return;
       setIsSavingTab(true);
       try {
-          await updateTablature(currentProject.id, listId, song.id, selectedTabId, { content });
+          await updateTablature(currentProject.id, listId, song.id, selectedTabId, { content }, editToken);
           toast.success(t('tab_updated', 'Tablatura actualizada'));
-      } catch {
+      } catch (error) {
           toast.error(t('tab_update_error', 'Error al guardar tablatura'));
+          throw error;
       } finally {
           setIsSavingTab(false);
       }
