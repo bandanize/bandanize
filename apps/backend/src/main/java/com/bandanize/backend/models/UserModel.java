@@ -175,10 +175,10 @@ public class UserModel implements UserDetails {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (o == null || getClass() != o.getClass())
+        if (!(o instanceof UserModel))
             return false;
         UserModel user = (UserModel) o;
-        return id != null && id.equals(user.id);
+        return getId() != null && getId().equals(user.getId());
     }
 
     @Override
