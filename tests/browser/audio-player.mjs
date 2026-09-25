@@ -61,7 +61,7 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   if(path.endsWith('.mpeg') || path.endsWith('.mp3')) {
    audioRequests.push(path);
    const body=path.endsWith('/video.mpeg')?encodedVideo:encodedAudio;
-   const contentType=path.endsWith('/video.mpeg')?'video/mp4':'audio/mpeg';
+   const contentType=path.endsWith('/video.mpeg')?'video/mp4':path.endsWith('.mpeg')?'video/mpeg':'audio/mpeg';
    const range=request.headers()['range']?.match(/bytes=(\d+)-(\d*)/);
    if(range) {
     const start=Number(range[1]),end=Math.min(body.length-1,range[2]?Number(range[2]):body.length-1);
