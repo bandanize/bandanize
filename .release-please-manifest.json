@@ -1,4 +1,4 @@
 {
-    "apps/backend": "1.14.1",
-    "apps/frontend": "1.20.3"
+    "apps/backend": "1.15.0",
+    "apps/frontend": "1.21.0"
 }
