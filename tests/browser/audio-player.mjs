@@ -26,9 +26,9 @@ function wav(seconds=15) {
  for(let i=0;i<samples;i++)buffer.writeInt16LE(Math.round(500*Math.sin(2*Math.PI*220*i/8000)),44+i*2);
  return buffer;
 }
-// Real encoded media, generated only in CI; a misleading extension must not discard video.
+// Real encoded media, generated only in CI. MPEG-labelled files always use the audio player.
 execFileSync('ffmpeg',['-y','-f','lavfi','-i','sine=frequency=220:duration=8','-c:a','libmp3lame','test-results/audio.mp3'],{stdio:'ignore'});
-execFileSync('ffmpeg',['-y','-f','lavfi','-i','color=c=green:s=160x90:d=8','-c:v','libx264','-pix_fmt','yuv420p','test-results/video.mp4'],{stdio:'ignore'});
+execFileSync('ffmpeg',['-y','-f','lavfi','-i','color=c=green:s=160x90:d=8','-f','lavfi','-i','sine=frequency=330:duration=8','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-shortest','test-results/video.mp4'],{stdio:'ignore'});
 const encodedAudio=readFileSync('test-results/audio.mp3'), encodedVideo=readFileSync('test-results/video.mp4');
 const mpeg={name:'Ensayo.mpeg',url:'/api/uploads/videos/audio.mpeg',type:'video/mpeg'};
 const generic={name:'Grabacion.MP3',url:'/api/uploads/files/generic.mp3',type:'application/octet-stream'};
@@ -39,7 +39,7 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
  const context=await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'});
  const page=await context.newPage();page.setDefaultTimeout(12000);
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
- let fail=true;const audioRequests=[];
+ let fail=true;const audioRequests=[];const uploads=[];
  await context.addCookies([{name:'i18next',value:'es',url:origin}]);
  await context.addInitScript(owner=>{
   window.audioEvents=[];
@@ -51,6 +51,13 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
  },owner);
  await context.route('**/api/**',async route=>{
   const request=route.request(),path=new URL(request.url()).pathname;
+  if(path.endsWith('/upload/chunk')) {
+   uploads.push(request.postData());return route.fulfill({body:'uploaded_Ensayo.mpeg'});
+  }
+  if(path.endsWith('/songs/21/files')&&request.method()==='POST'){
+   const added=request.postDataJSON();uploads.push(added);
+   return route.fulfill({json:{...band.songLists[0].songs[0],files:[...band.songLists[0].songs[0].files,added]}});
+  }
   if(path.endsWith('.mpeg') || path.endsWith('.mp3')) {
    audioRequests.push(path);
    const body=path.endsWith('/video.mpeg')?encodedVideo:encodedAudio;
@@ -177,19 +184,26 @@ for(const [engineName,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await panel.getByRole('button',{name:'Cerrar reproductor'}).click();
   await page.getByRole('button',{name:/^Ensayo.mpeg/}).click();
   await panel.waitFor();
-  // Some browsers require Play after an asynchronous metadata handoff.
-  await page.waitForFunction(()=>['playing','paused'].includes(document.querySelector('.floating-audio-player')?.dataset.playback));
-  if(await panel.getByRole('button',{name:'Reproducir',exact:true}).isVisible()) await panel.getByRole('button',{name:'Reproducir',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Escuchar como audio',exact:true}).count(),0);
   await page.locator('.floating-audio-player[data-playback="playing"]').waitFor();
   assert(await page.locator('[data-global-audio]').evaluate(a=>a.src.endsWith('audio.mpeg')));
   assert.equal(await page.locator('video').count(),0);
   await panel.getByRole('button',{name:'Cerrar reproductor'}).click();
   await page.getByRole('button',{name:/^Escenario.mpeg/}).click();
-  await page.waitForFunction(()=>document.querySelector('video')?.videoWidth>0);
-  assert.equal(await panel.count(),0,'Actual video must retain its picture');
-  await page.getByRole('button',{name:'Escuchar como audio',exact:true}).click();
   await panel.waitFor();
+  await page.locator('.floating-audio-player[data-playback="playing"]').waitFor();
+  await page.waitForFunction(()=>document.querySelector('[data-global-audio]').currentTime>0.1);
+  assert.equal(await page.getByRole('button',{name:'Escuchar como audio',exact:true}).count(),0);
+  console.log('PASS '+engineName+' MPEG opens directly as audio, including legacy video/mpeg metadata, without video or a format prompt');
   assert.equal(await page.locator('video').count(),0);
+  await page.locator('input[type=file]').first().setInputFiles({name:'Subida.mpeg',mimeType:'video/mpeg',buffer:encodedAudio});
+  await page.locator('#upload-name').waitFor();
+  await page.getByRole('button',{name:'Subir archivo',exact:true}).click();
+  await page.getByRole('dialog').waitFor({state:'detached'});
+  await page.getByRole('button',{name:'Subida.mpeg Audio',exact:true}).waitFor();
+  assert(uploads.some(value=>typeof value==='string'&&/name="folder"\r?\n\r?\naudio/.test(value)),'MPEG chunks use audio storage');
+  assert(uploads.some(value=>value?.type==='audio/mpeg'&&value.url==='/api/uploads/audio/uploaded_Ensayo.mpeg'),'Association saves audio MIME and folder');
+  console.log('PASS '+engineName+' MPEG upload bypasses video rejection and stores audio metadata');
   // Logout remounts the session provider and releases its source.
   await page.setViewportSize({width:1280,height:900});
   await page.getByRole('button',{name:'Mi cuenta',exact:true}).click();
