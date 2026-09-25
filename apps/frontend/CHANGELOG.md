@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.21.2](https://github.com/bandanize/bandanize/compare/web@v1.21.1...web@v1.21.2) (2026-09-25)
+
+
+### Bug Fixes
+
+* allow MPEG audio selection in song and comment attachments ([9172cf3](https://github.com/bandanize/bandanize/commit/9172cf383cd051305c9ea661fd2c313f85c7a410))
+* play MPEG files directly as audio ([ff08aae](https://github.com/bandanize/bandanize/commit/ff08aaeddffe45eee2098a8b33cad99e145d45d0))
+* play MPEG files directly as audio without format prompts ([0a82173](https://github.com/bandanize/bandanize/commit/0a82173b4b5ea672437121f3ab228a7a33fcc25a))
+
 ## [1.21.1](https://github.com/bandanize/bandanize/compare/web@v1.21.0...web@v1.21.1) (2026-09-25)
 
 
