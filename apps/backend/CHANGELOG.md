@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.15.1](https://github.com/bandanize/bandanize/compare/api@v1.15.0...api@v1.15.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* protect collaborative editing and recover stale comments, files and calendar ([b7608f9](https://github.com/bandanize/bandanize/commit/b7608f93a2ad390114610ef7d63f62647846e0ad))
+* protect comment anchors and verify delayed responses and outages ([89c30a6](https://github.com/bandanize/bandanize/commit/89c30a6748124cbbd4698fec7ad2399d7d0d4d96))
+* serialize attachment changes and exercise concurrent editing recovery ([26e236f](https://github.com/bandanize/bandanize/commit/26e236fb66fd81e2b396f87a4d9ed8084b9f2395))
+* update band membership handling with ID-based matching and live … ([e73f6d9](https://github.com/bandanize/bandanize/commit/e73f6d9ba26850b64fc36778fc94c85c5f91ddd2))
+* update band membership handling with ID-based matching and live notifications ([c02b54c](https://github.com/bandanize/bandanize/commit/c02b54cb5b72842c2238bee2d683c8a30e3a6a30))
+
 ## [1.15.0](https://github.com/bandanize/bandanize/compare/api@v1.14.1...api@v1.15.0) (2026-09-25)
 
 

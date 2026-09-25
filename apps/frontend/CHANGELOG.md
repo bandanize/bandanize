@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.21.1](https://github.com/bandanize/bandanize/compare/web@v1.21.0...web@v1.21.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* clarify deletion failures and document collaboration release gates ([939812c](https://github.com/bandanize/bandanize/commit/939812ce32276fd8eeb626ff36d0686281a54199))
+* make editing controls accessible and cover failed attachment deletion ([82222fb](https://github.com/bandanize/bandanize/commit/82222fb317e10d2e6747c3b84d1244e961550ef0))
+* protect collaborative editing and recover stale comments, files and calendar ([b7608f9](https://github.com/bandanize/bandanize/commit/b7608f93a2ad390114610ef7d63f62647846e0ad))
+* protect comment anchors and verify delayed responses and outages ([89c30a6](https://github.com/bandanize/bandanize/commit/89c30a6748124cbbd4698fec7ad2399d7d0d4d96))
+* serialize attachment changes and exercise concurrent editing recovery ([26e236f](https://github.com/bandanize/bandanize/commit/26e236fb66fd81e2b396f87a4d9ed8084b9f2395))
+
 ## [1.21.0](https://github.com/bandanize/bandanize/compare/web@v1.20.3...web@v1.21.0) (2026-09-25)
 
 
