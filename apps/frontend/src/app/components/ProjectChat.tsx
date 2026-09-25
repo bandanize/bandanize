@@ -14,7 +14,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export function ProjectChat() {
-  const { currentProject, sendMessage } = useProjects();
+  const { currentProject, sendMessage, chatSyncFailed } = useProjects();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [sending, setSending] = useState(false);
@@ -264,6 +264,11 @@ export function ProjectChat() {
         </div>
       </div>
 
+      {chatSyncFailed && (
+        <p role="status" className="px-4 py-2 text-xs text-amber-400 border-b border-border">
+          {t('chat_reconnecting', 'No se puede actualizar el chat. Reintentando la conexión…')}
+        </p>
+      )}
       <div ref={scrollAreaRef} onScroll={event => {
         const area = event.currentTarget;
         nearBottom.current = area.scrollHeight - area.scrollTop - area.clientHeight < 80;

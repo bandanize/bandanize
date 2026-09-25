@@ -7,7 +7,11 @@ for (const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
  const browser=await engine.launch();
  const owner={id:'1',username:'owner',name:'Owner',email:'owner@example.test'};
  let history=[{id:10,sender:owner,message:'Second legacy',timestamp:null},{id:2,sender:owner,message:'First legacy',timestamp:'2020-01-01T12:00:00'}];
- let invitations=[],failSend=true,postCount=0;
+ let invitations=[],failSend=true,postCount=0,failChat=false;
+ let holdInvitations=false,releaseInvitations;
+ const invitationGate=new Promise(resolve=>{releaseInvitations=resolve;});
+ let heldInvitationStarted;
+ const invitationStarted=new Promise(resolve=>{heldInvitationStarted=resolve;});
  const band={id:1,name:'Live project',ownerId:1,members:[owner],songLists:[],chatMessages:history};
  const context=await browser.newContext({serviceWorkers:'block'});
  const page=await context.newPage();page.setDefaultTimeout(12000);
@@ -33,7 +37,10 @@ for (const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   let body=[];
   if(path.endsWith('/auth/me')||path.endsWith('/users/1'))body=owner;
   else if(path.endsWith('/bands/my-bands'))body=[{...band,chatMessages:history}];
-  else if(path.endsWith('/invitations/mine'))body=invitations;
+  else if(path.endsWith('/invitations/mine')){
+   if(holdInvitations){heldInvitationStarted();await invitationGate;}
+   body=invitations;
+  }
   else if(path.endsWith('/accept')){invitations=[];body='Invitation accepted';}
   else if(path.endsWith('/reject')){invitations=[];body='Invitation rejected';}
   else if(path.endsWith('/chat')&&req.method()==='POST'){
@@ -42,7 +49,11 @@ for (const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
    body={id:30,sender:owner,message:req.postDataJSON().message,timestamp:'2026-01-01T12:00:00'};
    history.push(body);
   }
-  else if(path.endsWith('/chat'))body=history;
+  else if(path.endsWith('/chat')){
+   assert.ok(new URL(req.url()).searchParams.has('_fresh'));
+   if(failChat)return route.fulfill({status:503,json:{message:'Temporarily unavailable'}});
+   body=history;
+  }
   else if(path.endsWith('/heartbeat'))body={onlineCount:1};
   else if(path.includes('unread-count'))body=0;
   else if(path.includes('unread'))body=false;
@@ -69,6 +80,24 @@ for (const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   await page.getByText('Incoming without reload',{exact:true}).waitFor();
   await page.evaluate(()=>window.emitLive({kind:'chat',bandId:1}));
   assert.equal(await page.getByText('Keep my draft',{exact:true}).count(),1);
+  // A hanging invitation endpoint cannot prevent chat recovery without push.
+  holdInvitations=true;
+  await page.evaluate(()=>window.emitLive({kind:'invitations',bandId:1}));
+  await invitationStarted;
+  history.push({id:32,sender:{id:2,name:'Guest'},message:'Recovered while invitations hang',timestamp:null});
+  await page.getByText('Recovered while invitations hang',{exact:true}).waitFor({timeout:7000});
+  holdInvitations=false;releaseInvitations();
+  failChat=true;
+  await page.evaluate(()=>window.emitLive({kind:'chat',bandId:1}));
+  await page.getByRole('status').filter({hasText:'No se puede actualizar el chat'}).waitFor();
+  // Failed reads preserve both the history and the composer's current draft.
+  await input.fill('Unsent while reconnecting');
+  assert.equal(await page.getByText('Keep my draft',{exact:true}).count(),1);
+  failChat=false;
+  history.push({id:33,sender:{id:2,name:'Guest'},message:'Recovered after history failure',timestamp:null});
+  await page.getByText('Recovered after history failure',{exact:true}).waitFor({timeout:7000});
+  assert.equal(await input.inputValue(),'Unsent while reconnecting');
+  assert.equal(await page.getByRole('status').filter({hasText:'No se puede actualizar el chat'}).count(),0);
   await page.goto(origin+'/invitations');
   await page.getByText('No hay invitaciones pendientes',{exact:true}).waitFor();
   invitations=[{id:55,bandId:2,bandName:'Instant invitation'}];

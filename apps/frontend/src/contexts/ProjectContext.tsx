@@ -118,6 +118,7 @@ export interface Invitation {
 }
 
 interface ProjectContextType {
+  chatSyncFailed: boolean;
   refreshProjects: () => Promise<void>;
   updateTabCommentCount: (tabId: string, count: number) => void;
   projects: Project[];
@@ -166,6 +167,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [chatSyncFailed, setChatSyncFailed] = useState(false);
 
   const fetchProjects = useCallback(async (throwOnError = false, background = false) => {
     if (!background) setIsLoading(true);
@@ -256,42 +258,52 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       if (pending.has(projectId)) { dirty.add(projectId); return; }
       pending.add(projectId);
       try {
-        const response = await api.get('/bands/' + projectId + '/chat');
-        if (!active || !Array.isArray(response.data)) return;
+        const response = await api.get('/bands/' + projectId + '/chat', {
+          timeout: 8000,
+          params: { _fresh: Date.now() },
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+        if (!active) return;
+        if (!Array.isArray(response.data)) throw new Error('Invalid chat history response');
+        if (projectId === currentProject?.id) setChatSyncFailed(false);
         const incoming = response.data.map(mapChatMessage);
         const update = (project: Project) => project.id === projectId
           ? { ...project, chat: orderedChat([...project.chat, ...incoming]) } : project;
         setProjects(previous => previous.map(update));
         setCurrentProject(previous => previous ? update(previous) : previous);
-      } catch { /* Preserve history and drafts while offline. */ }
+      } catch {
+        if (active && projectId === currentProject?.id) setChatSyncFailed(true);
+      }
       finally {
         pending.delete(projectId);
         if (active && dirty.delete(projectId)) void refreshChat(projectId);
       }
     };
-    let refreshing = false;
-    const recover = async () => {
-      if (!active || refreshing || document.visibilityState === 'hidden') return;
-      refreshing = true;
-      try {
-        await fetchInvitations();
-        if (currentProject?.id) await refreshChat(currentProject.id);
-      } finally { refreshing = false; }
+    // Chat recovery must never wait for invitations or the project catalogue.
+    const recover = () => {
+      if (!active || document.visibilityState === 'hidden') return;
+      if (currentProject?.id) void refreshChat(currentProject.id);
+    };
+    const recoverInvitations = () => {
+      if (active && document.visibilityState !== 'hidden') void fetchInvitations();
     };
     const disconnect = connectLiveUpdates(change => {
       if (!active) return;
       if (change.kind === 'chat' && change.bandId) void refreshChat(String(change.bandId));
       else {
-        void fetchInvitations();
+        recoverInvitations();
+        if (change.kind === 'ready') recover();
         if (change.kind === 'projects' || change.kind === 'ready') void fetchProjects(false, true);
       }
     });
-    const timer = setInterval(recover, 10000);
+    recover();
+    const timer = setInterval(recover, 3000);
+    const invitationTimer = setInterval(recoverInvitations, 10000);
     window.addEventListener('online', recover);
     window.addEventListener('focus', recover);
     document.addEventListener('visibilitychange', recover);
     return () => {
-      active = false; disconnect(); clearInterval(timer);
+      active = false; disconnect(); clearInterval(timer); clearInterval(invitationTimer);
       window.removeEventListener('online', recover); window.removeEventListener('focus', recover);
       document.removeEventListener('visibilitychange', recover);
     };
@@ -1032,6 +1044,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   return (
     <ProjectContext.Provider value={{
       refreshProjects,
+      chatSyncFailed,
       updateTabCommentCount,
       projects,
       invitations,
