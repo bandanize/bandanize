@@ -438,7 +438,8 @@
     "read": "Read",
     "unread": "Unread",
     "failed": "Could not mark as read",
-    "unknown": "A member"
+    "unknown": "A member",
+    "load_failed": "Could not refresh notifications. Reconnect or try again."
   },
   "guide_ui": {
     "menu": "Bandanize guide",

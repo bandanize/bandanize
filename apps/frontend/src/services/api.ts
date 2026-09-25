@@ -56,7 +56,7 @@ api.interceptors.response.use(
     async (error) => {
         const _res = error.response;
         // A forbidden project action is not an expired authentication session.
-        if (_res?.status === 401) {
+        if (_res?.status === 401 && error.config?.headers?.Authorization === 'Bearer ' + getAuthToken()) {
             // Don't redirect if it's a login attempt failure (invalid credentials)
             const isPublicRoute = PUBLIC_ROUTES.some(route => window.location.pathname.startsWith(route));
 

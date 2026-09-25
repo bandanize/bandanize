@@ -997,7 +997,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 songs: l.songs.map(s => s.id === songId ? { 
                     ...s, 
                     updatedAt: updatedSong.updatedAt ?? s.updatedAt,
-                files: updatedSong.files || []
+                files: s.files.filter(existing => existing.url !== fileUrl)
                 } : s)
               }))
             }));
@@ -1019,7 +1019,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                       ...s, 
                       tablatures: s.tablatures.map(t => t.id === tabId ? {
                           ...t,
-                          files: updatedTab.files || []
+                          files: t.files.filter(existing => existing.url !== fileUrl)
                       } : t)
                   } : s)
               }))

@@ -438,7 +438,8 @@
     "read": "Leída",
     "unread": "Sin leer",
     "failed": "No se pudo marcar como leída",
-    "unknown": "Un miembro"
+    "unknown": "Un miembro",
+    "load_failed": "No se pudieron actualizar las notificaciones. Reconecta o vuelve a intentarlo."
   },
   "guide_ui": {
     "menu": "Guía de Bandanize",

@@ -44,6 +44,8 @@ class SongServiceTest {
     @Mock
     private StorageService storageService;
 
+    @Mock jakarta.persistence.EntityManager entityManager;
+    @Mock TabEditService tabEdits;
     @InjectMocks
     private SongService songService;
 

@@ -64,7 +64,7 @@ for (const [engineName, engine] of [['chromium',chromium],['webkit',webkit]]) {
   page.on('pageerror',error=>errors.push(error.message));
   page.on('dialog',dialog=>dialog.accept());
   await page.goto(origin+'/project/1?tab=songs&listId=11&songId=21&tabId=31');
-  const cookie=page.getByRole('button',{name:'Got it',exact:true});if(await cookie.isVisible())await cookie.click();
+  const cookie=page.getByRole('button',{name:'Understood',exact:true});if(await cookie.isVisible())await cookie.click();
   await page.locator('pre').waitFor();
   return {context,page};
  }

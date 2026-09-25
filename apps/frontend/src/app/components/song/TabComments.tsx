@@ -178,7 +178,7 @@ export function TabComments({ songId, tabId, content, anchor, onClearAnchor, onL
 
   const handleSendComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!message.trim() && !attachments.length) || !user || isSending || uploading) return;
+    if ((!message.trim() && !attachments.length) || !user || mutations.current || isSending || uploading) return;
 
     setSendError('');
     setIsSending(true);

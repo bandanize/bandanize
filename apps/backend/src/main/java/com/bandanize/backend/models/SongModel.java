@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@org.hibernate.annotations.DynamicUpdate
 public class SongModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -166,7 +166,7 @@ export function NotificationFeed({ projectId, onRead }: NotificationFeedProps) {
         return <div className="p-4 text-center text-sm text-muted-foreground">Loading notifications...</div>;
     }
 
-    if (loadFailed) return <p role="status" className="p-4 text-sm text-amber-400">{t('notification_ui.failed')}</p>;
+    if (loadFailed) return <p role="status" className="p-4 text-sm text-amber-400">{t('notification_ui.load_failed')}</p>;
 
     if (notifications.length === 0) {
         return <div className="p-4 text-center text-sm text-muted-foreground">No recent activity</div>;
