@@ -98,7 +98,6 @@ public class AuthController {
      * @param user The user details to register.
      * @return ResponseEntity with success or error message.
      */
-    @org.springframework.transaction.annotation.Transactional
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserModel user) {
         if (user.getUsername() == null || user.getUsername().isBlank()) {
@@ -129,10 +128,14 @@ public class AuthController {
 
         user.setHashedPassword(passwordEncoder.encode(user.getHashedPassword()));
         user.setDisabled(true);
-        userRepository.save(user);
 
-        String token = jwtService.generateVerificationToken(user.getUsername());
-        userService.sendVerificationEmail(user, token);
+        try {
+            userService.registerNewUser(user);
+        } catch (com.bandanize.backend.exceptions.EmailDeliveryException e) {
+            // Transaction rolled back — user was NOT persisted
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body("Registration could not be completed because the verification email failed to send. Please try again later.");
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("User registered successfully. Please check your email to verify your account.");

@@ -24,11 +24,18 @@ public class ResendEmailService implements EmailService {
 
     public ResendEmailService(@Value("${resend.api.key}") String apiKey) {
         if (apiKey == null || apiKey.isBlank() || "placeholder".equals(apiKey)) {
-            logger.warn("Resend API key is missing. Email sending will fail.");
+            logger.warn("Resend API key is missing or placeholder. Email sending will fail.");
             this.resend = null;
         } else {
+            logger.info("Resend client initialized with API key: {}...", apiKey.substring(0, Math.min(10, apiKey.length())));
             this.resend = new Resend(apiKey);
         }
+    }
+
+    @jakarta.annotation.PostConstruct
+    public void logConfig() {
+        logger.info("ResendEmailService config — from: {}, frontendUrl: {}, client initialized: {}",
+                fromEmail, frontendUrl, resend != null);
     }
 
     @Override
@@ -131,7 +138,10 @@ public class ResendEmailService implements EmailService {
 
     @Override
     public void sendVerificationEmail(String to, String token) {
+        logger.info("sendVerificationEmail called — to: {}, resend client null: {}, from: {}", to, resend == null, fromEmail);
+
         if (resend == null) {
+            logger.error("Resend client is null — cannot send verification email to {}", to);
             throw new com.bandanize.backend.exceptions.EmailDeliveryException();
         }
 
@@ -156,9 +166,10 @@ public class ResendEmailService implements EmailService {
 
         try {
             CreateEmailResponse data = resend.emails().send(params);
-            logger.info("Verification email sent. ID: " + data.getId());
+            logger.info("Verification email sent successfully — to: {}, ID: {}", to, data.getId());
         } catch (Exception e) {
-            logger.error("Failed to send verification email", e);
+            logger.error("Failed to send verification email to {} — exception type: {}, message: {}",
+                    to, e.getClass().getName(), e.getMessage(), e);
             throw new com.bandanize.backend.exceptions.EmailDeliveryException();
         }
     }
